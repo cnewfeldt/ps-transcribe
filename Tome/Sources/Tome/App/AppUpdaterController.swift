@@ -16,6 +16,10 @@ final class AppUpdaterController {
             delegate: nil
         )
 
+        // Only start updater if EdDSA signing key is configured
+        let edKey = hostBundle.object(forInfoDictionaryKey: "SUPublicEDKey") as? String ?? ""
+        guard !edKey.isEmpty else { return }
+
         do {
             try updater.start()
         } catch {

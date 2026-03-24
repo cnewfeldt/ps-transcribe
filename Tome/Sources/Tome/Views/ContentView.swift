@@ -79,12 +79,46 @@ struct ContentView: View {
             if transcriptionEngine == nil {
                 transcriptionEngine = TranscriptionEngine(transcriptStore: transcriptStore)
             }
-            // Flush transcript buffer every 10 seconds
-            Task {
-                while !Task.isCancelled {
-                    try? await Task.sleep(for: .seconds(10))
-                    await transcriptLogger.flushIfNeeded()
+        }
+        // Audio level polling (replaces 0.1s Timer.publish)
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(100))
+                guard let engine = transcriptionEngine else {
+                    if audioLevel != 0 { audioLevel = 0 }
+                    continue
                 }
+                if engine.isRunning {
+                    audioLevel = engine.audioLevel
+                    if audioLevel > 0.01 {
+                        silenceSeconds = 0
+                    }
+                } else if audioLevel != 0 {
+                    audioLevel = 0
+                }
+            }
+        }
+        // Silence auto-stop (replaces 1.0s Timer.publish)
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(1))
+                guard isRunning else {
+                    silenceSeconds = 0
+                    continue
+                }
+                if audioLevel < 0.01 {
+                    silenceSeconds += 1
+                    if silenceSeconds >= 120 {
+                        stopSession()
+                    }
+                }
+            }
+        }
+        // Transcript buffer flush
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(10))
+                await transcriptLogger.flushIfNeeded()
             }
         }
         .onChange(of: settings.inputDeviceID) {
@@ -94,34 +128,6 @@ struct ContentView: View {
         }
         .onChange(of: transcriptStore.utterances.count) {
             handleNewUtterance()
-        }
-        .onReceive(Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()) { _ in
-            guard let engine = transcriptionEngine else {
-                if audioLevel != 0 { audioLevel = 0 }
-                return
-            }
-            if engine.isRunning {
-                audioLevel = engine.audioLevel
-                // Reset silence timer when there's audio activity
-                if audioLevel > 0.01 {
-                    silenceSeconds = 0
-                }
-            } else if audioLevel != 0 {
-                audioLevel = 0
-            }
-        }
-        // Silence auto-stop timer (checks every second)
-        .onReceive(Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()) { _ in
-            guard isRunning else {
-                silenceSeconds = 0
-                return
-            }
-            if audioLevel < 0.01 {
-                silenceSeconds += 1
-                if silenceSeconds >= 120 {
-                    stopSession()
-                }
-            }
         }
     }
 
@@ -219,6 +225,9 @@ struct ContentView: View {
                     await transcriptLogger.rewriteWithDiarization(segments: segments)
                 }
             }
+
+            // Finalize frontmatter AFTER diarization (duration, speakers, rename)
+            await transcriptLogger.finalizeFrontmatter()
         }
         activeSessionType = nil
         detectedAppName = nil

@@ -7,6 +7,7 @@ final class StreamingTranscriber: @unchecked Sendable {
     private let asrManager: AsrManager
     private let vadManager: VadManager
     private let speaker: Speaker
+    private let audioSource: AudioSource
     private let onPartial: @Sendable (String) -> Void
     private let onFinal: @Sendable (String) -> Void
     private let log = Logger(subsystem: "io.gremble.tome", category: "StreamingTranscriber")
@@ -24,12 +25,14 @@ final class StreamingTranscriber: @unchecked Sendable {
         asrManager: AsrManager,
         vadManager: VadManager,
         speaker: Speaker,
+        audioSource: AudioSource = .microphone,
         onPartial: @escaping @Sendable (String) -> Void,
         onFinal: @escaping @Sendable (String) -> Void
     ) {
         self.asrManager = asrManager
         self.vadManager = vadManager
         self.speaker = speaker
+        self.audioSource = audioSource
         self.onPartial = onPartial
         self.onFinal = onFinal
     }
@@ -121,7 +124,7 @@ final class StreamingTranscriber: @unchecked Sendable {
 
     private func transcribeSegment(_ samples: [Float]) async {
         do {
-            let result = try await asrManager.transcribe(samples)
+            let result = try await asrManager.transcribe(samples, source: audioSource)
             let text = result.text.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !text.isEmpty else { return }
             log.info("[\(self.speaker.rawValue)] transcribed: \(text.prefix(80))")

@@ -31,8 +31,8 @@ final class TranscriptionEngine {
     private let micCapture = MicCapture()
     private let transcriptStore: TranscriptStore
 
-    /// Audio level from mic for the UI meter.
-    var audioLevel: Float { micCapture.audioLevel }
+    /// Combined audio level from mic and system for the UI meter.
+    var audioLevel: Float { max(micCapture.audioLevel, systemCapture.audioLevel) }
 
     private var micTask: Task<Void, Never>?
     private var sysTask: Task<Void, Never>?
@@ -119,6 +119,7 @@ final class TranscriptionEngine {
             asrManager: asrManager,
             vadManager: vadManager,
             speaker: .you,
+            audioSource: .microphone,
             onPartial: { text in
                 Task { @MainActor in store.volatileYouText = text }
             },
@@ -139,6 +140,7 @@ final class TranscriptionEngine {
                 asrManager: asrManager,
                 vadManager: vadManager,
                 speaker: .them,
+                audioSource: .system,
                 onPartial: { text in
                     Task { @MainActor in store.volatileThemText = text }
                 },
@@ -192,6 +194,7 @@ final class TranscriptionEngine {
             asrManager: asrManager,
             vadManager: vadManager,
             speaker: .you,
+            audioSource: .microphone,
             onPartial: { text in
                 Task { @MainActor in store.volatileYouText = text }
             },

@@ -112,10 +112,13 @@ final class SystemAudioCapture: NSObject, @unchecked Sendable, SCStreamDelegate,
         )
         guard status == noErr else { return }
 
+        // Update audio level for visualizer
+        let rms = Self.normalizedRMS(from: pcmBuffer)
+        _audioLevel.value = min(rms * 25, 1.0)
+
         // Diagnostic: log raw system audio levels periodically
         let count = _sampleCount.withLock { val -> Int in val += 1; return val }
         if count <= 5 || count % 200 == 0 {
-            let rms = Self.normalizedRMS(from: pcmBuffer)
             diagLog("[SYS-RAW] #\(count) frames=\(frameCount) sr=\(asbd.mSampleRate) ch=\(asbd.mChannelsPerFrame) rms=\(rms)")
         }
 

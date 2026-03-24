@@ -14,9 +14,11 @@ actor TranscriptLogger {
     // Map from raw speaker identity to display label
     private var speakerLabels: [String: String] = [:]
 
-    // Retained from last session for post-session diarization rewrite
+    // Retained from last session for post-session diarization and frontmatter finalization
     private var lastSessionFilePath: URL?
     private var lastSessionStartTime: Date?
+    private var lastSpeakersDetected: Set<String> = []
+    private var lastSessionContext: String = ""
 
     func startSession(sourceApp: String, vaultPath: String, sessionType: SessionType = .callCapture) {
         self.sourceApp = sourceApp
@@ -94,11 +96,7 @@ tags:
         let label = labelForSpeaker(speaker)
         speakersDetected.insert(label)
         utteranceBuffer.append((speaker: label, text: text, timestamp: timestamp))
-
-        // Flush if buffer has accumulated enough
-        if utteranceBuffer.count >= 5 {
-            flushBuffer()
-        }
+        flushBuffer()  // Flush every utterance for crash safety
     }
 
     /// Periodic flush — call from a timer or at intervals
@@ -171,17 +169,13 @@ tags:
         try? fileHandle?.close()
         fileHandle = nil
 
-        // Retain for post-session diarization
+        // Retain for post-session diarization and frontmatter finalization
         lastSessionFilePath = currentFilePath
         lastSessionStartTime = sessionStartTime
+        lastSpeakersDetected = speakersDetected
+        lastSessionContext = sessionContext
 
-        // Capture state for detached task
-        let filePath = currentFilePath
-        let startTime = sessionStartTime
-        let speakers = speakersDetected
-        let context = sessionContext
-
-        // Reset state immediately
+        // Reset state immediately so next session can start
         currentFilePath = nil
         sessionStartTime = nil
         speakersDetected = []
@@ -189,17 +183,40 @@ tags:
         speakerLabels = [:]
         speakerCounter = 1
 
-        // Detached task for frontmatter rewrite — doesn't block next startSession
-        guard let filePath, let startTime else { return }
+        // Frontmatter rewrite is NOT called here — caller must call
+        // finalizeFrontmatter() AFTER diarization completes to avoid race.
+    }
 
-        Task.detached {
-            await Self.rewriteFrontmatter(
-                filePath: filePath,
-                startTime: startTime,
-                speakers: speakers,
-                context: context
-            )
+    /// Call AFTER diarization is complete. Rewrites frontmatter with correct
+    /// duration, speaker count, attendees, and optionally renames the file.
+    func finalizeFrontmatter() async {
+        guard let filePath = lastSessionFilePath,
+              let startTime = lastSessionStartTime else { return }
+
+        await Self.rewriteFrontmatter(
+            filePath: filePath,
+            startTime: startTime,
+            speakers: lastSpeakersDetected,
+            context: lastSessionContext
+        )
+
+        // Update lastSessionFilePath if the file was renamed
+        if !lastSessionContext.isEmpty {
+            let truncated = String(lastSessionContext.prefix(50))
+                .replacingOccurrences(of: "/", with: "-")
+                .replacingOccurrences(of: ":", with: "-")
+                .trimmingCharacters(in: .whitespaces)
+            let dateFmt = DateFormatter()
+            dateFmt.dateFormat = "yyyy-MM-dd HH-mm-ss"
+            let datePrefix = dateFmt.string(from: startTime)
+            let newFilename = "\(datePrefix) \(truncated).md"
+            let newPath = filePath.deletingLastPathComponent().appendingPathComponent(newFilename)
+            lastSessionFilePath = newPath
         }
+
+        lastSessionStartTime = nil
+        lastSpeakersDetected = []
+        lastSessionContext = ""
     }
 
     private static func rewriteFrontmatter(
@@ -220,16 +237,16 @@ tags:
         let sortedSpeakers = speakers.sorted()
         let attendeesYaml = sortedSpeakers.isEmpty ? "[]" : "[\"\(sortedSpeakers.joined(separator: "\", \""))\"]"
 
-        // Update frontmatter fields
-        if let range = content.range(of: #"duration: "00:00""#) {
+        // Update frontmatter fields (regex to handle already-rewritten values)
+        if let range = content.range(of: #"duration: "\d{2}:\d{2}""#, options: .regularExpression) {
             content.replaceSubrange(range, with: "duration: \"\(durationStr)\"")
         }
-        if let range = content.range(of: "attendees: []") {
+        if let range = content.range(of: #"attendees: \[.*\]"#, options: .regularExpression) {
             content.replaceSubrange(range, with: "attendees: \(attendeesYaml)")
         }
 
-        // Update header line
-        if let range = content.range(of: "**Duration:** 00:00 | **Speakers:** 0") {
+        // Update header line (regex to handle already-rewritten values)
+        if let range = content.range(of: #"\*\*Duration:\*\* \d{2}:\d{2} \| \*\*Speakers:\*\* \d+"#, options: .regularExpression) {
             content.replaceSubrange(range, with: "**Duration:** \(durationStr) | **Speakers:** \(speakers.count)")
         }
 
