@@ -13,9 +13,9 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [ ] **REBR-02**: Bundle identifier updated across project configuration
 - [ ] **REBR-03**: Package.swift target names and module references updated
 - [ ] **REBR-04**: Source directory structure renamed (Tome/ to PSTranscribe/)
-- [ ] **REBR-05**: CI/CD workflows (release-dmg.yml, build-check.yml) reference new names
-- [ ] **REBR-06**: Sparkle update feed URL and appcast references updated
-- [ ] **REBR-07**: Info.plist and entitlements updated with new app identity
+- [x] **REBR-05**: CI/CD workflows (release-dmg.yml, build-check.yml) reference new names
+- [x] **REBR-06**: Sparkle update feed URL and appcast references updated
+- [x] **REBR-07**: Info.plist and entitlements updated with new app identity
 - [ ] **REBR-08**: UserDefaults migration preserves existing user settings (vault paths, device ID, locale) on first launch after rebrand
 
 ### Security
@@ -133,9 +133,9 @@ Deferred to future milestone. Tracked but not in current roadmap.
 | REBR-02 | Phase 1 | Pending |
 | REBR-03 | Phase 1 | Pending |
 | REBR-04 | Phase 1 | Pending |
-| REBR-05 | Phase 1 | Pending |
-| REBR-06 | Phase 1 | Pending |
-| REBR-07 | Phase 1 | Pending |
+| REBR-05 | Phase 1 | Complete |
+| REBR-06 | Phase 1 | Complete |
+| REBR-07 | Phase 1 | Complete |
 | REBR-08 | Phase 1 | Pending |
 | SECR-01 | Phase 2 | Pending |
 | SECR-02 | Phase 2 | Pending |
