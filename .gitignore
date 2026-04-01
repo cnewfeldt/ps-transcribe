@@ -1,6 +1,6 @@
 # Build artifacts
-Tome/.build/
-Tome/.swiftpm/
+PSTranscribe/.build/
+PSTranscribe/.swiftpm/
 dist/
 build/
 
