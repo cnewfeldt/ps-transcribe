@@ -16,5 +16,5 @@ jobs:
           swift --version
 
       - name: Build
-        working-directory: Tome
+        working-directory: PSTranscribe
         run: swift build
