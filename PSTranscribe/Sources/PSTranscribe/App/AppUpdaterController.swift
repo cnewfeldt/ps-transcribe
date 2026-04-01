@@ -4,11 +4,11 @@ import Sparkle
 @MainActor
 final class AppUpdaterController {
     let updater: SPUUpdater
-    private let userDriver: TomeUserDriver
+    private let userDriver: PSTranscribeUserDriver
 
     init() {
         let hostBundle = Bundle.main
-        userDriver = TomeUserDriver(hostBundle: hostBundle, delegate: nil)
+        userDriver = PSTranscribeUserDriver(hostBundle: hostBundle, delegate: nil)
         updater = SPUUpdater(
             hostBundle: hostBundle,
             applicationBundle: hostBundle,
@@ -30,13 +30,13 @@ final class AppUpdaterController {
     private func presentStartupError() {
         let alert = NSAlert()
         alert.messageText = "Unable to Check For Updates"
-        alert.informativeText = "The updater failed to start. Please verify you have the latest version of Tome and contact the developer if the issue persists."
+        alert.informativeText = "The updater failed to start. Please verify you have the latest version of PS Transcribe and contact the developer if the issue persists."
         alert.runModal()
     }
 }
 
 @MainActor
-final class TomeUserDriver: SPUStandardUserDriver {
+final class PSTranscribeUserDriver: SPUStandardUserDriver {
     private static let sparkleErrorDomain = "SUSparkleErrorDomain"
     private static let installationErrorCode = 4005
     private static let installationWriteNoPermissionErrorCode = 4012

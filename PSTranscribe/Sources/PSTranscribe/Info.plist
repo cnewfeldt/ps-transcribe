@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>Tome</string>
+    <string>PS Transcribe</string>
     <key>CFBundleDisplayName</key>
-    <string>Tome</string>
+    <string>PS Transcribe</string>
     <key>CFBundleIdentifier</key>
-    <string>io.gremble.tome</string>
+    <string>com.pstranscribe.app</string>
     <key>CFBundleVersion</key>
     <string>1.2.1</string>
     <key>CFBundleShortVersionString</key>
     <string>1.2.1</string>
     <key>CFBundleExecutable</key>
-    <string>Tome</string>
+    <string>PSTranscribe</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundlePackageType</key>
@@ -21,9 +21,9 @@
     <key>LSMinimumSystemVersion</key>
     <string>26.0</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Tome needs microphone access to transcribe your voice in real-time during conversations.</string>
+    <string>PS Transcribe needs microphone access to transcribe your voice in real-time during conversations.</string>
     <key>NSScreenCaptureUsageDescription</key>
-    <string>Tome needs screen capture permission to capture system audio from other participants.</string>
+    <string>PS Transcribe needs screen capture permission to capture system audio from other participants.</string>
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.productivity</string>
     <key>SUFeedURL</key>

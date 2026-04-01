@@ -4,11 +4,11 @@ import FluidAudio
 import Observation
 import os
 
-// Writes to /tmp/tome.log
+// Writes to /tmp/pstranscribe.log
 func diagLog(_ msg: String) {
     #if DEBUG
     let line = "\(Date()): \(msg)\n"
-    let path = "/tmp/tome.log"
+    let path = "/tmp/pstranscribe.log"
     if let fh = FileHandle(forWritingAtPath: path) {
         fh.seekToEndOfFile()
         fh.write(line.data(using: .utf8)!)

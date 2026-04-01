@@ -3,7 +3,7 @@ import AppKit
 import Sparkle
 
 @main
-struct TomeApp: App {
+struct PSTranscribeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var settings = AppSettings()
     private let updaterController = AppUpdaterController()
@@ -26,10 +26,10 @@ struct TomeApp: App {
             SettingsView(settings: settings, updater: updaterController.updater)
         }
         MenuBarExtra {
-            Text("Tome")
+            Text("PS Transcribe")
                 .font(.headline)
             Divider()
-            Button("Quit Tome") {
+            Button("Quit PS Transcribe") {
                 NSApplication.shared.terminate(nil)
             }
             .keyboardShortcut("q")

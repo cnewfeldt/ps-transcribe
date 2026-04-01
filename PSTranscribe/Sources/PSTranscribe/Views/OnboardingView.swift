@@ -7,7 +7,7 @@ struct OnboardingView: View {
     private let steps: [(icon: String, title: String, body: String)] = [
         (
             "waveform.circle",
-            "Welcome to Tome",
+            "Welcome to PS Transcribe",
             "A lightweight meeting transcription tool that captures your conversations — all running locally on your Mac. No API keys, no cloud services."
         ),
         (
