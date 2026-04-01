@@ -45,6 +45,18 @@ Users can record conversations and voice memos with accurate, private, on-device
 - Multi-language simultaneous transcription -- single locale per session
 - Complex onboarding wizard -- minimal setup, user owns troubleshooting
 
+## Current Milestone: v1.0 PS Transcribe
+
+**Goal:** Rebrand from Tome, harden security/stability, add session management and recording UX, integrate local LLM via Ollama for live analysis.
+
+**Target features:**
+- Rebrand to "PS Transcribe" across entire codebase
+- Security fixes for all 12 SCAN findings
+- Stability -- crash recovery, diarization fix, error handling
+- Session library with grid view, naming, lifecycle
+- Three-state mic button + model onboarding
+- Ollama integration + live LLM analysis panel
+
 ## Context
 
 - Existing brownfield codebase: Swift 6.2, SwiftUI, macOS 26.0+
@@ -93,4 +105,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-31 after initialization*
+*Last updated: 2026-04-01 after milestone v1.0 start*
