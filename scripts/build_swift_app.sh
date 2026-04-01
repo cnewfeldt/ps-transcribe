@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Build signed macOS .app for Tome (Swift)
+# Build signed macOS .app for PS Transcribe (Swift)
 # Usage:
 #   ./scripts/build_swift_app.sh
 #
@@ -15,16 +15,16 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 ROOT_DIR="$(pwd)"
-SWIFT_DIR="$ROOT_DIR/Tome"
-APP_NAME="Tome"
-BUNDLE_ID="io.gremble.tome"
+SWIFT_DIR="$ROOT_DIR/PSTranscribe"
+APP_NAME="PS Transcribe"
+BUNDLE_ID="com.pstranscribe.app"
 
 echo "=== Building $APP_NAME (Swift) ==="
 
 # Build release binary
 cd "$SWIFT_DIR"
 swift build -c release 2>&1
-BINARY_PATH=".build/release/Tome"
+BINARY_PATH=".build/release/PSTranscribe"
 
 if [[ ! -f "$BINARY_PATH" ]]; then
   echo "Build failed: binary not found at $BINARY_PATH"
@@ -41,21 +41,21 @@ mkdir -p "$APP_DIR/Contents/Resources"
 mkdir -p "$APP_DIR/Contents/Frameworks"
 
 # Copy binary
-cp "$BINARY_PATH" "$APP_DIR/Contents/MacOS/Tome"
+cp "$BINARY_PATH" "$APP_DIR/Contents/MacOS/PSTranscribe"
 
 # Make the SwiftPM-built executable behave like a normal app bundle by
 # teaching dyld to search the app's embedded Frameworks directory.
-APP_BINARY="$APP_DIR/Contents/MacOS/Tome"
+APP_BINARY="$APP_DIR/Contents/MacOS/PSTranscribe"
 if ! otool -l "$APP_BINARY" | grep -Fq "@executable_path/../Frameworks"; then
   install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP_BINARY"
   echo "Added app Frameworks rpath to executable"
 fi
 
 # Copy Info.plist
-cp "$SWIFT_DIR/Sources/Tome/Info.plist" "$APP_DIR/Contents/Info.plist"
+cp "$SWIFT_DIR/Sources/PSTranscribe/Info.plist" "$APP_DIR/Contents/Info.plist"
 
 # Copy app icon
-ICON_PATH="$SWIFT_DIR/Sources/Tome/Assets/AppIcon.icns"
+ICON_PATH="$SWIFT_DIR/Sources/PSTranscribe/Assets/AppIcon.icns"
 if [[ -f "$ICON_PATH" ]]; then
   cp "$ICON_PATH" "$APP_DIR/Contents/Resources/AppIcon.icns"
   echo "App icon copied"
@@ -86,7 +86,7 @@ fi
 
 # Sign the app
 if [[ -n "${CODESIGN_IDENTITY:-}" ]]; then
-  ENTITLEMENTS="$SWIFT_DIR/Sources/Tome/Tome.entitlements"
+  ENTITLEMENTS="$SWIFT_DIR/Sources/PSTranscribe/PSTranscribe.entitlements"
   echo "Signing with: $CODESIGN_IDENTITY"
 
   # Sign Sparkle components inside-out (innermost first)
@@ -135,6 +135,6 @@ fi
 
 # Install to /Applications
 cp -R "$APP_DIR" /Applications/
-echo "Installed to /Applications/$APP_NAME.app"
+echo "Installed to /Applications/PS Transcribe.app"
 
 echo "=== Build complete ==="
