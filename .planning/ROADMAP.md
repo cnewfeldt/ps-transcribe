@@ -66,10 +66,10 @@ Plans:
   3. Stopping a recording saves it to the library and clears the transcript view -- the next recording start creates a fresh session with no risk of overwriting the previous one
   4. Session library persists across app restarts -- no recordings disappear after quitting and relaunching
   5. User can name a recording before starting, rename it mid-session, or rename it later from the library -- unnamed recordings get a date-based filename automatically, and renaming updates the file on disk
-**Plans:** 4 plans
+**Plans:** 1/4 plans executed
 
 Plans:
-- [ ] 03-01-PLAN.md -- Data models, LibraryStore actor, TranscriptParser, test infrastructure
+- [x] 03-01-PLAN.md -- Data models, LibraryStore actor, TranscriptParser, test infrastructure
 - [ ] 03-02-PLAN.md -- UI components (LibrarySidebar, LibraryEntryRow, RecordingNameField) and ContentView NavigationSplitView restructure
 - [ ] 03-03-PLAN.md -- Session lifecycle wiring, name flow, inline rename, Obsidian settings
 - [ ] 03-04-PLAN.md -- End-to-end manual verification of all session library features
@@ -117,7 +117,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 |-------|----------------|--------|-----------|
 | 1. Rebrand | 1/3 | In Progress|  |
 | 2. Security + Stability | 5/5 | Complete   | 2026-04-03 |
-| 3. Session Management + Recording Naming | 0/4 | Planned | - |
+| 3. Session Management + Recording Naming | 1/4 | In Progress|  |
 | 4. Mic Button + Model Onboarding | 0/TBD | Not started | - |
 | 5. Ollama Integration | 0/TBD | Not started | - |
 | 6. Live LLM Analysis | 0/TBD | Not started | - |
