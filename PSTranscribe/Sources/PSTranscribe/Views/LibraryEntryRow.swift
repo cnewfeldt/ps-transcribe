@@ -40,7 +40,7 @@ struct LibraryEntryRow: View {
 
                 // Center content
                 VStack(alignment: .leading, spacing: 4) {
-                    // Recording name (editable)
+                    // Recording name (editable via pencil icon or double-click)
                     if isEditing {
                         TextField(entry.displayName, text: $editText)
                             .font(.system(size: 12))
@@ -53,14 +53,25 @@ struct LibraryEntryRow: View {
                                 isEditing = false
                             }
                     } else {
-                        Text(entry.displayName)
-                            .font(.system(size: 12))
-                            .foregroundStyle(Color.fg1)
-                            .lineLimit(1)
-                            .onTapGesture {
-                                editText = entry.name ?? ""
-                                isEditing = true
+                        HStack(spacing: 4) {
+                            Text(entry.displayName)
+                                .font(.system(size: 12))
+                                .foregroundStyle(Color.fg1)
+                                .lineLimit(1)
+
+                            if isHovered {
+                                Button {
+                                    editText = entry.name ?? ""
+                                    isEditing = true
+                                } label: {
+                                    Image(systemName: "pencil")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(Color.fg2)
+                                }
+                                .buttonStyle(.plain)
+                                .help("Rename")
                             }
+                        }
                     }
 
                     // Metadata line

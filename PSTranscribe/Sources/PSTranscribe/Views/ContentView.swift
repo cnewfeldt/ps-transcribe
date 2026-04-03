@@ -99,6 +99,7 @@ struct ContentView: View {
                 silenceSeconds: silenceSeconds,
                 statusMessage: transcriptionEngine?.assetStatus,
                 errorMessage: transcriptionEngine?.lastError,
+                modelsReady: transcriptionEngine?.modelsReady ?? false,
                 onStartCallCapture: { startSession(type: .callCapture) },
                 onStartVoiceMemo: { startSession(type: .voiceMemo) },
                 onStop: stopSession
@@ -125,6 +126,8 @@ struct ContentView: View {
             if transcriptionEngine == nil {
                 transcriptionEngine = TranscriptionEngine(transcriptStore: transcriptStore)
             }
+            // Pre-download models at launch so recording can start immediately
+            await transcriptionEngine?.prepareModels()
             // Scan for sessions left incomplete by a prior crash (STAB-01)
             let incomplete = await sessionStore.scanIncompleteCheckpoints()
             for checkpoint in incomplete {
@@ -228,7 +231,16 @@ struct ContentView: View {
                 loadedUtterances = []
                 return
             }
+            // Skip loading if filePath is empty (entry still being recorded)
+            guard !entry.filePath.isEmpty else {
+                loadedUtterances = []
+                return
+            }
             let url = URL(fileURLWithPath: entry.filePath)
+            guard FileManager.default.fileExists(atPath: entry.filePath) else {
+                loadedUtterances = []
+                return
+            }
             do {
                 loadedUtterances = try parseTranscript(at: url)
             } catch {
@@ -449,6 +461,16 @@ struct ContentView: View {
                 }
                 refreshLibrary()
                 selectedEntryID = entryID
+
+                // Load transcript now that filePath is populated
+                if !capturedPath.isEmpty,
+                   FileManager.default.fileExists(atPath: capturedPath) {
+                    do {
+                        loadedUtterances = try parseTranscript(at: URL(fileURLWithPath: capturedPath))
+                    } catch {
+                        loadedUtterances = []
+                    }
+                }
             }
 
             // Show inline save confirmation

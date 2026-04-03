@@ -6,6 +6,7 @@ struct RecordingNameField: View {
     let sessionElapsed: Int
     let isRecording: Bool
     let savedConfirmation: Bool
+    @FocusState private var isNameFieldFocused: Bool
 
     var body: some View {
         HStack(spacing: 0) {
@@ -15,6 +16,8 @@ struct RecordingNameField: View {
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(Color.fg1)
                     .textFieldStyle(.plain)
+                    .focused($isNameFieldFocused)
+                    .onAppear { isNameFieldFocused = true }
             } else {
                 Text("PS TRANSCRIBE")
                     .font(.system(size: 14, weight: .heavy))

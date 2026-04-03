@@ -21,6 +21,7 @@ struct ControlBar: View {
     let silenceSeconds: Int
     let statusMessage: String?
     let errorMessage: String?
+    let modelsReady: Bool
     let onStartCallCapture: () -> Void
     let onStartVoiceMemo: () -> Void
     let onStop: () -> Void
@@ -110,6 +111,8 @@ struct ControlBar: View {
                     }
                     .buttonStyle(.plain)
                     .keyboardShortcut("r", modifiers: .command)
+                    .disabled(!modelsReady)
+                    .opacity(modelsReady ? 1.0 : 0.4)
 
                     Button(action: onStartVoiceMemo) {
                         HStack(spacing: 6) {
@@ -133,6 +136,24 @@ struct ControlBar: View {
                     }
                     .buttonStyle(.plain)
                     .keyboardShortcut("r", modifiers: [.command, .shift])
+                    .disabled(!modelsReady)
+                    .opacity(modelsReady ? 1.0 : 0.4)
+
+                    // Settings gear
+                    Button {
+                        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                    } label: {
+                        Image(systemName: "gearshape")
+                            .font(.system(size: 14))
+                            .foregroundStyle(Color.fg2)
+                            .frame(width: 36, height: 36)
+                            .background(Color.bg1.opacity(0.7))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.06)))
+                    }
+                    .buttonStyle(.plain)
+                    .keyboardShortcut(",", modifiers: .command)
+                    .help("Settings (⌘,)")
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
