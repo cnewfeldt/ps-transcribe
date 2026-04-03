@@ -21,7 +21,7 @@ struct PSTranscribeApp: App {
                 }
         }
         .windowStyle(.hiddenTitleBar)
-        .defaultSize(width: 320, height: 560)
+        .defaultSize(width: 720, height: 500)
         .commands {
             CommandGroup(after: .appInfo) {
                 CheckForUpdatesView(updater: updaterController.updater)

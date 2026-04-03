@@ -28,37 +28,54 @@ struct ContentView: View {
     @State private var activeSessionType: SessionType?
     @State private var detectedAppName: String?
     @State private var silenceSeconds: Int = 0
-    @State private var savedFileURL: URL?
-    @State private var bannerDismissTask: Task<Void, Never>?
     @State private var sessionElapsed: Int = 0
+
+    // Library state
+    @State private var libraryStore = LibraryStore()
+    @State private var libraryEntries: [LibraryEntry] = []
+    @State private var selectedEntryID: UUID?
+    @State private var activeLibraryEntryID: UUID?
+    @State private var sessionName: String = ""
+    @State private var loadedUtterances: [Utterance] = []
+    @State private var savedConfirmation: Bool = false
 
     var body: some View {
         VStack(spacing: 0) {
-            // Glass top bar
-            topBar
+            // Top bar spans full width
+            RecordingNameField(
+                sessionName: $sessionName,
+                isSessionActive: activeSessionType != nil,
+                sessionElapsed: sessionElapsed,
+                isRecording: isRunning,
+                savedConfirmation: savedConfirmation
+            )
 
-            // Main content area
-            if !isRunning && transcriptStore.utterances.isEmpty
-                && transcriptStore.volatileYouText.isEmpty
-                && transcriptStore.volatileThemText.isEmpty {
-                emptyState
-            } else {
-                TranscriptView(
-                    utterances: transcriptStore.utterances,
-                    volatileYouText: transcriptStore.volatileYouText,
-                    volatileThemText: transcriptStore.volatileThemText
+            // NavigationSplitView for sidebar + detail
+            NavigationSplitView {
+                LibrarySidebar(
+                    entries: libraryEntries,
+                    selectedID: $selectedEntryID,
+                    activeEntryID: activeLibraryEntryID,
+                    obsidianVaultName: settings.obsidianVaultName,
+                    vaultRootPath: currentVaultRootPath,
+                    onRename: { id, newName in
+                        let capturedID = id
+                        let capturedName = newName
+                        Task {
+                            await libraryStore.updateEntry(id: capturedID) { @Sendable entry in
+                                entry.name = capturedName
+                            }
+                            refreshLibrary()
+                        }
+                    }
                 )
+                .navigationSplitViewColumnWidth(min: 180, ideal: 220, max: 300)
+            } detail: {
+                detailView
             }
+            .navigationSplitViewStyle(.balanced)
 
-            // Save banner
-            if let url = savedFileURL, activeSessionType == nil {
-                saveBanner(url: url)
-            }
-
-            // Waveform ribbon
-            WaveformView(isRecording: isRunning, audioLevel: audioLevel)
-
-            // Glass control bar
+            // ControlBar spans full width
             ControlBar(
                 isRecording: isRunning,
                 activeSessionType: activeSessionType,
@@ -72,7 +89,7 @@ struct ContentView: View {
                 onStop: stopSession
             )
         }
-        .frame(minWidth: 280, maxWidth: 360, minHeight: 400)
+        .frame(minWidth: 640, minHeight: 400)
         .background(Color.bg0)
         .preferredColorScheme(.dark)
         .overlay {
@@ -95,9 +112,26 @@ struct ContentView: View {
             }
             // Scan for sessions left incomplete by a prior crash (STAB-01)
             let incomplete = await sessionStore.scanIncompleteCheckpoints()
-            if !incomplete.isEmpty {
-                transcriptionEngine?.lastError = "\(incomplete.count) incomplete session(s) recovered"
+            for checkpoint in incomplete {
+                let existsInLibrary = await libraryStore.entries.contains {
+                    $0.filePath == checkpoint.transcriptPath
+                }
+                if !existsInLibrary {
+                    let entry = LibraryEntry(
+                        id: UUID(),
+                        name: nil,
+                        sessionType: .callCapture,
+                        startDate: checkpoint.sessionStartTime,
+                        duration: 0,
+                        filePath: checkpoint.transcriptPath,
+                        sourceApp: "Recovered",
+                        isFinalized: false,
+                        firstLinePreview: nil
+                    )
+                    await libraryStore.addEntry(entry)
+                }
             }
+            refreshLibrary()
         }
         // Audio level polling
         .task {
@@ -150,105 +184,82 @@ struct ContentView: View {
         .onChange(of: transcriptStore.utterances.count) {
             handleNewUtterance()
         }
-    }
-
-    // MARK: - Top Bar
-
-    private var topBar: some View {
-        HStack(spacing: 0) {
-            Text("TOME")
-                .font(.system(size: 14, weight: .heavy))
-                .tracking(3)
-                .foregroundStyle(Color.fg1)
-
-            Spacer()
-
-            HStack(spacing: 10) {
-                Text(topBarStatus)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(isRunning ? Color.fg1 : Color.fg2)
-
-                if isRunning {
-                    PulsingDot(size: 6)
-                } else {
-                    Circle()
-                        .fill(Color.fg2)
-                        .frame(width: 6, height: 6)
-                        .opacity(0.5)
-                }
+        .onChange(of: selectedEntryID) { _, newID in
+            guard let newID,
+                  let entry = libraryEntries.first(where: { $0.id == newID }),
+                  activeSessionType == nil else {
+                loadedUtterances = []
+                return
+            }
+            let url = URL(fileURLWithPath: entry.filePath)
+            do {
+                loadedUtterances = try parseTranscript(at: url)
+            } catch {
+                loadedUtterances = []
+                transcriptionEngine?.lastError = "Couldn't load transcript. The file may be corrupted."
             }
         }
-        .padding(.horizontal, 16)
-        .frame(height: 44)
-        .background(Color.bg1.opacity(0.45))
-        .overlay(Divider(), alignment: .bottom)
     }
 
-    private var topBarStatus: String {
-        if isRunning {
-            return formatTime(sessionElapsed)
-        } else if savedFileURL != nil {
-            return "\(formatTime(sessionElapsed)) · Done"
-        } else {
-            return "Ready"
-        }
-    }
+    // MARK: - Detail View
 
-    // MARK: - Empty State
-
-    private var emptyState: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "waveform.circle")
-                .font(.system(size: 28))
-                .foregroundStyle(Color.fg3)
-            Text("No active session")
-                .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(Color.fg2)
-            Text("Start a call capture or voice memo\nto begin transcribing.")
-                .font(.system(size: 11))
-                .foregroundStyle(Color.fg3)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    // MARK: - Save Banner
-
-    private func saveBanner(url: URL) -> some View {
-        HStack(spacing: 8) {
-            Circle()
-                .fill(Color.accent1.opacity(0.15))
-                .frame(width: 16, height: 16)
-                .overlay(
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 8, weight: .bold))
-                        .foregroundStyle(Color.accent1)
+    @ViewBuilder
+    private var detailView: some View {
+        if activeSessionType != nil || isRunning {
+            // Live recording view
+            VStack(spacing: 0) {
+                TranscriptView(
+                    utterances: transcriptStore.utterances,
+                    volatileYouText: transcriptStore.volatileYouText,
+                    volatileThemText: transcriptStore.volatileThemText
                 )
-            Text("Saved to \(url.lastPathComponent)")
-                .font(.system(size: 11, weight: .bold))
-                .foregroundStyle(Color.fg1)
-                .lineLimit(1)
-                .truncationMode(.middle)
-            Spacer()
-            Button("Show in Finder") {
-                NSWorkspace.shared.selectFile(url.path, inFileViewerRootedAtPath: url.deletingLastPathComponent().path)
-                savedFileURL = nil
+                WaveformView(isRecording: isRunning, audioLevel: audioLevel)
             }
-            .font(.system(size: 11))
-            .buttonStyle(.plain)
-            .foregroundStyle(Color.accent1)
+        } else if let selectedID = selectedEntryID,
+                  let _ = libraryEntries.first(where: { $0.id == selectedID }) {
+            // Past transcript loaded (per D-10)
+            VStack(spacing: 0) {
+                TranscriptView(
+                    utterances: loadedUtterances,
+                    volatileYouText: "",
+                    volatileThemText: ""
+                )
+            }
+        } else {
+            // Empty detail state
+            VStack(spacing: 8) {
+                Image(systemName: "doc.text")
+                    .font(.system(size: 24))
+                    .foregroundStyle(Color.fg3)
+                Text("Select a recording")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color.fg2)
+                Text("Choose a session from the sidebar")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.fg3)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .background(Color.bg1.opacity(0.7))
-        .overlay(Divider(), alignment: .top)
-        .overlay(Divider(), alignment: .bottom)
     }
 
     // MARK: - Helpers
 
     private var isRunning: Bool {
         transcriptionEngine?.isRunning ?? false
+    }
+
+    private var currentVaultRootPath: String {
+        if let entry = libraryEntries.first(where: { $0.id == selectedEntryID }) {
+            return entry.sessionType == .callCapture
+                ? settings.vaultMeetingsPath : settings.vaultVoicePath
+        }
+        return settings.vaultMeetingsPath
+    }
+
+    private func refreshLibrary() {
+        Task {
+            libraryEntries = await libraryStore.entries
+        }
     }
 
     private func formatTime(_ s: Int) -> String {
@@ -261,8 +272,8 @@ struct ContentView: View {
         transcriptStore.clear()
         silenceSeconds = 0
         sessionElapsed = 0
-        savedFileURL = nil
-        bannerDismissTask?.cancel()
+        sessionName = ""
+        savedConfirmation = false
 
         // Determine output folder and app bundle ID based on session type
         let outputPath: String
@@ -287,6 +298,8 @@ struct ContentView: View {
             sourceApp = "Voice Memo"
         }
 
+        let startDate = Date()
+
         Task {
             transcriptionEngine?.lastError = nil
             do {
@@ -309,8 +322,29 @@ struct ContentView: View {
                 transcriptionEngine?.lastError = error.localizedDescription
                 return
             }
+
+            // Add library entry for this session (filePath updated at session stop)
+            let entry = LibraryEntry(
+                id: UUID(),
+                name: nil,
+                sessionType: type,
+                startDate: startDate,
+                duration: 0,
+                filePath: "",
+                sourceApp: sourceApp,
+                isFinalized: false,
+                firstLinePreview: nil
+            )
+            await libraryStore.addEntry(entry)
+            let newEntryID = entry.id
+
+            activeLibraryEntryID = newEntryID
             activeSessionType = type
             detectedAppName = resolvedAppName
+
+            refreshLibrary()
+            selectedEntryID = newEntryID
+
             if type == .callCapture {
                 await transcriptionEngine?.start(
                     locale: settings.locale,
@@ -328,9 +362,11 @@ struct ContentView: View {
 
     private func stopSession() {
         let wasCallCapture = activeSessionType == .callCapture
+        let stoppedEntryID = activeLibraryEntryID
         activeSessionType = nil
         detectedAppName = nil
         silenceSeconds = 0
+        activeLibraryEntryID = nil
 
         Task {
             await transcriptionEngine?.stop()
@@ -353,13 +389,36 @@ struct ContentView: View {
             let savedPath = await transcriptLogger.finalizeFrontmatter()
             transcriptionEngine?.assetStatus = "Ready"
 
-            if activeSessionType == nil, let savedPath {
-                savedFileURL = savedPath
-                bannerDismissTask?.cancel()
-                bannerDismissTask = Task {
-                    try? await Task.sleep(for: .seconds(8))
-                    if !Task.isCancelled { savedFileURL = nil }
+            // Update library entry with final duration and finalized state
+            let finalDuration = TimeInterval(sessionElapsed)
+            let finalPath = savedPath?.path ?? ""
+            let firstLine = transcriptStore.utterances.first?.text
+
+            if let entryID = stoppedEntryID {
+                let capturedDuration = finalDuration
+                let capturedPath = finalPath
+                let capturedFirstLine = firstLine
+                let capturedName = sessionName.trimmingCharacters(in: .whitespacesAndNewlines)
+                await libraryStore.updateEntry(id: entryID) { @Sendable entry in
+                    entry.duration = capturedDuration
+                    if !capturedPath.isEmpty {
+                        entry.filePath = capturedPath
+                    }
+                    entry.isFinalized = true
+                    entry.firstLinePreview = capturedFirstLine
+                    if !capturedName.isEmpty {
+                        entry.name = capturedName
+                    }
                 }
+                refreshLibrary()
+                selectedEntryID = entryID
+            }
+
+            // Show inline save confirmation
+            savedConfirmation = true
+            try? await Task.sleep(for: .milliseconds(2500))
+            withAnimation(.easeOut(duration: 0.5)) {
+                savedConfirmation = false
             }
         }
     }
