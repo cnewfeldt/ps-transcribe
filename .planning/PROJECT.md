@@ -24,6 +24,10 @@ Users can record conversations and voice memos with accurate, private, on-device
 ### Active
 
 - [x] Rebrand from "Tome" to "PS Transcribe" across entire codebase -- Validated in Phase 1: Rebrand (2026-04-02)
+- [x] Security fixes (all 12 SCAN findings from SECURITY-SCAN.md) -- Validated in Phase 2: Security + Stability (2026-04-03)
+- [x] Crash recovery for incomplete sessions -- Validated in Phase 2: Security + Stability (2026-04-03)
+- [x] Diarization timestamp bug fix (sessions crossing midnight) -- Validated in Phase 2: Security + Stability (2026-04-03)
+- [x] Error suppression cleanup (replace silent try? with proper error handling) -- Validated in Phase 2: Security + Stability (2026-04-03)
 - [ ] Session library (grid view of past recordings with file paths, missing-file detection, Obsidian deep links)
 - [ ] Proper session lifecycle (stop → clear → save to library, no silent overwrite)
 - [ ] Recording naming (optional at any time -- before/during/after, date-based fallback)
@@ -31,10 +35,6 @@ Users can record conversations and voice memos with accurate, private, on-device
 - [ ] Simple model onboarding (download prompt on first launch, progress indicator, success/fail)
 - [ ] Ollama integration (detect/configure local Ollama, model browser/download)
 - [ ] Live LLM analysis panel (summary, action items, key topics alongside transcript during recording)
-- [ ] Security fixes (all 12 SCAN findings from SECURITY-SCAN.md)
-- [ ] Crash recovery for incomplete sessions
-- [ ] Diarization timestamp bug fix (sessions crossing midnight)
-- [ ] Error suppression cleanup (replace silent try? with proper error handling)
 
 ### Out of Scope
 
@@ -51,8 +51,8 @@ Users can record conversations and voice memos with accurate, private, on-device
 
 **Target features:**
 - ~~Rebrand to "PS Transcribe" across entire codebase~~ (Phase 1 complete)
-- Security fixes for all 12 SCAN findings
-- Stability -- crash recovery, diarization fix, error handling
+- ~~Security fixes for all 12 SCAN findings~~ (Phase 2 complete)
+- ~~Stability -- crash recovery, diarization fix, error handling~~ (Phase 2 complete)
 - Session library with grid view, naming, lifecycle
 - Three-state mic button + model onboarding
 - Ollama integration + live LLM analysis panel
