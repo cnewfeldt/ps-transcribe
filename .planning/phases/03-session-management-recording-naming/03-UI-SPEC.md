@@ -61,7 +61,7 @@ All type uses SF Pro via `.font(.system(size:weight:))`. Existing sizes extracte
 
 | Role | Size | Weight | Line Height | Usage |
 |------|------|--------|-------------|-------|
-| Body | 12px | regular (400) | 1.4 (system default) | Transcript utterance text, sidebar first-line preview |
+| Body | 12px | regular (400) | 1.4 (system default) | Transcript utterance text, sidebar first-line preview, sidebar recording name |
 | Label | 11px | medium (500) | 1.3 | Metadata (date, duration, source tag), settings form labels |
 | Caption | 10px | bold (600) | 1.2 | Speaker label ("YOU", "THEM") with uppercase + tracking 0.8; missing badge tooltip |
 | Brand | 14px | heavy (900) | 1.0 | "PS TRANSCRIBE" brand label in top bar (idle state) |
@@ -70,10 +70,13 @@ Name field (top bar active state): 14px, medium (500), plain style -- matches br
 to avoid layout shift when toggling between brand label and name field.
 
 Two weights actively used in Phase 3 new UI:
-- **regular (400):** body text, preview text, metadata values
+- **regular (400):** body text, preview text, metadata values, sidebar recording names
 - **medium (500):** name field, metadata labels, interactive labels
 
 Heavy (900) is used only for the brand label -- not for new elements.
+
+**Type scale is four sizes: 10, 11, 12, 14.** No exceptions are permitted. Sidebar recording
+names use 12px (Body) -- the 13px size that appeared in earlier drafts is removed.
 
 ---
 
@@ -114,6 +117,11 @@ All tokens defined in `TranscriptView.swift` extension. Phase 3 adds NO new colo
 ## Layout Architecture
 
 This phase introduces a structural change from single-column VStack to NavigationSplitView.
+
+**Primary visual anchor:** The top bar name field / brand label -- the only 14px element in the
+interface. When in brand mode it reads "PS TRANSCRIBE"; when in recording mode it becomes the
+editable session name. This is the single largest text element and draws the eye first on every
+state of the window.
 
 ### Window
 
@@ -217,8 +225,7 @@ Each row (72px height, 16px horizontal padding) contains:
 - Incomplete/recovered session: `exclamationmark.circle` 14pt `Color.fg2`
 
 **Recording name:**
-- Display: `Text(entry.displayName)` -- 13px medium `Color.fg1` (13px not in main type scale --
-  justified exception for sidebar list density; equivalent to Notes.app sidebar)
+- Display: `Text(entry.displayName)` -- 12px regular `Color.fg1`
 - Click-to-edit: tap name text -> TextField appears, `onSubmit` commits, `onExitCommand` cancels
 - TextField placeholder: entry's current displayName (so user sees what they're editing)
 - Commit triggers: Enter key OR focus loss
@@ -281,7 +288,7 @@ Shown when `LibraryStore.entries.isEmpty`:
 
 ```
 [waveform.circle icon -- 28pt, Color.fg3]
-"No recordings yet"                          [13px bold, Color.fg2]
+"No recordings yet"                          [12px bold, Color.fg2]
 "Start a call capture or voice memo          [11px regular, Color.fg3, centered]
  to begin transcribing."
 ```
