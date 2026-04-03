@@ -42,10 +42,10 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Session Management
 
-- [ ] **SESS-01**: User sees a library/grid view of all past recordings
+- [x] **SESS-01**: User sees a library/grid view of all past recordings
 - [x] **SESS-02**: Each library entry shows recording name, date, duration, and file status
 - [x] **SESS-03**: Clicking a library entry loads the transcript content in the app
-- [ ] **SESS-04**: Each library entry has a clickable file path to the transcript on disk
+- [x] **SESS-04**: Each library entry has a clickable file path to the transcript on disk
 - [x] **SESS-05**: Library entries show "missing" indicator if transcript file has been moved or deleted
 - [x] **SESS-06**: Each library entry has an Obsidian deep link that opens the transcript in Obsidian
 - [ ] **SESS-07**: Stopping a recording clears the transcript view and saves the session to the library
@@ -54,8 +54,8 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Recording Naming
 
-- [ ] **NAME-01**: User can set a recording name before starting a recording
-- [ ] **NAME-02**: User can rename a recording during an active session
+- [x] **NAME-01**: User can set a recording name before starting a recording
+- [x] **NAME-02**: User can rename a recording during an active session
 - [ ] **NAME-03**: User can rename a recording after it has been saved (from library)
 - [x] **NAME-04**: Unnamed recordings fall back to date-based filename
 - [ ] **NAME-05**: File on disk renames to match when user changes the recording name
@@ -153,17 +153,17 @@ Deferred to future milestone. Tracked but not in current roadmap.
 | STAB-02 | Phase 2 | Complete |
 | STAB-03 | Phase 2 | Complete |
 | STAB-04 | Phase 2 | Complete |
-| SESS-01 | Phase 3 | Pending |
+| SESS-01 | Phase 3 | Complete |
 | SESS-02 | Phase 3 | Complete |
 | SESS-03 | Phase 3 | Complete |
-| SESS-04 | Phase 3 | Pending |
+| SESS-04 | Phase 3 | Complete |
 | SESS-05 | Phase 3 | Complete |
 | SESS-06 | Phase 3 | Complete |
 | SESS-07 | Phase 3 | Pending |
 | SESS-08 | Phase 3 | Pending |
 | SESS-09 | Phase 3 | Complete |
-| NAME-01 | Phase 3 | Pending |
-| NAME-02 | Phase 3 | Pending |
+| NAME-01 | Phase 3 | Complete |
+| NAME-02 | Phase 3 | Complete |
 | NAME-03 | Phase 3 | Pending |
 | NAME-04 | Phase 3 | Complete |
 | NAME-05 | Phase 3 | Pending |
