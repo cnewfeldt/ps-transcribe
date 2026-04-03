@@ -12,7 +12,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
 
       - name: Select Xcode 26
         run: |
@@ -44,7 +44,7 @@ jobs:
           MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
         run: |
           CERT_FILE=$(mktemp /tmp/cert.XXXXXX.p12)
-          KEYCHAIN_FILE="/tmp/build-$$-$(date +%s).keychain-db"
+          KEYCHAIN_FILE=$(mktemp /tmp/keychain.XXXXXX.keychain-db)
           KEYCHAIN_PWD=$(openssl rand -base64 32)
 
           echo "$MACOS_CERTIFICATE" | base64 --decode > "$CERT_FILE"
@@ -87,11 +87,13 @@ jobs:
         if: always()
         run: |
           if [[ -n "${KEYCHAIN_FILE:-}" ]]; then
-            security delete-keychain "$KEYCHAIN_FILE" 2>/dev/null || true
+            if ! security delete-keychain "$KEYCHAIN_FILE"; then
+              echo "Warning: failed to delete keychain $KEYCHAIN_FILE -- may need manual cleanup" >&2
+            fi
           fi
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: PS-Transcribe-dmg
           path: dist/PS Transcribe.dmg
@@ -114,7 +116,7 @@ jobs:
           DMG_PATH="dist/PS Transcribe.dmg"
 
           # Extract sign_update from Sparkle build artifacts
-          SIGN_UPDATE=$(find PSTranscribe/.build/artifacts/sparkle -name "sign_update" -type f 2>/dev/null | head -1)
+          SIGN_UPDATE=$(find PSTranscribe/.build/artifacts/sparkle -name "sign_update" -type f | head -1)
           if [[ -z "$SIGN_UPDATE" ]]; then
             echo "Error: sign_update not found in Sparkle artifacts"
             exit 1
@@ -141,7 +143,7 @@ jobs:
 
           # Clone gh-pages branch
           # TODO: Replace OWNER with actual GitHub org/user when repo is created
-          git clone --branch gh-pages --single-branch "https://x-access-token:${GH_TOKEN}@github.com/OWNER/ps-transcribe.git" /tmp/gh-pages
+          gh repo clone OWNER/ps-transcribe /tmp/gh-pages -- --branch gh-pages --single-branch
 
           # Generate appcast.xml
           cat > /tmp/gh-pages/appcast.xml <<APPCAST_EOF
