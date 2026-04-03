@@ -328,7 +328,11 @@ struct ContentView: View {
                 transcriptionEngine?.assetStatus = "Identifying speakers..."
                 if let segments = await transcriptionEngine?.runPostSessionDiarization() {
                     transcriptionEngine?.assetStatus = "Rewriting transcript..."
-                    await transcriptLogger.rewriteWithDiarization(segments: segments)
+                    do {
+                        try await transcriptLogger.rewriteWithDiarization(segments: segments)
+                    } catch {
+                        transcriptionEngine?.lastError = error.localizedDescription
+                    }
                 }
             }
 

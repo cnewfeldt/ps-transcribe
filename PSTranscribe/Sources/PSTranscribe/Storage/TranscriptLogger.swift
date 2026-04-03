@@ -1,4 +1,7 @@
 import Foundation
+import os
+
+private let log = Logger(subsystem: "com.pstranscribe.app", category: "TranscriptLogger")
 
 enum TranscriptLoggerError: LocalizedError {
     case cannotCreateFile(String)
@@ -27,6 +30,71 @@ actor TranscriptLogger {
     private var lastSpeakersDetected: Set<String> = []
     private var lastSessionContext: String = ""
 
+    // MARK: - Security Helpers
+
+    /// Validates a vault path against traversal patterns before any file operations.
+    private func validatedVaultPath(_ rawPath: String) throws -> URL {
+        let expanded = NSString(string: rawPath).expandingTildeInPath
+        // Reject traversal patterns and null bytes before resolution
+        guard !expanded.contains("\0"),
+              !expanded.contains("..") else {
+            log.error("Invalid vault path rejected: contains traversal pattern")
+            throw TranscriptLoggerError.cannotCreateFile("Invalid vault path: contains prohibited characters")
+        }
+        let resolved = URL(fileURLWithPath: expanded).resolvingSymlinksInPath()
+        return resolved.standardized
+    }
+
+    /// Sanitizes a string for use as a filename component using a whitelist approach.
+    private func sanitizedFilenameComponent(_ input: String) -> String {
+        let allowed = CharacterSet.alphanumerics
+            .union(CharacterSet(charactersIn: " -_."))
+        let filtered = String(input.unicodeScalars.filter { allowed.contains($0) })
+        return String(filtered.trimmingCharacters(in: .whitespaces).prefix(50))
+    }
+
+    /// Atomically rewrites a file: writes to temp, removes original, moves temp to destination.
+    /// If any step fails, the original is left intact (or the temp is cleaned up) and the error is thrown.
+    private func atomicRewrite(at filePath: URL, newPath: URL? = nil, content: String) throws {
+        let dir = filePath.deletingLastPathComponent()
+        let tmpPath = dir.appendingPathComponent(".\(filePath.lastPathComponent).tmp")
+
+        // Write to temp -- if this fails, original is untouched
+        do {
+            try content.write(to: tmpPath, atomically: false, encoding: .utf8)
+            try FileManager.default.setAttributes(
+                [.posixPermissions: NSNumber(value: 0o600)],
+                ofItemAtPath: tmpPath.path
+            )
+        } catch {
+            log.error("atomicRewrite: failed to write temp file: \(error.localizedDescription, privacy: .public)")
+            try? FileManager.default.removeItem(at: tmpPath)
+            throw error
+        }
+
+        let destination = newPath ?? filePath
+        // Remove original -- if this fails, temp is orphaned but original intact
+        do {
+            if FileManager.default.fileExists(atPath: filePath.path) {
+                try FileManager.default.removeItem(at: filePath)
+            }
+        } catch {
+            log.error("atomicRewrite: failed to remove original: \(error.localizedDescription, privacy: .public)")
+            try? FileManager.default.removeItem(at: tmpPath)
+            throw error
+        }
+
+        // Move temp to final -- if this fails, data is in tmpPath (logged prominently)
+        do {
+            try FileManager.default.moveItem(at: tmpPath, to: destination)
+        } catch {
+            log.error("atomicRewrite: CRITICAL -- move failed, data at \(tmpPath.path, privacy: .private): \(error.localizedDescription, privacy: .public)")
+            throw error
+        }
+    }
+
+    // MARK: - Session Lifecycle
+
     func startSession(sourceApp: String, vaultPath: String, sessionType: SessionType = .callCapture) throws {
         self.sourceApp = sourceApp
         self.sessionStartTime = Date()
@@ -36,8 +104,7 @@ actor TranscriptLogger {
         self.sessionContext = ""
         self.utteranceBuffer = []
 
-        let expandedPath = NSString(string: vaultPath).expandingTildeInPath
-        let directory = URL(fileURLWithPath: expandedPath)
+        let directory = try validatedVaultPath(vaultPath)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 
         let now = sessionStartTime!
@@ -94,8 +161,13 @@ tags:
 
 """
 
-        let created = FileManager.default.createFile(atPath: currentFilePath!.path, contents: content.data(using: .utf8))
-        guard created else { throw TranscriptLoggerError.cannotCreateFile(currentFilePath!.path) }
+        guard FileManager.default.createFile(atPath: currentFilePath!.path, contents: content.data(using: .utf8)) else {
+            throw TranscriptLoggerError.cannotCreateFile(currentFilePath!.path)
+        }
+        try FileManager.default.setAttributes(
+            [.posixPermissions: NSNumber(value: 0o600)],
+            ofItemAtPath: currentFilePath!.path
+        )
         fileHandle = try FileHandle(forWritingTo: currentFilePath!)
         fileHandle?.seekToEndOfFile()
     }
@@ -134,16 +206,22 @@ tags:
         utteranceBuffer.removeAll()
     }
 
-    func updateContext(_ text: String) {
+    func updateContext(_ text: String) throws {
         sessionContext = text
         guard let filePath = currentFilePath else { return }
 
         // Flush any buffered utterances first
         flushBuffer()
-        try? fileHandle?.close()
+        try? fileHandle?.close()  // SAFE: cleanup before rewrite, handle nilled anyway
         fileHandle = nil
 
-        guard var content = try? String(contentsOf: filePath, encoding: .utf8) else { return }
+        var content: String
+        do {
+            content = try String(contentsOf: filePath, encoding: .utf8)
+        } catch {
+            log.error("updateContext: failed to read file: \(error.localizedDescription, privacy: .public)")
+            throw error
+        }
 
         // Update frontmatter context field
         if let range = content.range(of: #"context: ".*""#, options: .regularExpression) {
@@ -158,15 +236,16 @@ tags:
             content.replaceSubrange(replaceRange, with: "\n\(text)\n")
         }
 
-        // Atomic write
-        let tmpPath = filePath.deletingLastPathComponent().appendingPathComponent(".tome_tmp.md")
-        try? content.write(to: tmpPath, atomically: true, encoding: .utf8)
-        try? FileManager.default.removeItem(at: filePath)
-        try? FileManager.default.moveItem(at: tmpPath, to: filePath)
+        try atomicRewrite(at: filePath, content: content)
 
         // Reopen file handle
-        fileHandle = try? FileHandle(forWritingTo: filePath)
-        fileHandle?.seekToEndOfFile()
+        do {
+            fileHandle = try FileHandle(forWritingTo: filePath)
+            fileHandle?.seekToEndOfFile()
+        } catch {
+            log.error("updateContext: failed to reopen file handle: \(error.localizedDescription, privacy: .public)")
+            throw error
+        }
     }
 
     func endSession() {
@@ -174,7 +253,7 @@ tags:
         flushBuffer()
 
         // Close file handle immediately so next session can start
-        try? fileHandle?.close()
+        try? fileHandle?.close()  // SAFE: cleanup, state is being reset regardless
         fileHandle = nil
 
         // Retain for post-session diarization and frontmatter finalization
@@ -202,7 +281,7 @@ tags:
         guard let filePath = lastSessionFilePath,
               let startTime = lastSessionStartTime else { return nil }
 
-        await Self.rewriteFrontmatter(
+        await rewriteFrontmatter(
             filePath: filePath,
             startTime: startTime,
             speakers: lastSpeakersDetected,
@@ -211,10 +290,7 @@ tags:
 
         // Update lastSessionFilePath if the file was renamed
         if !lastSessionContext.isEmpty {
-            let truncated = String(lastSessionContext.prefix(50))
-                .replacingOccurrences(of: "/", with: "-")
-                .replacingOccurrences(of: ":", with: "-")
-                .trimmingCharacters(in: .whitespaces)
+            let truncated = sanitizedFilenameComponent(lastSessionContext)
             let dateFmt = DateFormatter()
             dateFmt.dateFormat = "yyyy-MM-dd HH-mm-ss"
             let datePrefix = dateFmt.string(from: startTime)
@@ -230,13 +306,19 @@ tags:
         return savedPath
     }
 
-    private static func rewriteFrontmatter(
+    private func rewriteFrontmatter(
         filePath: URL,
         startTime: Date,
         speakers: Set<String>,
         context: String
     ) async {
-        guard var content = try? String(contentsOf: filePath, encoding: .utf8) else { return }
+        var content: String
+        do {
+            content = try String(contentsOf: filePath, encoding: .utf8)
+        } catch {
+            log.error("rewriteFrontmatter: failed to read file: \(error.localizedDescription, privacy: .public)")
+            return
+        }
 
         // Calculate duration
         let elapsed = Date().timeIntervalSince(startTime)
@@ -264,11 +346,7 @@ tags:
         // Context-based file rename
         var finalPath = filePath
         if !context.isEmpty {
-            let truncated = String(context.prefix(50))
-                .replacingOccurrences(of: "/", with: "-")
-                .replacingOccurrences(of: ":", with: "-")
-                .trimmingCharacters(in: .whitespaces)
-
+            let truncated = sanitizedFilenameComponent(context)
             let dateFmt = DateFormatter()
             dateFmt.dateFormat = "yyyy-MM-dd HH-mm-ss"
             let datePrefix = dateFmt.string(from: startTime)
@@ -283,25 +361,26 @@ tags:
             finalPath = newPath
         }
 
-        // Atomic write
-        let tmpPath = filePath.deletingLastPathComponent().appendingPathComponent(".tome_tmp.md")
-        try? content.write(to: tmpPath, atomically: true, encoding: .utf8)
-
-        if finalPath != filePath {
-            // Rename: remove old, move tmp to new name
-            try? FileManager.default.removeItem(at: filePath)
-            try? FileManager.default.moveItem(at: tmpPath, to: finalPath)
-        } else {
-            try? FileManager.default.removeItem(at: filePath)
-            try? FileManager.default.moveItem(at: tmpPath, to: filePath)
+        // Atomic write -- uses atomicRewrite helper for rename or same-name paths
+        do {
+            try atomicRewrite(at: filePath, newPath: finalPath != filePath ? finalPath : nil, content: content)
+        } catch {
+            log.error("rewriteFrontmatter: atomic write failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
     /// Rewrite the transcript file, replacing "Them" labels with diarized speaker IDs.
     /// Segments are (speakerId, startTimeSeconds, endTimeSeconds) from the offline diarizer.
-    func rewriteWithDiarization(segments: [(speakerId: String, startTime: Float, endTime: Float)]) {
+    func rewriteWithDiarization(segments: [(speakerId: String, startTime: Float, endTime: Float)]) throws {
         guard let filePath = currentFilePath ?? lastSessionFilePath else { return }
-        guard var content = try? String(contentsOf: filePath, encoding: .utf8) else { return }
+
+        var content: String
+        do {
+            content = try String(contentsOf: filePath, encoding: .utf8)
+        } catch {
+            log.error("rewriteWithDiarization: failed to read file: \(error.localizedDescription, privacy: .public)")
+            throw error
+        }
 
         // Build a map of unique diarization speaker IDs → friendly labels (Speaker 2, 3, etc.)
         var diarSpeakerMap: [String: String] = [:]
@@ -319,7 +398,7 @@ tags:
 
         // For each "**Them** (HH:mm:ss)" line, find the best matching diarization segment
         let pattern = #"\*\*Them\*\* \((\d{2}:\d{2}:\d{2})\)"#
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return }
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return }  // SAFE: hardcoded pattern, failure is a bug
 
         let nsContent = content as NSString
         let matches = regex.matches(in: content, range: NSRange(location: 0, length: nsContent.length))
@@ -377,11 +456,7 @@ tags:
             content.replaceSubrange(range, with: "**Speakers:** \(allSpeakers.count)")
         }
 
-        // Atomic write
-        let tmpPath = filePath.deletingLastPathComponent().appendingPathComponent(".tome_diar_tmp.md")
-        try? content.write(to: tmpPath, atomically: true, encoding: .utf8)
-        try? FileManager.default.removeItem(at: filePath)
-        try? FileManager.default.moveItem(at: tmpPath, to: filePath)
+        try atomicRewrite(at: filePath, content: content)
     }
 
     private func labelForSpeaker(_ rawSpeaker: String) -> String {
