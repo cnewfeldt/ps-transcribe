@@ -23,7 +23,7 @@ Users can record conversations and voice memos with accurate, private, on-device
 
 ### Active
 
-- [ ] Rebrand from "Tome" to "PS Transcribe" across entire codebase
+- [x] Rebrand from "Tome" to "PS Transcribe" across entire codebase -- Validated in Phase 1: Rebrand (2026-04-02)
 - [ ] Session library (grid view of past recordings with file paths, missing-file detection, Obsidian deep links)
 - [ ] Proper session lifecycle (stop → clear → save to library, no silent overwrite)
 - [ ] Recording naming (optional at any time -- before/during/after, date-based fallback)
@@ -50,7 +50,7 @@ Users can record conversations and voice memos with accurate, private, on-device
 **Goal:** Rebrand from Tome, harden security/stability, add session management and recording UX, integrate local LLM via Ollama for live analysis.
 
 **Target features:**
-- Rebrand to "PS Transcribe" across entire codebase
+- ~~Rebrand to "PS Transcribe" across entire codebase~~ (Phase 1 complete)
 - Security fixes for all 12 SCAN findings
 - Stability -- crash recovery, diarization fix, error handling
 - Session library with grid view, naming, lifecycle
