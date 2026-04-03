@@ -75,6 +75,7 @@ struct ControlBar: View {
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.accent1.opacity(0.12)))
                 }
                 .buttonStyle(.plain)
+                .focusable(false)
                 .keyboardShortcut(".", modifiers: .command)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
@@ -110,6 +111,7 @@ struct ControlBar: View {
                         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.06)))
                     }
                     .buttonStyle(.plain)
+                    .focusable(false)
                     .keyboardShortcut("r", modifiers: .command)
                     .disabled(!modelsReady)
                     .opacity(modelsReady ? 1.0 : 0.4)
@@ -135,13 +137,18 @@ struct ControlBar: View {
                         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.06)))
                     }
                     .buttonStyle(.plain)
+                    .focusable(false)
                     .keyboardShortcut("r", modifiers: [.command, .shift])
                     .disabled(!modelsReady)
                     .opacity(modelsReady ? 1.0 : 0.4)
 
                     // Settings gear
                     Button {
-                        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                        if #available(macOS 14, *) {
+                            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                        } else {
+                            NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
+                        }
                     } label: {
                         Image(systemName: "gearshape")
                             .font(.system(size: 14))
@@ -152,7 +159,7 @@ struct ControlBar: View {
                             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.06)))
                     }
                     .buttonStyle(.plain)
-                    .keyboardShortcut(",", modifiers: .command)
+                    .focusable(false)
                     .help("Settings (⌘,)")
                 }
                 .padding(.horizontal, 12)

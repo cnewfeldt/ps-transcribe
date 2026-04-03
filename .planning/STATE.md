@@ -89,7 +89,7 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None yet.
+- [ ] Model update strategy: Add automatic speech model version checking so users get newer FluidAudio ASR models without waiting for an app release. Current approach ties model updates to Sparkle app updates, which works but delays model improvements. Consider checking FluidAudio's latest model version at launch and re-downloading if newer.
 
 ### Blockers/Concerns
 

@@ -110,8 +110,12 @@ struct ContentView: View {
         .preferredColorScheme(.dark)
         .overlay {
             if showOnboarding {
-                OnboardingView(isPresented: $showOnboarding)
-                    .transition(.opacity)
+                OnboardingView(
+                    isPresented: $showOnboarding,
+                    modelStatus: transcriptionEngine?.assetStatus ?? "Waiting...",
+                    modelsReady: transcriptionEngine?.modelsReady ?? false
+                )
+                .transition(.opacity)
             }
         }
         .onChange(of: showOnboarding) {
@@ -412,12 +416,23 @@ struct ContentView: View {
     private func stopSession() {
         let wasCallCapture = activeSessionType == .callCapture
         let stoppedEntryID = activeLibraryEntryID
+
+        // Cancel any pending debounce and apply name before ending session
+        nameDebounceTask?.cancel()
+        nameDebounceTask = nil
+        let finalName = sessionName.trimmingCharacters(in: .whitespacesAndNewlines)
+
         activeSessionType = nil
         detectedAppName = nil
         silenceSeconds = 0
         activeLibraryEntryID = nil
 
         Task {
+            // Apply the session name to the file on disk before closing
+            if !finalName.isEmpty {
+                try? await transcriptLogger.setName(finalName)
+            }
+
             await transcriptionEngine?.stop()
             await sessionStore.endSession()
             await transcriptLogger.endSession()
