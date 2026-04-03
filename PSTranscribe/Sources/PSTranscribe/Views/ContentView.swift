@@ -93,6 +93,11 @@ struct ContentView: View {
             if transcriptionEngine == nil {
                 transcriptionEngine = TranscriptionEngine(transcriptStore: transcriptStore)
             }
+            // Scan for sessions left incomplete by a prior crash (STAB-01)
+            let incomplete = await sessionStore.scanIncompleteCheckpoints()
+            if !incomplete.isEmpty {
+                transcriptionEngine?.lastError = "\(incomplete.count) incomplete session(s) recovered"
+            }
         }
         // Audio level polling
         .task {
