@@ -123,13 +123,15 @@ final class TranscriptionEngine {
                 }
             }
         )
-        let reportMicError: @Sendable (String) -> Void = { [weak self] msg in
-            Task { @MainActor in self?.lastError = msg }
-        }
-        micTask = Task.detached {
+        let capture = micCapture
+        micTask = Task.detached { [weak self] in
             let hadFatalError = await micTranscriber.run(stream: micStream)
             if hadFatalError {
-                reportMicError("Mic transcription failed — restart session")
+                let errorMsg = capture.captureError ?? "Microphone recording failed"
+                await MainActor.run {
+                    guard let self else { return }
+                    self.lastError = errorMsg
+                }
             }
         }
 
@@ -210,13 +212,15 @@ final class TranscriptionEngine {
                 }
             }
         )
-        let reportMicError: @Sendable (String) -> Void = { [weak self] msg in
-            Task { @MainActor in self?.lastError = msg }
-        }
-        micTask = Task.detached {
+        let swapCapture = micCapture
+        micTask = Task.detached { [weak self] in
             let hadFatalError = await micTranscriber.run(stream: micStream)
             if hadFatalError {
-                reportMicError("Mic transcription failed — restart session")
+                let errorMsg = swapCapture.captureError ?? "Microphone recording failed"
+                await MainActor.run {
+                    guard let self else { return }
+                    self.lastError = errorMsg
+                }
             }
         }
 
