@@ -47,12 +47,12 @@ Plans:
   3. After a crash or force-quit mid-session, the next app launch surfaces the incomplete session in the library rather than losing it
   4. Diarization timestamps are correct for sessions that cross midnight -- no negative or wraparound offsets
   5. MicCapture errors appear visibly in the UI -- silent audio failures are not possible
-**Plans:** 2/5 plans executed
+**Plans:** 3/5 plans executed
 
 Plans:
 - [x] 02-01-PLAN.md -- CI hardening: token exposure, mktemp, SHA pinning, gitignore, cleanup logging
 - [x] 02-02-PLAN.md -- Replace diagLog with os.Logger and fix audio buffer memory clearing
-- [ ] 02-03-PLAN.md -- TranscriptLogger overhaul: path validation, permissions, atomic writes, try? audit
+- [x] 02-03-PLAN.md -- TranscriptLogger overhaul: path validation, permissions, atomic writes, try? audit
 - [ ] 02-04-PLAN.md -- SessionStore and SystemAudioCapture: permissions, temp dir, try? conversions
 - [ ] 02-05-PLAN.md -- Stability: crash recovery checkpoints, timestamp fix, mic error propagation
 
@@ -110,7 +110,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Rebrand | 1/3 | In Progress|  |
-| 2. Security + Stability | 2/5 | In Progress|  |
+| 2. Security + Stability | 3/5 | In Progress|  |
 | 3. Session Management + Recording Naming | 0/TBD | Not started | - |
 | 4. Mic Button + Model Onboarding | 0/TBD | Not started | - |
 | 5. Ollama Integration | 0/TBD | Not started | - |

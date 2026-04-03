@@ -22,14 +22,14 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 - [ ] **SECR-01**: GH_TOKEN no longer exposed in CI git clone URLs (SCAN-001)
 - [x] **SECR-02**: Debug log uses os.Logger instead of world-readable /tmp file (SCAN-002)
-- [ ] **SECR-03**: Vault path validated against directory traversal before file creation (SCAN-003)
+- [x] **SECR-03**: Vault path validated against directory traversal before file creation (SCAN-003)
 - [ ] **SECR-04**: System audio temp files use restricted permissions and reliable cleanup (SCAN-004)
 - [ ] **SECR-05**: CI keychain file created via mktemp instead of predictable path (SCAN-005)
-- [ ] **SECR-06**: Transcript and session files created with restrictive file permissions (SCAN-006)
+- [x] **SECR-06**: Transcript and session files created with restrictive file permissions (SCAN-006)
 - [ ] **SECR-07**: GitHub Actions pinned to commit SHAs (SCAN-007)
 - [ ] **SECR-08**: .gitignore includes secret file patterns (.env, *.p12, *.cer, *.pem, *.key) (SCAN-008)
-- [ ] **SECR-09**: File I/O operations use explicit error handling with rollback, not try? (SCAN-009)
-- [ ] **SECR-10**: Filename sanitization uses whitelist approach for all filesystem-special characters (SCAN-010)
+- [x] **SECR-09**: File I/O operations use explicit error handling with rollback, not try? (SCAN-009)
+- [x] **SECR-10**: Filename sanitization uses whitelist approach for all filesystem-special characters (SCAN-010)
 - [x] **SECR-11**: Audio buffer memory cleared with removeAll(keepingCapacity: false) (SCAN-011)
 - [ ] **SECR-12**: CI cleanup logs errors instead of suppressing with 2>/dev/null (SCAN-012)
 
@@ -139,14 +139,14 @@ Deferred to future milestone. Tracked but not in current roadmap.
 | REBR-08 | Phase 1 | Pending |
 | SECR-01 | Phase 2 | Pending |
 | SECR-02 | Phase 2 | Complete |
-| SECR-03 | Phase 2 | Pending |
+| SECR-03 | Phase 2 | Complete |
 | SECR-04 | Phase 2 | Pending |
 | SECR-05 | Phase 2 | Pending |
-| SECR-06 | Phase 2 | Pending |
+| SECR-06 | Phase 2 | Complete |
 | SECR-07 | Phase 2 | Pending |
 | SECR-08 | Phase 2 | Pending |
-| SECR-09 | Phase 2 | Pending |
-| SECR-10 | Phase 2 | Pending |
+| SECR-09 | Phase 2 | Complete |
+| SECR-10 | Phase 2 | Complete |
 | SECR-11 | Phase 2 | Complete |
 | SECR-12 | Phase 2 | Pending |
 | STAB-01 | Phase 2 | Pending |
