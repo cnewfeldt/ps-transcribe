@@ -14,3 +14,15 @@ build/
 
 # Misc
 *.spec
+
+# Secrets and credentials
+.env
+*.env.*
+*.p12
+*.cer
+*.pem
+*.key
+*.keychain
+*.keychain-db
+*.mobileprovision
+*.xcconfig
