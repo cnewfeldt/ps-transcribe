@@ -478,6 +478,99 @@ tags:
         }
     }
 
+    // MARK: - Naming
+
+    /// The file URL for the active session, or the last session's path post-finalization.
+    var currentFilePathURL: URL? {
+        currentFilePath ?? lastSessionFilePath
+    }
+
+    /// Sets a user-provided name for the current session. Renames the file on disk.
+    /// Call with debounce (500ms) from the UI to avoid rapid rename races.
+    func setName(_ name: String) throws {
+        guard let filePath = currentFilePath, let startTime = sessionStartTime else { return }
+
+        // Flush buffer before rename
+        flushBuffer()
+        try? fileHandle?.close()  // SAFE: cleanup before rename
+        fileHandle = nil
+
+        let sanitized = sanitizedFilenameComponent(name)
+        guard !sanitized.isEmpty else {
+            // Reopen handle at existing path
+            fileHandle = try FileHandle(forWritingTo: filePath)
+            fileHandle?.seekToEndOfFile()
+            return
+        }
+
+        let dateFmt = DateFormatter()
+        dateFmt.dateFormat = "yyyy-MM-dd HH-mm-ss"
+        let datePrefix = dateFmt.string(from: startTime)
+        let newFilename = "\(datePrefix) \(sanitized).md"
+        let newPath = filePath.deletingLastPathComponent().appendingPathComponent(newFilename)
+
+        // Read current content
+        var content: String
+        do {
+            content = try String(contentsOf: filePath, encoding: .utf8)
+        } catch {
+            log.error("setName: failed to read file: \(error.localizedDescription, privacy: .public)")
+            // Reopen at old path
+            fileHandle = try FileHandle(forWritingTo: filePath)
+            fileHandle?.seekToEndOfFile()
+            throw error
+        }
+
+        // Update source_file in frontmatter
+        if let range = content.range(of: #"source_file: ".*""#, options: .regularExpression) {
+            content.replaceSubrange(range, with: "source_file: \"\(newFilename)\"")
+        }
+
+        // Atomic rename
+        try atomicRewrite(at: filePath, newPath: newPath, content: content)
+        currentFilePath = newPath
+
+        // Reopen file handle at new path
+        do {
+            fileHandle = try FileHandle(forWritingTo: newPath)
+            fileHandle?.seekToEndOfFile()
+        } catch {
+            log.error("setName: failed to reopen after rename: \(error.localizedDescription, privacy: .public)")
+            throw error
+        }
+    }
+
+    /// Renames a finalized transcript file on disk. For post-session renames from the library.
+    /// Returns the new file URL on success.
+    func renameFinalized(at filePath: URL, to newName: String) throws -> URL {
+        let sanitized = sanitizedFilenameComponent(newName)
+        guard !sanitized.isEmpty else { throw TranscriptLoggerError.cannotCreateFile("Empty name") }
+
+        // Extract date prefix from existing filename (format: "yyyy-MM-dd HH-mm-ss ...")
+        let existingName = filePath.deletingPathExtension().lastPathComponent
+        let datePrefix: String
+        if existingName.count >= 19 {
+            datePrefix = String(existingName.prefix(19))
+        } else {
+            let dateFmt = DateFormatter()
+            dateFmt.dateFormat = "yyyy-MM-dd HH-mm-ss"
+            datePrefix = dateFmt.string(from: Date())
+        }
+
+        let newFilename = "\(datePrefix) \(sanitized).md"
+        let newPath = filePath.deletingLastPathComponent().appendingPathComponent(newFilename)
+
+        // Read, update source_file, atomic rename
+        var content = try String(contentsOf: filePath, encoding: .utf8)
+        if let range = content.range(of: #"source_file: ".*""#, options: .regularExpression) {
+            content.replaceSubrange(range, with: "source_file: \"\(newFilename)\"")
+        }
+        try atomicRewrite(at: filePath, newPath: newPath, content: content)
+        return newPath
+    }
+
+    // MARK: - Speaker Labels
+
     private func labelForSpeaker(_ rawSpeaker: String) -> String {
         // "You" always maps to "You"
         if rawSpeaker.lowercased() == "you" { return "You" }
