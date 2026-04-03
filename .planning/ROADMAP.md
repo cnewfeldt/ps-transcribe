@@ -34,8 +34,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01-PLAN.md -- Rename directories and update all Swift source content
-- [ ] 01-02-PLAN.md -- Update Info.plist, build scripts, and CI workflows
-- [ ] 01-03-PLAN.md -- UserDefaults migration and manual verification
+- [x] 01-02-PLAN.md -- Update Info.plist, build scripts, and CI workflows
+- [x] 01-03-PLAN.md -- UserDefaults migration and manual verification
 
 ### Phase 2: Security + Stability
 **Goal**: All 12 security findings are resolved and the app no longer silently loses transcripts, crashes unrecoverably, or produces wrong timestamps

@@ -48,14 +48,14 @@ completed: 2026-04-01
 
 ## Status
 
-**CHECKPOINT: Task 2 (manual verification) awaiting user confirmation.**
+**COMPLETE: All tasks done. Task 2 human-verify approved 2026-04-02.**
 
 ## Performance
 
-- **Duration:** ~5 min (Task 1 only; awaiting Task 2 verification)
+- **Duration:** ~5 min
 - **Started:** 2026-04-01T09:39:00Z
-- **Completed:** Pending Task 2 verification
-- **Tasks:** 1 of 2 complete
+- **Completed:** 2026-04-02
+- **Tasks:** 2 of 2 complete
 - **Files modified:** 1
 
 ## Accomplishments
@@ -69,7 +69,7 @@ completed: 2026-04-01
 ## Task Commits
 
 1. **Task 1: Add UserDefaults migration to PSTranscribeApp** -- `6def785` (feat)
-2. **Task 2: Verify UserDefaults migration works on dev machine** -- pending human verification
+2. **Task 2: Verify UserDefaults migration works on dev machine** -- approved 2026-04-02 (all 6 keys migrated, sentinel set, app launched as PS Transcribe)
 
 ## Files Created/Modified
 
@@ -90,9 +90,9 @@ None.
 
 ## Next Phase Readiness
 
-- Task 2 (manual verification on dev machine) awaiting user approval
-- Once approved, plan 01-03 is complete and phase 01-rebrand has all structural rebrand tasks done
+- Plan 01-03 complete. Phase 01-rebrand has all structural rebrand tasks done.
+- Note: `swift build` uses `PSTranscribe` as the UserDefaults domain (executable name). Production `.app` bundle will use `com.pstranscribe.app` from Info.plist.
 
 ---
 *Phase: 01-rebrand*
-*Completed: 2026-04-01 (pending Task 2 human-verify)*
+*Completed: 2026-04-02*
