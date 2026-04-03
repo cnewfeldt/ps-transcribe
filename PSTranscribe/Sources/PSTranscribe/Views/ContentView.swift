@@ -38,6 +38,7 @@ struct ContentView: View {
     @State private var sessionName: String = ""
     @State private var loadedUtterances: [Utterance] = []
     @State private var savedConfirmation: Bool = false
+    @State private var nameDebounceTask: Task<Void, Never>?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -62,8 +63,22 @@ struct ContentView: View {
                         let capturedID = id
                         let capturedName = newName
                         Task {
-                            await libraryStore.updateEntry(id: capturedID) { @Sendable entry in
-                                entry.name = capturedName
+                            guard let entry = await libraryStore.entries.first(where: { $0.id == capturedID }) else { return }
+                            do {
+                                let newPath = try await transcriptLogger.renameFinalized(
+                                    at: URL(fileURLWithPath: entry.filePath),
+                                    to: capturedName
+                                )
+                                await libraryStore.updateEntry(id: capturedID) { @Sendable e in
+                                    e.name = capturedName
+                                    e.filePath = newPath.path
+                                }
+                            } catch {
+                                // File may not exist or name is invalid -- update name only
+                                await libraryStore.updateEntry(id: capturedID) { @Sendable e in
+                                    e.name = capturedName
+                                }
+                                transcriptionEngine?.lastError = "Rename failed: \(error.localizedDescription)"
                             }
                             refreshLibrary()
                         }
@@ -174,6 +189,28 @@ struct ContentView: View {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(10))
                 await transcriptLogger.flushIfNeeded()
+            }
+        }
+        .onChange(of: sessionName) { _, newName in
+            guard activeSessionType != nil else { return }
+            nameDebounceTask?.cancel()
+            nameDebounceTask = Task {
+                try? await Task.sleep(for: .milliseconds(500))
+                guard !Task.isCancelled else { return }
+                do {
+                    try await transcriptLogger.setName(newName)
+                    // Update library entry file path after rename
+                    if let entryID = activeLibraryEntryID,
+                       let newPath = await transcriptLogger.currentFilePathURL {
+                        await libraryStore.updateEntry(id: entryID) { @Sendable entry in
+                            entry.filePath = newPath.path
+                            entry.name = newName.isEmpty ? nil : newName
+                        }
+                        refreshLibrary()
+                    }
+                } catch {
+                    transcriptionEngine?.lastError = "Failed to rename: \(error.localizedDescription)"
+                }
             }
         }
         .onChange(of: settings.inputDeviceID) {

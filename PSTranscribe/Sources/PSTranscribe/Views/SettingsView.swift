@@ -49,6 +49,20 @@ struct SettingsView: View {
                         }
                     }
                 }
+
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Obsidian Vault Name")
+                            .font(.system(size: 12, weight: .medium))
+                        Text("Used to open transcripts in Obsidian")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.tertiary)
+                    }
+                    Spacer()
+                    TextField("e.g. MyVault", text: $settings.obsidianVaultName)
+                        .frame(width: 120)
+                        .multilineTextAlignment(.trailing)
+                }
             }
 
             Section("Audio Input") {

@@ -115,6 +115,15 @@ struct LibraryEntryRow: View {
         }
         .frame(height: 72)
         .onHover { isHovered = $0 }
+        .contextMenu {
+            Button("Show in Finder") {
+                NSWorkspace.shared.selectFile(
+                    entry.filePath,
+                    inFileViewerRootedAtPath: URL(fileURLWithPath: entry.filePath)
+                        .deletingLastPathComponent().path
+                )
+            }
+        }
     }
 
     // MARK: - Helpers
