@@ -19,5 +19,10 @@ let package = Package(
             path: "Sources/PSTranscribe",
             exclude: ["Info.plist", "PSTranscribe.entitlements", "Assets"]
         ),
+        .testTarget(
+            name: "PSTranscribeTests",
+            dependencies: ["PSTranscribe"],
+            path: "Tests/PSTranscribeTests"
+        ),
     ]
 )
