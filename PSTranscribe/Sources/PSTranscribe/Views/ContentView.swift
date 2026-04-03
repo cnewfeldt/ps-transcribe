@@ -284,7 +284,12 @@ struct ContentView: View {
 
         Task {
             transcriptionEngine?.lastError = nil
-            await sessionStore.startSession()
+            do {
+                try await sessionStore.startSession()
+            } catch {
+                transcriptionEngine?.lastError = error.localizedDescription
+                return
+            }
             do {
                 try await transcriptLogger.startSession(
                     sourceApp: sourceApp,
