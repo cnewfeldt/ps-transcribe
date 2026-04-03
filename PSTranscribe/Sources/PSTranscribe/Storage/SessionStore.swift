@@ -166,4 +166,7 @@ actor SessionStore {
     }
 
     var sessionsDirectoryURL: URL { sessionsDirectory }
+
+    /// Returns the session ID for the current active session (nil if no session is active).
+    var activeSessionId: String? { currentSessionId }
 }

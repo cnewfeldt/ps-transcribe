@@ -290,11 +290,14 @@ struct ContentView: View {
                 transcriptionEngine?.lastError = error.localizedDescription
                 return
             }
+            let sessionId = await sessionStore.activeSessionId
             do {
                 try await transcriptLogger.startSession(
                     sourceApp: sourceApp,
                     vaultPath: outputPath,
-                    sessionType: type
+                    sessionType: type,
+                    sessionStore: sessionStore,
+                    sessionId: sessionId
                 )
             } catch {
                 await sessionStore.endSession()

@@ -30,6 +30,10 @@ actor TranscriptLogger {
     private var lastSpeakersDetected: Set<String> = []
     private var lastSessionContext: String = ""
 
+    // Checkpoint integration for STAB-03
+    private var sessionStore: SessionStore?
+    private var currentSessionId: String?
+
     // MARK: - Security Helpers
 
     /// Validates a vault path against traversal patterns before any file operations.
@@ -95,7 +99,9 @@ actor TranscriptLogger {
 
     // MARK: - Session Lifecycle
 
-    func startSession(sourceApp: String, vaultPath: String, sessionType: SessionType = .callCapture) throws {
+    func startSession(sourceApp: String, vaultPath: String, sessionType: SessionType = .callCapture, sessionStore: SessionStore? = nil, sessionId: String? = nil) throws {
+        self.sessionStore = sessionStore
+        self.currentSessionId = sessionId
         self.sourceApp = sourceApp
         self.sessionStartTime = Date()
         self.speakersDetected = []
@@ -189,12 +195,17 @@ tags:
     private func flushBuffer() {
         guard let fileHandle, !utteranceBuffer.isEmpty else { return }
 
-        let timeFmt = DateFormatter()
-        timeFmt.dateFormat = "HH:mm:ss"
-
         var lines = ""
         for entry in utteranceBuffer {
-            lines += "**\(entry.speaker)** (\(timeFmt.string(from: entry.timestamp)))\n"
+            // Use session-relative offset (HH:mm:ss as duration) instead of clock time
+            // This avoids midnight-crossing bugs (STAB-02)
+            let offsetSeconds = entry.timestamp.timeIntervalSince(sessionStartTime ?? entry.timestamp)
+            let totalSeconds = max(0, Int(offsetSeconds))
+            let hh = totalSeconds / 3600
+            let mm = (totalSeconds % 3600) / 60
+            let ss = totalSeconds % 60
+            let relativeTimestamp = String(format: "%02d:%02d:%02d", hh, mm, ss)
+            lines += "**\(entry.speaker)** (\(relativeTimestamp))\n"
             lines += "\(entry.text)\n\n"
         }
 
@@ -248,7 +259,7 @@ tags:
         }
     }
 
-    func endSession() {
+    func endSession() async {
         // Flush remaining buffer
         flushBuffer()
 
@@ -261,6 +272,11 @@ tags:
         lastSessionStartTime = sessionStartTime
         lastSpeakersDetected = speakersDetected
         lastSessionContext = sessionContext
+
+        // Update checkpoint: transcript buffer flushed and file handle closed (STAB-03)
+        if let id = currentSessionId {
+            await sessionStore?.updateCheckpoint(sessionId: id, step: "transcript_written")
+        }
 
         // Reset state immediately so next session can start
         currentFilePath = nil
@@ -299,10 +315,19 @@ tags:
             lastSessionFilePath = newPath
         }
 
+        // Update checkpoint: frontmatter rewrite complete (STAB-03)
+        if let id = currentSessionId {
+            await sessionStore?.updateCheckpoint(sessionId: id, step: "frontmatter_done")
+            // Finalization sequence complete -- remove checkpoint file
+            await sessionStore?.finalizeCheckpoint(sessionId: id)
+        }
+
         let savedPath = lastSessionFilePath
         lastSessionStartTime = nil
         lastSpeakersDetected = []
         lastSessionContext = ""
+        currentSessionId = nil
+        sessionStore = nil
         return savedPath
     }
 
@@ -371,7 +396,7 @@ tags:
 
     /// Rewrite the transcript file, replacing "Them" labels with diarized speaker IDs.
     /// Segments are (speakerId, startTimeSeconds, endTimeSeconds) from the offline diarizer.
-    func rewriteWithDiarization(segments: [(speakerId: String, startTime: Float, endTime: Float)]) throws {
+    func rewriteWithDiarization(segments: [(speakerId: String, startTime: Float, endTime: Float)]) async throws {
         guard let filePath = currentFilePath ?? lastSessionFilePath else { return }
 
         var content: String
@@ -392,10 +417,6 @@ tags:
             }
         }
 
-        // Parse transcript lines and re-attribute "Them" utterances based on timestamp overlap
-        let timeFmt = DateFormatter()
-        timeFmt.dateFormat = "HH:mm:ss"
-
         // For each "**Them** (HH:mm:ss)" line, find the best matching diarization segment
         let pattern = #"\*\*Them\*\* \((\d{2}:\d{2}:\d{2})\)"#
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return }  // SAFE: hardcoded pattern, failure is a bug
@@ -408,18 +429,11 @@ tags:
             let timeRange = match.range(at: 1)
             let timeStr = nsContent.substring(with: timeRange)
 
-            // Parse the timestamp relative to session start
-            guard let sessionStart = sessionStartTime ?? lastSessionStartTime else { continue }
-            guard let utteranceDate = timeFmt.date(from: timeStr) else { continue }
-
-            // Calculate seconds from session start (timestamps are clock times on the same day)
-            let calendar = Calendar.current
-            let startComponents = calendar.dateComponents([.hour, .minute, .second], from: sessionStart)
-            let uttComponents = calendar.dateComponents([.hour, .minute, .second], from: utteranceDate)
-
-            let startSeconds = (startComponents.hour ?? 0) * 3600 + (startComponents.minute ?? 0) * 60 + (startComponents.second ?? 0)
-            let uttSeconds = (uttComponents.hour ?? 0) * 3600 + (uttComponents.minute ?? 0) * 60 + (uttComponents.second ?? 0)
-            let offsetSeconds = Float(uttSeconds - startSeconds)
+            // Parse HH:mm:ss as a session-relative duration (not clock time -- STAB-02)
+            // No subtraction needed: the values ARE already offsets from session start
+            let parts = timeStr.split(separator: ":").compactMap { Int($0) }
+            guard parts.count == 3 else { continue }
+            let offsetSeconds = Float(parts[0] * 3600 + parts[1] * 60 + parts[2])
 
             // Find best matching segment
             var bestMatch: String?
@@ -457,6 +471,11 @@ tags:
         }
 
         try atomicRewrite(at: filePath, content: content)
+
+        // Update checkpoint: diarization rewrite complete (STAB-03)
+        if let id = currentSessionId {
+            await sessionStore?.updateCheckpoint(sessionId: id, step: "diarization_done")
+        }
     }
 
     private func labelForSpeaker(_ rawSpeaker: String) -> String {
