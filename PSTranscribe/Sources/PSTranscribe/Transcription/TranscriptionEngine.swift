@@ -4,19 +4,12 @@ import FluidAudio
 import Observation
 import os
 
-// Writes to /tmp/pstranscribe.log
+private let engineLog = Logger(subsystem: "com.pstranscribe.app", category: "TranscriptionEngine")
+
 func diagLog(_ msg: String) {
-    #if DEBUG
-    let line = "\(Date()): \(msg)\n"
-    let path = "/tmp/pstranscribe.log"
-    if let fh = FileHandle(forWritingAtPath: path) {
-        fh.seekToEndOfFile()
-        fh.write(line.data(using: .utf8)!)
-        fh.closeFile()
-    } else {
-        FileManager.default.createFile(atPath: path, contents: line.data(using: .utf8))
+    if UserDefaults.standard.bool(forKey: "enableVerboseLogging") {
+        engineLog.debug("\(msg, privacy: .public)")
     }
-    #endif
 }
 
 /// Dual-stream mic + system audio transcription.
