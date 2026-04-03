@@ -37,18 +37,27 @@ never hardcode hex values.
 Multiples of 4 only. Derived from existing usage across `ContentView.swift`, `TranscriptView.swift`,
 and `ControlBar.swift`.
 
+### Phase 3 Spacing Contract
+
+New Phase 3 elements MUST use only values from this set: {4, 8, 16, 24, 32, 48, 64}.
+
 | Token | Value | Usage |
 |-------|-------|-------|
 | xs | 4px | Icon gaps, label spacing within a row (e.g. missing badge next to name) |
 | sm | 8px | Spacing between elements within a sidebar row (name-to-metadata gap) |
-| md | 12px | Transcript bubble horizontal/vertical padding (established in TranscriptView) |
-| lg | 16px | Horizontal insets for top bar, control bar, sidebar rows |
-| xl | 24px | Vertical section gaps within settings form |
-| 2xl | 32px | Reserved -- not required in this phase |
-| 3xl | 48px | Empty state vertical centering padding |
+| md | 16px | Horizontal insets for top bar, control bar, sidebar rows |
+| lg | 24px | Vertical section gaps within settings form |
+| xl | 32px | Reserved -- not required in this phase |
+| 2xl | 48px | Empty state vertical centering padding |
 
-Exceptions:
-- Top bar height: 44px (established; matches macOS touch target minimum)
+### Inherited Spacing (do not extend)
+
+12px exists in `TranscriptView.swift` as the horizontal and vertical padding on utterance bubbles.
+This value will NOT be changed. New Phase 3 elements MUST NOT use 12px -- use 8px (sm) or 16px (md)
+as appropriate.
+
+Exceptions (established, not extended):
+- Top bar height: 44px (matches macOS touch target minimum)
 - Utterance bubble corner radius: 10px (established in TranscriptView)
 - Sidebar column: min 180px, ideal 220px, max 300px (NavigationSplitView column width)
 - Window minimum: 640px wide x 400px tall (sidebar 220px + detail 420px)
@@ -59,21 +68,30 @@ Exceptions:
 
 All type uses SF Pro via `.font(.system(size:weight:))`. Existing sizes extracted from codebase:
 
+### Phase 3 Type Contract
+
+New Phase 3 elements MUST use only these two weights:
+
 | Role | Size | Weight | Line Height | Usage |
 |------|------|--------|-------------|-------|
 | Body | 12px | regular (400) | 1.4 (system default) | Transcript utterance text, sidebar first-line preview, sidebar recording name |
 | Label | 11px | medium (500) | 1.3 | Metadata (date, duration, source tag), settings form labels |
-| Caption | 10px | bold (600) | 1.2 | Speaker label ("YOU", "THEM") with uppercase + tracking 0.8; missing badge tooltip |
-| Brand | 14px | heavy (900) | 1.0 | "PS TRANSCRIBE" brand label in top bar (idle state) |
+| Name field | 14px | medium (500) | 1.0 | Top bar name field (active/post-session state) |
 
-Name field (top bar active state): 14px, medium (500), plain style -- matches brand label size
-to avoid layout shift when toggling between brand label and name field.
-
-Two weights actively used in Phase 3 new UI:
+Permitted weights for new elements:
 - **regular (400):** body text, preview text, metadata values, sidebar recording names
 - **medium (500):** name field, metadata labels, interactive labels
 
-Heavy (900) is used only for the brand label -- not for new elements.
+### Inherited Typography (do not extend)
+
+These weights exist in the codebase but are off-limits for any new Phase 3 element:
+
+| Role | Size | Weight | Location |
+|------|------|--------|----------|
+| Speaker label ("YOU", "THEM") | 10px | bold (600) | `TranscriptView.swift` -- uppercase + tracking 0.8 |
+| Brand label ("PS TRANSCRIBE") | 14px | heavy (900) | Top bar idle state only |
+
+Do not apply bold (600) or heavy (900) to any new element introduced in this phase.
 
 **Type scale is four sizes: 10, 11, 12, 14.** No exceptions are permitted. Sidebar recording
 names use 12px (Body) -- the 13px size that appeared in earlier drafts is removed.
@@ -288,7 +306,7 @@ Shown when `LibraryStore.entries.isEmpty`:
 
 ```
 [waveform.circle icon -- 28pt, Color.fg3]
-"No recordings yet"                          [12px bold, Color.fg2]
+"No recordings yet"                          [12px regular, Color.fg2]
 "Start a call capture or voice memo          [11px regular, Color.fg3, centered]
  to begin transcribing."
 ```
@@ -300,7 +318,7 @@ which are always visible. Source: CONTEXT.md D-04.
 
 ```
 [doc.text icon -- 24pt, Color.fg3]
-"Select a recording"                         [12px bold, Color.fg2]
+"Select a recording"                         [12px regular, Color.fg2]
 "Choose a session from the sidebar"          [11px regular, Color.fg3]
 ```
 
