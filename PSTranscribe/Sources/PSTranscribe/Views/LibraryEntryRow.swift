@@ -80,6 +80,23 @@ struct LibraryEntryRow: View {
                         .foregroundStyle(Color.fg2)
                         .lineLimit(1)
 
+                    // Clickable file path (SESS-04)
+                    if !entry.filePath.isEmpty && isHovered {
+                        Text(URL(fileURLWithPath: entry.filePath).lastPathComponent)
+                            .font(.system(size: 10))
+                            .foregroundStyle(Color.accent1.opacity(0.7))
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                            .onTapGesture {
+                                NSWorkspace.shared.selectFile(
+                                    entry.filePath,
+                                    inFileViewerRootedAtPath: URL(fileURLWithPath: entry.filePath)
+                                        .deletingLastPathComponent().path
+                                )
+                            }
+                            .help(entry.filePath)
+                    }
+
                     // First-line preview
                     Text(entry.firstLinePreview?.isEmpty == false ? entry.firstLinePreview! : "No transcript")
                         .font(.system(size: 11))

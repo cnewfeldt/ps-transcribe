@@ -48,17 +48,17 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **SESS-04**: Each library entry has a clickable file path to the transcript on disk
 - [x] **SESS-05**: Library entries show "missing" indicator if transcript file has been moved or deleted
 - [x] **SESS-06**: Each library entry has an Obsidian deep link that opens the transcript in Obsidian
-- [ ] **SESS-07**: Stopping a recording clears the transcript view and saves the session to the library
-- [ ] **SESS-08**: Starting a new recording creates a fresh session (no overwriting previous content)
+- [x] **SESS-07**: Stopping a recording clears the transcript view and saves the session to the library
+- [x] **SESS-08**: Starting a new recording creates a fresh session (no overwriting previous content)
 - [x] **SESS-09**: Session index persists across app restarts
 
 ### Recording Naming
 
 - [x] **NAME-01**: User can set a recording name before starting a recording
 - [x] **NAME-02**: User can rename a recording during an active session
-- [ ] **NAME-03**: User can rename a recording after it has been saved (from library)
+- [x] **NAME-03**: User can rename a recording after it has been saved (from library)
 - [x] **NAME-04**: Unnamed recordings fall back to date-based filename
-- [ ] **NAME-05**: File on disk renames to match when user changes the recording name
+- [x] **NAME-05**: File on disk renames to match when user changes the recording name
 
 ### Mic Button
 
