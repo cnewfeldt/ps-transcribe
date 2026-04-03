@@ -13,7 +13,7 @@ Six phases transform Tome (v1.2.1) into PS Transcribe: start with the rebrand an
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Rebrand** - Rename Tome to PS Transcribe across all code, config, CI, and user settings
-- [ ] **Phase 2: Security + Stability** - Resolve all 12 SCAN findings and fix crash/data-loss bugs
+- [x] **Phase 2: Security + Stability** - Resolve all 12 SCAN findings and fix crash/data-loss bugs (completed 2026-04-03)
 - [ ] **Phase 3: Session Management + Recording Naming** - Session library grid, lifecycle, and flexible recording naming
 - [ ] **Phase 4: Mic Button + Model Onboarding** - Three-state mic button and first-launch model download flow
 - [ ] **Phase 5: Ollama Integration** - Local Ollama detection, model browser, and decoupled LLM service
@@ -47,14 +47,14 @@ Plans:
   3. After a crash or force-quit mid-session, the next app launch surfaces the incomplete session in the library rather than losing it
   4. Diarization timestamps are correct for sessions that cross midnight -- no negative or wraparound offsets
   5. MicCapture errors appear visibly in the UI -- silent audio failures are not possible
-**Plans:** 2/5 plans executed
+**Plans:** 5/5 plans complete
 
 Plans:
 - [x] 02-01-PLAN.md -- CI hardening: token exposure, mktemp, SHA pinning, gitignore, cleanup logging
 - [x] 02-02-PLAN.md -- Replace diagLog with os.Logger and fix audio buffer memory clearing
-- [ ] 02-03-PLAN.md -- TranscriptLogger overhaul: path validation, permissions, atomic writes, try? audit
+- [x] 02-03-PLAN.md -- TranscriptLogger overhaul: path validation, permissions, atomic writes, try? audit
 - [x] 02-04-PLAN.md -- SessionStore and SystemAudioCapture: permissions, temp dir, try? conversions
-- [ ] 02-05-PLAN.md -- Stability: crash recovery checkpoints, timestamp fix, mic error propagation
+- [x] 02-05-PLAN.md -- Stability: crash recovery checkpoints, timestamp fix, mic error propagation
 
 ### Phase 3: Session Management + Recording Naming
 **Goal**: Users have a persistent, browsable library of past recordings with reliable session lifecycle, flexible naming, and direct Obsidian access
@@ -110,7 +110,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Rebrand | 1/3 | In Progress|  |
-| 2. Security + Stability | 2/5 | In Progress|  |
+| 2. Security + Stability | 5/5 | Complete   | 2026-04-03 |
 | 3. Session Management + Recording Naming | 0/TBD | Not started | - |
 | 4. Mic Button + Model Onboarding | 0/TBD | Not started | - |
 | 5. Ollama Integration | 0/TBD | Not started | - |

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-04-PLAN.md
-last_updated: "2026-04-03T04:35:08.168Z"
+stopped_at: Completed 02-05-PLAN.md
+last_updated: "2026-04-03T04:47:03.179Z"
 last_activity: 2026-04-03
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 8
-  completed_plans: 6
+  completed_plans: 8
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 ## Current Position
 
 Phase: 02 (security-stability) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-04-03
 
@@ -55,6 +55,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-rebrand P02 | 15 | 2 tasks | 5 files |
 | Phase 02-security-stability P02 | 3 | 2 tasks | 2 files |
 | Phase 02-security-stability P04 | 8 | 2 tasks | 3 files |
+| Phase 02-security-stability P05 | 15 | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -71,6 +72,9 @@ Recent decisions affecting current work:
 - [Phase 02-security-stability]: os.Logger pattern established: file-level Logger(subsystem: com.pstranscribe.app, category: TypeName) for downstream plans 03-05 to follow
 - [Phase 02-security-stability]: startSession() in SessionStore changed to throws -- propagates FileHandle open errors to ContentView call site
 - [Phase 02-security-stability]: POSIX 0o600 on all app-created files, 0o700 on app-created directories -- uniform permission model across SessionStore and SystemAudioCapture
+- [Phase 02-security-stability]: endSession() made async in TranscriptLogger to call await sessionStore.updateCheckpoint -- cleaner than checkpoint calls at every call site
+- [Phase 02-security-stability]: Session-relative HH:mm:ss duration timestamps established as canonical pattern -- timeIntervalSince(sessionStartTime) in flushBuffer, direct parts-parsing in rewriteWithDiarization
+- [Phase 02-security-stability]: activeSessionId exposed as read-only computed property on SessionStore to thread sessionId from startSession through ContentView to TranscriptLogger
 
 ### Pending Todos
 
@@ -83,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-03T04:35:08.166Z
-Stopped at: Completed 02-04-PLAN.md
+Last session: 2026-04-03T04:47:03.177Z
+Stopped at: Completed 02-05-PLAN.md
 Resume file: None

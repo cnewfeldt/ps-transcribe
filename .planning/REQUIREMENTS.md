@@ -35,10 +35,10 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Stability
 
-- [ ] **STAB-01**: App recovers incomplete sessions on next launch (marks as incomplete, surfaces in library)
-- [ ] **STAB-02**: Diarization timestamps use session-relative offsets, not clock time (fixes midnight crossing bug)
-- [ ] **STAB-03**: Session finalization (endSession + frontmatter + diarization) is atomic or recoverable
-- [ ] **STAB-04**: MicCapture errors propagate to UI via TranscriptionEngine.lastError
+- [x] **STAB-01**: App recovers incomplete sessions on next launch (marks as incomplete, surfaces in library)
+- [x] **STAB-02**: Diarization timestamps use session-relative offsets, not clock time (fixes midnight crossing bug)
+- [x] **STAB-03**: Session finalization (endSession + frontmatter + diarization) is atomic or recoverable
+- [x] **STAB-04**: MicCapture errors propagate to UI via TranscriptionEngine.lastError
 
 ### Session Management
 
@@ -149,10 +149,10 @@ Deferred to future milestone. Tracked but not in current roadmap.
 | SECR-10 | Phase 2 | Pending |
 | SECR-11 | Phase 2 | Complete |
 | SECR-12 | Phase 2 | Pending |
-| STAB-01 | Phase 2 | Pending |
-| STAB-02 | Phase 2 | Pending |
-| STAB-03 | Phase 2 | Pending |
-| STAB-04 | Phase 2 | Pending |
+| STAB-01 | Phase 2 | Complete |
+| STAB-02 | Phase 2 | Complete |
+| STAB-03 | Phase 2 | Complete |
+| STAB-04 | Phase 2 | Complete |
 | SESS-01 | Phase 3 | Pending |
 | SESS-02 | Phase 3 | Pending |
 | SESS-03 | Phase 3 | Pending |
