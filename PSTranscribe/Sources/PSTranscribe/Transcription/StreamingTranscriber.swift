@@ -89,7 +89,7 @@ final class StreamingTranscriber: @unchecked Sendable {
                         switch event.kind {
                         case .speechStart:
                             isSpeaking = true
-                            speechSamples.removeAll(keepingCapacity: true)
+                            speechSamples.removeAll(keepingCapacity: false)
                             diagLog("[\(self.speaker.rawValue)] speech start")
 
                         case .speechEnd:
@@ -97,7 +97,7 @@ final class StreamingTranscriber: @unchecked Sendable {
                             diagLog("[\(self.speaker.rawValue)] speech end, samples=\(speechSamples.count)")
                             if speechSamples.count > 8000 {
                                 let segment = speechSamples
-                                speechSamples.removeAll(keepingCapacity: true)
+                                speechSamples.removeAll(keepingCapacity: false)
                                 if await !transcribeSegment(segment) {
                                     consecutiveErrors += 1
                                     if consecutiveErrors > 10 { break outerLoop }
@@ -105,7 +105,7 @@ final class StreamingTranscriber: @unchecked Sendable {
                                     consecutiveErrors = 0
                                 }
                             } else {
-                                speechSamples.removeAll(keepingCapacity: true)
+                                speechSamples.removeAll(keepingCapacity: false)
                             }
                         }
                     }
@@ -116,7 +116,7 @@ final class StreamingTranscriber: @unchecked Sendable {
                         // Flush every ~3s for near-real-time output during continuous speech
                         if speechSamples.count >= Self.flushInterval {
                             let segment = speechSamples
-                            speechSamples.removeAll(keepingCapacity: true)
+                            speechSamples.removeAll(keepingCapacity: false)
                             if await !transcribeSegment(segment) {
                                 consecutiveErrors += 1
                                 if consecutiveErrors > 10 { break outerLoop }
