@@ -3,6 +3,8 @@
 import CoreMedia
 import os
 
+private let log = Logger(subsystem: "com.pstranscribe.app", category: "SystemAudioCapture")
+
 final class SystemAudioCapture: NSObject, @unchecked Sendable, SCStreamDelegate, SCStreamOutput {
     private let _stream = OSAllocatedUnfairLock<SCStream?>(uncheckedState: nil)
     private let _sysContinuation = OSAllocatedUnfairLock<AsyncStream<AVAudioPCMBuffer>.Continuation?>(uncheckedState: nil)
@@ -19,6 +21,19 @@ final class SystemAudioCapture: NSObject, @unchecked Sendable, SCStreamDelegate,
 
     struct CaptureStreams {
         let systemAudio: AsyncStream<AVAudioPCMBuffer>
+    }
+
+    private static func audioTempDirectory() throws -> URL {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let tmpDir = appSupport.appendingPathComponent("PSTranscribe/tmp", isDirectory: true)
+        if !FileManager.default.fileExists(atPath: tmpDir.path) {
+            try FileManager.default.createDirectory(at: tmpDir, withIntermediateDirectories: true)
+            try FileManager.default.setAttributes(
+                [.posixPermissions: NSNumber(value: 0o700)],
+                ofItemAtPath: tmpDir.path
+            )
+        }
+        return tmpDir
     }
 
     /// Start capturing system audio. Pass a bundle ID to filter to a specific app.
@@ -43,7 +58,8 @@ final class SystemAudioCapture: NSObject, @unchecked Sendable, SCStreamDelegate,
         }
 
         // Set up audio buffer file for post-session diarization
-        let bufferURL = FileManager.default.temporaryDirectory.appendingPathComponent("tome_sys_audio_\(UUID().uuidString).wav")
+        let tmpDir = try SystemAudioCapture.audioTempDirectory()
+        let bufferURL = tmpDir.appendingPathComponent("ps_sys_audio_\(UUID().uuidString).wav")
         _bufferFilePath.withLock { $0 = bufferURL }
         _audioFileWriter.withLock { $0 = nil } // will be created on first audio callback
 
@@ -82,7 +98,11 @@ final class SystemAudioCapture: NSObject, @unchecked Sendable, SCStreamDelegate,
     /// Remove the buffered audio file after diarization is complete
     func cleanupBufferFile() {
         if let path = _bufferFilePath.withLock({ $0 }) {
-            try? FileManager.default.removeItem(at: path)
+            do {
+                try FileManager.default.removeItem(at: path)
+            } catch {
+                log.warning("Failed to clean up audio temp file \(path.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            }
         }
         _bufferFilePath.withLock { $0 = nil }
     }
@@ -127,9 +147,25 @@ final class SystemAudioCapture: NSObject, @unchecked Sendable, SCStreamDelegate,
         _audioFileWriter.withLock { writer in
             if writer == nil, let bufferPath = self._bufferFilePath.withLock({ $0 }) {
                 let wavFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: sampleRate, channels: 1, interleaved: false)!
-                writer = try? AVAudioFile(forWriting: bufferPath, settings: wavFormat.settings)
+                do {
+                    writer = try AVAudioFile(forWriting: bufferPath, settings: wavFormat.settings)
+                    try FileManager.default.setAttributes(
+                        [.posixPermissions: NSNumber(value: 0o600)],
+                        ofItemAtPath: bufferPath.path
+                    )
+                } catch {
+                    log.error("Failed to create audio file: \(error.localizedDescription, privacy: .public)")
+                    // writer remains nil -- diarization will be skipped but recording continues
+                }
             }
-            try? writer?.write(from: pcmBuffer)
+            if let w = writer {
+                do {
+                    try w.write(from: pcmBuffer)
+                } catch {
+                    log.error("Failed to write audio buffer: \(error.localizedDescription, privacy: .public)")
+                    // Continue capturing -- partial diarization data is better than none
+                }
+            }
         }
 
         _ = _sysContinuation.withLock { $0?.yield(pcmBuffer) }
