@@ -100,8 +100,14 @@ struct ContentView: View {
                 statusMessage: transcriptionEngine?.assetStatus,
                 errorMessage: transcriptionEngine?.lastError,
                 modelsReady: transcriptionEngine?.modelsReady ?? false,
+                hasError: transcriptionEngine?.hasError ?? false,
+                activeErrors: transcriptionEngine?.activeErrors ?? [],
                 onStartCallCapture: { startSession(type: .callCapture) },
                 onStartVoiceMemo: { startSession(type: .voiceMemo) },
+                onStartLastUsed: {
+                    let type = settings.lastUsedSessionType
+                    startSession(type: type)
+                },
                 onStop: stopSession
             )
         }
@@ -269,7 +275,6 @@ struct ContentView: View {
                     volatileYouText: transcriptStore.volatileYouText,
                     volatileThemText: transcriptStore.volatileThemText
                 )
-                WaveformView(isRecording: isRunning, audioLevel: audioLevel)
             }
         } else if let selectedID = selectedEntryID,
                   let _ = libraryEntries.first(where: { $0.id == selectedID }) {
@@ -326,6 +331,7 @@ struct ContentView: View {
 
     private func startSession(type: SessionType) {
         transcriptStore.clear()
+        settings.lastUsedSessionType = type
         silenceSeconds = 0
         sessionElapsed = 0
         sessionName = ""
