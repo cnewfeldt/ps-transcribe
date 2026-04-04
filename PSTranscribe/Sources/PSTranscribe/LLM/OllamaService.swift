@@ -59,7 +59,20 @@ actor OllamaService {
         return response.models
     }
 
-    func generate(prompt: String, model: String) async throws -> String {
+    func generate(prompt: String, model: String, timeout: TimeInterval = 2.0) async throws -> String {
+        // When a non-default timeout is requested (e.g. live LLM analysis calls
+        // that legitimately need > 2s), build a dedicated ephemeral session so
+        // the health-check 2s default does not kill the request.
+        let callSession: URLSession
+        if timeout != 2.0 {
+            let config = URLSessionConfiguration.ephemeral
+            config.timeoutIntervalForRequest = timeout
+            config.timeoutIntervalForResource = timeout
+            callSession = URLSession(configuration: config)
+        } else {
+            callSession = session
+        }
+
         var request = URLRequest(url: baseURL.appending(path: "/api/generate"))
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -70,7 +83,7 @@ actor OllamaService {
             options: OllamaGenerateRequest.OllamaOptions(numCtx: 16384)  // OLMA-06
         )
         request.httpBody = try JSONEncoder().encode(body)
-        let (data, _) = try await session.data(for: request)
+        let (data, _) = try await callSession.data(for: request)
         let decoded = try JSONDecoder().decode(OllamaGenerateResponse.self, from: data)
         return decoded.response
     }
