@@ -79,12 +79,12 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Ollama Integration
 
-- [ ] **OLMA-01**: App detects whether Ollama is installed and running on the local machine
+- [x] **OLMA-01**: App detects whether Ollama is installed and running on the local machine
 - [ ] **OLMA-02**: Settings pane shows Ollama connection status (connected/not found/not running)
-- [ ] **OLMA-03**: User can browse available Ollama models from within the app
+- [x] **OLMA-03**: User can browse available Ollama models from within the app
 - [ ] **OLMA-04**: User can download/pull Ollama models from within the app with progress indication
-- [ ] **OLMA-05**: Ollama operations use 2-second timeout and never block the recording pipeline
-- [ ] **OLMA-06**: Ollama requests explicitly set num_ctx to handle long transcripts (not default 4096)
+- [x] **OLMA-05**: Ollama operations use 2-second timeout and never block the recording pipeline
+- [x] **OLMA-06**: Ollama requests explicitly set num_ctx to handle long transcripts (not default 4096)
 
 ### Live LLM Analysis
 
@@ -178,12 +178,12 @@ Deferred to future milestone. Tracked but not in current roadmap.
 | ONBR-03 | Phase 4 | Complete |
 | ONBR-04 | Phase 4 | Complete |
 | ONBR-05 | Phase 4 | Complete |
-| OLMA-01 | Phase 5 | Pending |
+| OLMA-01 | Phase 5 | Complete |
 | OLMA-02 | Phase 5 | Pending |
-| OLMA-03 | Phase 5 | Pending |
+| OLMA-03 | Phase 5 | Complete |
 | OLMA-04 | Phase 5 | Pending |
-| OLMA-05 | Phase 5 | Pending |
-| OLMA-06 | Phase 5 | Pending |
+| OLMA-05 | Phase 5 | Complete |
+| OLMA-06 | Phase 5 | Complete |
 | LLMA-01 | Phase 6 | Pending |
 | LLMA-02 | Phase 6 | Pending |
 | LLMA-03 | Phase 6 | Pending |

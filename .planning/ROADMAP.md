@@ -99,10 +99,10 @@ Plans:
   1. Settings pane shows live Ollama connection status -- connected, not found, or not running -- without the user needing to configure anything manually
   2. User can browse models available in their local Ollama instance and pull new models from within the app, with download progress visible
   3. Ollama connection failures or timeouts never affect recording -- the transcription pipeline operates identically whether Ollama is present or absent
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
-- [ ] 05-01-PLAN.md -- OllamaService actor, Codable types, and unit tests
+- [x] 05-01-PLAN.md -- OllamaService actor, Codable types, and unit tests
 - [ ] 05-02-PLAN.md -- OllamaState bridge, AppSettings, SettingsView section, Browse Models sheet
 
 ### Phase 6: Live LLM Analysis
@@ -128,5 +128,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. Security + Stability | 5/5 | Complete   | 2026-04-03 |
 | 3. Session Management + Recording Naming | 3/4 | In Progress|  |
 | 4. Mic Button + Model Onboarding | 3/3 | Complete   | 2026-04-03 |
-| 5. Ollama Integration | 0/2 | In Progress | - |
+| 5. Ollama Integration | 1/2 | In Progress|  |
 | 6. Live LLM Analysis | 0/TBD | Not started | - |
