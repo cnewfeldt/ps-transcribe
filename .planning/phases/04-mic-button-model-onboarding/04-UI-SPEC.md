@@ -35,7 +35,7 @@ Declared values (multiples of 4 only). Source: extracted from ControlBar.swift a
 | Token | Value | Usage |
 |-------|-------|-------|
 | xs | 4px | Error/status text vertical padding (`.padding(.vertical, 4)`) |
-| sm | 8px | Button inner horizontal padding, dot spacing, ring gap |
+| sm | 8px | Button inner horizontal padding, dot spacing, ring gap, ControlBar row vertical padding |
 | md | 16px | Default horizontal padding (`.padding(.horizontal, 16)`) |
 | lg | 24px | Section gap within ControlBar rows |
 | xl | 28px | OnboardingView outer padding (`.padding(28)`) |
@@ -45,7 +45,7 @@ Declared values (multiples of 4 only). Source: extracted from ControlBar.swift a
 Exceptions:
 - MicButton touch/click target: 44pt minimum (`.frame(width: 44, height: 44)` on icon frame). Source: CONTEXT.md D-06 (icon 40-48pt).
 - Green pulsing ring outer diameter: 52pt (ring strokes at 56pt, icon frame 44pt). Source: RESEARCH.md code example.
-- ControlBar row vertical padding: 10pt (existing `.padding(.vertical, 10)` preserved). Source: ControlBar.swift.
+- ControlBar row vertical padding: 8pt (`.padding(.vertical, 8)` -- uses `sm` token). Source: ControlBar.swift, updated from 10pt to align with 4-point scale.
 - Button vertical padding: 12pt (existing `.padding(.vertical, 12)` preserved on record buttons). Source: ControlBar.swift.
 
 ---
@@ -53,6 +53,8 @@ Exceptions:
 ## Typography
 
 Source: codebase inspection -- all typography uses `.system(size:weight:)`. No custom fonts.
+
+**Maximum 2 weights declared: 400 (regular) and 600 (semibold).**
 
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
@@ -66,7 +68,7 @@ Notes:
 - Error text in ControlBar: 10px regular (`Color.recordRed`). Source: ControlBar.swift line 34.
 - OnboardingView step title: 16px semibold. Source: OnboardingView.swift line 39.
 - OnboardingView body: 13px regular with `.lineSpacing(3)`. Source: OnboardingView.swift line 44.
-- "Get Started" / "Next" / "Try Again" button label: 13px medium (weight 500). Source: OnboardingView.swift line 135.
+- "Get Started" / "Next" / "Try Again" button label: 13px **semibold (weight 600)**. Weight 500/medium is not used -- all button labels use 600/semibold consistent with the ControlBar button pattern.
 - Model status subtext: 11px regular (`Color.fg2` / `.tertiary`). Source: OnboardingView.swift line 87.
 - Download fine-print: 10px regular (`.quaternary`). Source: OnboardingView.swift line 93.
 
@@ -137,10 +139,10 @@ Error overrides recording: if `hasError == true`, error state renders regardless
 - recording: calls `onStop()` -- second stop mechanism alongside existing stop bar
 - error: calls `openSettings()` -- `NSApp.sendAction(Selector("showSettingsWindow:"))` pattern
 
-**Tooltip (error state only):**
-- `.help(activeErrorsJoined)` where `activeErrorsJoined` is newline-separated string of all active errors
-- If newline rendering fails in QA, fall back to " | " separator
-- Source: CONTEXT.md D-09, RESEARCH.md pitfall 3
+**Tooltips:**
+- idle state: `.help("Start Recording")` -- discoverability tooltip for first-time and returning users
+- recording state: no tooltip (action is visually clear from the active ring animation)
+- error state: `.help(activeErrorsJoined)` where `activeErrorsJoined` is newline-separated string of all active errors. If newline rendering fails in QA, fall back to " | " separator. Source: CONTEXT.md D-09, RESEARCH.md pitfall 3.
 
 **Animation (recording state only):**
 - Type: radar ping -- scale outward with opacity fade, non-reversing repeat
@@ -179,7 +181,7 @@ MicButton is always rendered in the view hierarchy (never conditionally inserted
 | Icon | `xmark.circle` in `Color.recordRed`, 40pt light weight |
 | Title | "Download Failed" -- 16px semibold |
 | Body | Error detail from `modelStatus` string -- 13px regular, `.secondary` |
-| Button | "Try Again" -- 13px medium weight, `Color.accent1` background, calls `onRetry()` |
+| Button | "Try Again" -- 13px semibold (weight 600), `Color.accent1` background, calls `onRetry()` |
 
 Failure detection: `downloadFailed` computed property -- `!modelsReady && modelStatus.lowercased().contains("failed")`.
 
@@ -217,11 +219,9 @@ Source: REQUIREMENTS.md + OnboardingView.swift existing copy + CONTEXT.md decisi
 | Onboarding fine print | "Download times will vary based on the speed of your internet connection." |
 | Error tooltip -- mic permission denied | "Microphone access denied. Enable in System Settings > Privacy > Microphone." |
 | Error tooltip -- model download failed | "Speech model download failed. Check your internet connection." |
-| Error tooltip -- device disconnected | Passed through from `TranscriptionEngine.lastError` string |
-| Error tooltip -- system audio denied | Passed through from `TranscriptionEngine.lastError` string |
-| ControlBar stop button label | "Stop Recording" (existing -- no change) |
-| Silence auto-stop warning | "Silence -- auto-stop in {N}s" (existing -- no change) |
-| MicButton idle tooltip | none (no `.help()` in idle/recording states) |
+| Error tooltip -- device disconnected | `lastError` if non-nil and non-empty; fallback: "Audio device disconnected. Reconnect your microphone." |
+| Error tooltip -- system audio denied | `lastError` if non-nil and non-empty; fallback: "System audio permission denied. Enable in System Settings > Privacy > Screen Recording." |
+| MicButton idle tooltip | "Start Recording" |
 | MicButton recording tooltip | none |
 
 Destructive actions in this phase:
@@ -236,7 +236,7 @@ Destructive actions in this phase:
 | Condition | State | Visual |
 |-----------|-------|--------|
 | `modelsReady == false`, no errors | disabled idle | `mic.fill`, `Color.fg2`, opacity 0.4 |
-| `modelsReady == true`, not recording, no errors | idle | `mic.fill`, `Color.fg2`, opacity 1.0 |
+| `modelsReady == true`, not recording, no errors | idle | `mic.fill`, `Color.fg2`, opacity 1.0, tooltip "Start Recording" |
 | `isRecording == true`, no errors | recording | `mic.fill`, `Color.green`, green pulsing ring |
 | `hasError == true` (any condition) | error | `mic.slash`, `Color.recordRed`, `.help(errors)` |
 
@@ -269,11 +269,13 @@ Note: error overrides recording. If recording fails and `hasError` becomes true 
 
 3. **`activeErrors: [String]`** computed property on `TranscriptionEngine` aggregates the four D-08 conditions. Join with `"\n"` for `.help()`. Do not replace `lastError: String?` -- it is used throughout the codebase. Source: RESEARCH.md Pattern 2.
 
-4. **ControlBar `onStartLastUsed` callback** -- new parameter. Calls `onStartCallCapture` or `onStartVoiceMemo` based on `AppSettings.lastUsedSessionType`. `AppSettings` gets a new `lastUsedSessionType: SessionType` property persisted via `didSet`/UserDefaults. Source: CONTEXT.md D-03, RESEARCH.md code example.
+4. **Error tooltip fallback pattern** -- for device-disconnected and system-audio-denied conditions, read `lastError` first. If `lastError` is nil or empty string, substitute the declared fallback copy from the Copywriting Contract above. This ensures the tooltip is never blank.
 
-5. **Settings window from error tap** -- reuse the exact `NSApp.sendAction(Selector("showSettingsWindow:"))` pattern from ControlBar gear button. No custom window management. Source: RESEARCH.md "Don't Hand-Roll" table.
+5. **ControlBar `onStartLastUsed` callback** -- new parameter. Calls `onStartCallCapture` or `onStartVoiceMemo` based on `AppSettings.lastUsedSessionType`. `AppSettings` gets a new `lastUsedSessionType: SessionType` property persisted via `didSet`/UserDefaults. Source: CONTEXT.md D-03, RESEARCH.md code example.
 
-6. **WaveformView.swift deleted** -- ContentView line 269 `WaveformView(isRecording:audioLevel:)` removed. `audioLevel` parameter on ControlBar remains available for optional ring intensity modulation. Source: CONTEXT.md D-15, D-16.
+6. **Settings window from error tap** -- reuse the exact `NSApp.sendAction(Selector("showSettingsWindow:"))` pattern from ControlBar gear button. No custom window management. Source: RESEARCH.md "Don't Hand-Roll" table.
+
+7. **WaveformView.swift deleted** -- ContentView line 269 `WaveformView(isRecording:audioLevel:)` removed. `audioLevel` parameter on ControlBar remains available for optional ring intensity modulation. Source: CONTEXT.md D-15, D-16.
 
 ---
 
