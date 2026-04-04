@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-04-04T05:46:45.259Z"
+stopped_at: "Checkpoint: Task 2 human-verify for 05-02-PLAN.md"
+last_updated: "2026-04-04T05:52:54.814Z"
 last_activity: 2026-04-04
 progress:
   total_phases: 6
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 17
-  completed_plans: 16
+  completed_plans: 17
   percent: 100
 ---
 
@@ -94,6 +94,8 @@ Recent decisions affecting current work:
 - [Phase 05-ollama-integration]: Internal (not private) let session: URLSession on OllamaService actor enables test timeout verification without protocol abstraction
 - [Phase 05-ollama-integration]: OllamaGenerateRequest.OllamaOptions defined as nested struct -- scoped to use site, avoids namespace pollution
 - [Phase 05-ollama-integration]: checkConnection() has no state mutation -- concurrent calls are idempotent, no reentrancy guard needed
+- [Phase 05-ollama-integration]: OllamaState instantiated at PSTranscribeApp App level and passed to Settings scene -- ensures single OllamaState instance, avoids duplicate actors per window open
+- [Phase 05-ollama-integration]: OllamaModel and OllamaModelDetails given Equatable conformance to support .onChange(of: ollamaState.models) on SwiftUI Form
 
 ### Pending Todos
 
@@ -106,6 +108,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-04T05:46:45.256Z
-Stopped at: Completed 05-01-PLAN.md
+Last session: 2026-04-04T05:52:50.008Z
+Stopped at: Checkpoint: Task 2 human-verify for 05-02-PLAN.md
 Resume file: None
