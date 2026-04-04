@@ -114,8 +114,13 @@ Plans:
   2. Analysis updates periodically as new transcript chunks arrive -- it does not update on every utterance and does not block or delay the transcript display
   3. If Ollama is unavailable, recording and transcription proceed exactly as before -- the panel is simply absent, no error state required
   4. When a session ends, the analysis results are saved alongside the transcript on disk
-**Plans**: TBD
+**Plans:** 3 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 06-01-PLAN.md -- AnalysisState types, AnalysisCoordinator actor (threshold/cooldown/in-flight), OllamaService timeout extension, unit tests
+- [ ] 06-02-PLAN.md -- TranscriptLogger.appendAnalysis persistence, TranscriptParser.parseAnalysis for review mode, tests
+- [ ] 06-03-PLAN.md -- AnalysisPanel view, ControlBar toggle, ContentView wiring, PSTranscribeApp OllamaState passthrough, visual verification
 
 ## Progress
 
@@ -129,4 +134,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 3. Session Management + Recording Naming | 3/4 | In Progress|  |
 | 4. Mic Button + Model Onboarding | 3/3 | Complete   | 2026-04-03 |
 | 5. Ollama Integration | 2/2 | Complete   | 2026-04-04 |
-| 6. Live LLM Analysis | 0/TBD | Not started | - |
+| 6. Live LLM Analysis | 0/3 | Not started | - |
