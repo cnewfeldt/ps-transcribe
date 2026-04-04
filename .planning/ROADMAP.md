@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 1: Rebrand** - Rename Tome to PS Transcribe across all code, config, CI, and user settings
 - [x] **Phase 2: Security + Stability** - Resolve all 12 SCAN findings and fix crash/data-loss bugs (completed 2026-04-03)
 - [ ] **Phase 3: Session Management + Recording Naming** - Session library grid, lifecycle, and flexible recording naming
-- [ ] **Phase 4: Mic Button + Model Onboarding** - Three-state mic button and first-launch model download flow
+- [x] **Phase 4: Mic Button + Model Onboarding** - Three-state mic button and first-launch model download flow (completed 2026-04-03)
 - [ ] **Phase 5: Ollama Integration** - Local Ollama detection, model browser, and decoupled LLM service
 - [ ] **Phase 6: Live LLM Analysis** - Live insights panel showing summary, action items, and key topics during recording
 
@@ -83,12 +83,12 @@ Plans:
   1. The waveform visualizer is gone -- a mic icon button is the sole recording control, with a pulsing green ring during recording and a red error state when something is wrong
   2. Error state is never silent -- hovering shows a tooltip with the error message, clicking opens settings with the error displayed
   3. On first launch without a transcription model, the app shows a download prompt with a progress indicator -- recording is disabled until the download succeeds or fails with a clear message
-**Plans:** 1/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 04-01-PLAN.md -- Engine error aggregation, retry-safe model download, OnboardingView failure/retry, AppSettings lastUsedSessionType
-- [ ] 04-02-PLAN.md -- MicButton component, ControlBar layout restructure, WaveformView deletion, ContentView wiring
-- [ ] 04-03-PLAN.md -- Full test suite + visual verification checkpoint
+- [x] 04-02-PLAN.md -- MicButton component, ControlBar layout restructure, WaveformView deletion, ContentView wiring
+- [x] 04-03-PLAN.md -- Visual verification + ControlBar redesign (session buttons embed mic indicator, expand to full width when recording)
 **UI hint**: yes
 
 ### Phase 5: Ollama Integration
@@ -99,7 +99,11 @@ Plans:
   1. Settings pane shows live Ollama connection status -- connected, not found, or not running -- without the user needing to configure anything manually
   2. User can browse models available in their local Ollama instance and pull new models from within the app, with download progress visible
   3. Ollama connection failures or timeouts never affect recording -- the transcription pipeline operates identically whether Ollama is present or absent
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 05-01-PLAN.md -- OllamaService actor, Codable types, and unit tests
+- [ ] 05-02-PLAN.md -- OllamaState bridge, AppSettings, SettingsView section, Browse Models sheet
 
 ### Phase 6: Live LLM Analysis
 **Goal**: During a recording session, a live side panel surfaces an AI-generated summary, action items, and key topics that update as the conversation progresses and are saved with the transcript
@@ -123,6 +127,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 1. Rebrand | 1/3 | In Progress|  |
 | 2. Security + Stability | 5/5 | Complete   | 2026-04-03 |
 | 3. Session Management + Recording Naming | 3/4 | In Progress|  |
-| 4. Mic Button + Model Onboarding | 1/3 | In Progress|  |
-| 5. Ollama Integration | 0/TBD | Not started | - |
+| 4. Mic Button + Model Onboarding | 3/3 | Complete   | 2026-04-03 |
+| 5. Ollama Integration | 0/2 | In Progress | - |
 | 6. Live LLM Analysis | 0/TBD | Not started | - |
