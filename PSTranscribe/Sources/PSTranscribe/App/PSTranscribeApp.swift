@@ -16,9 +16,12 @@ struct PSTranscribeApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(settings: settings)
+            ContentView(settings: settings, ollamaState: ollamaState)
                 .onAppear {
                     settings.applyScreenShareVisibility()
+                }
+                .task {
+                    await ollamaState.refresh()
                 }
         }
         .windowStyle(.hiddenTitleBar)
