@@ -21,6 +21,23 @@ final class TranscriptionEngine {
     var assetStatus: String = "Ready"
     var lastError: String?
 
+    var activeErrors: [String] {
+        var errors: [String] = []
+        let micStatus = AVCaptureDevice.authorizationStatus(for: .audio)
+        if micStatus == .denied || micStatus == .restricted {
+            errors.append("Microphone access denied. Enable in System Settings > Privacy > Microphone.")
+        }
+        if !modelsReady && assetStatus.lowercased().contains("failed") {
+            errors.append("Speech model download failed. Check your internet connection.")
+        }
+        if let err = lastError, !err.isEmpty, !errors.contains(where: { $0 == err }) {
+            errors.append(err)
+        }
+        return errors
+    }
+
+    var hasError: Bool { !activeErrors.isEmpty }
+
     private let systemCapture = SystemAudioCapture()
     private let micCapture = MicCapture()
     private let transcriptStore: TranscriptStore
@@ -72,6 +89,8 @@ final class TranscriptionEngine {
         } catch {
             let msg = "Failed to download models: \(error.localizedDescription)"
             diagLog("[ENGINE-PREP-FAIL] \(msg)")
+            self.asrManager = nil
+            self.vadManager = nil
             lastError = msg
             assetStatus = "Model download failed"
         }

@@ -35,6 +35,12 @@ final class AppSettings {
         }
     }
 
+    var lastUsedSessionType: SessionType {
+        didSet {
+            UserDefaults.standard.set(lastUsedSessionType.rawValue, forKey: "lastUsedSessionType")
+        }
+    }
+
     init() {
         let defaults = UserDefaults.standard
         self.transcriptionLocale = defaults.string(forKey: "transcriptionLocale") ?? "en-US"
@@ -48,6 +54,8 @@ final class AppSettings {
         } else {
             self.hideFromScreenShare = defaults.bool(forKey: "hideFromScreenShare")
         }
+        let rawType = defaults.string(forKey: "lastUsedSessionType") ?? SessionType.callCapture.rawValue
+        self.lastUsedSessionType = SessionType(rawValue: rawType) ?? .callCapture
     }
 
     /// Apply current screen-share visibility to all app windows.
