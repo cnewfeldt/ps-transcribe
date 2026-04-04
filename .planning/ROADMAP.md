@@ -83,7 +83,12 @@ Plans:
   1. The waveform visualizer is gone -- a mic icon button is the sole recording control, with a pulsing green ring during recording and a red error state when something is wrong
   2. Error state is never silent -- hovering shows a tooltip with the error message, clicking opens settings with the error displayed
   3. On first launch without a transcription model, the app shows a download prompt with a progress indicator -- recording is disabled until the download succeeds or fails with a clear message
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 04-01-PLAN.md -- Engine error aggregation, retry-safe model download, OnboardingView failure/retry, AppSettings lastUsedSessionType
+- [ ] 04-02-PLAN.md -- MicButton component, ControlBar layout restructure, WaveformView deletion, ContentView wiring
+- [ ] 04-03-PLAN.md -- Full test suite + visual verification checkpoint
 **UI hint**: yes
 
 ### Phase 5: Ollama Integration
@@ -118,6 +123,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 1. Rebrand | 1/3 | In Progress|  |
 | 2. Security + Stability | 5/5 | Complete   | 2026-04-03 |
 | 3. Session Management + Recording Naming | 3/4 | In Progress|  |
-| 4. Mic Button + Model Onboarding | 0/TBD | Not started | - |
+| 4. Mic Button + Model Onboarding | 0/3 | Not started | - |
 | 5. Ollama Integration | 0/TBD | Not started | - |
 | 6. Live LLM Analysis | 0/TBD | Not started | - |
