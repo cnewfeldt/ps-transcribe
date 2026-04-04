@@ -478,6 +478,40 @@ tags:
         }
     }
 
+    // MARK: - Analysis
+
+    /// Appends the final analysis section to a transcript file. Called after finalizeFrontmatter().
+    /// Per D-14: written once at session end. Per LLMA-07: saved alongside transcript.
+    /// Per D-12/D-13: format is ## Analysis > ### Summary, ### Action Items (checkboxes), ### Key Topics (comma-separated).
+    func appendAnalysis(to filePath: URL, summary: String, actionItems: [String], keyTopics: [String]) {
+        // Guard: omit section entirely if no analysis was generated (UI-SPEC persistence contract)
+        guard !summary.isEmpty || !actionItems.isEmpty || !keyTopics.isEmpty else {
+            log.info("appendAnalysis: no analysis data, skipping")
+            return
+        }
+
+        // Build markdown per D-12/D-13
+        var content = "\n\n## Analysis\n\n### Summary\n\n\(summary)\n\n### Action Items\n\n"
+        for item in actionItems {
+            content += "- [ ] \(item)\n"
+        }
+        content += "\n### Key Topics\n\n"
+        content += keyTopics.joined(separator: ", ")
+        content += "\n"
+
+        // Append to file
+        guard let handle = try? FileHandle(forWritingTo: filePath) else {
+            log.error("appendAnalysis: cannot open file at \(filePath.path, privacy: .public)")
+            return
+        }
+        handle.seekToEndOfFile()
+        if let data = content.data(using: .utf8) {
+            handle.write(data)
+        }
+        try? handle.close()
+        log.info("appendAnalysis: wrote analysis section to \(filePath.lastPathComponent, privacy: .public)")
+    }
+
     // MARK: - Naming
 
     /// The file URL for the active session, or the last session's path post-finalization.
