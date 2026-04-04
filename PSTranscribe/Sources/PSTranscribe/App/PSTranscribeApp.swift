@@ -6,6 +6,7 @@ import Sparkle
 struct PSTranscribeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var settings: AppSettings
+    @State private var ollamaState = OllamaState()
     private let updaterController = AppUpdaterController()
 
     init() {
@@ -28,7 +29,7 @@ struct PSTranscribeApp: App {
             }
         }
         Settings {
-            SettingsView(settings: settings, updater: updaterController.updater)
+            SettingsView(settings: settings, updater: updaterController.updater, ollamaState: ollamaState)
         }
         MenuBarExtra {
             Text("PS Transcribe")

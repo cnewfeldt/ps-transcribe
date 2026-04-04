@@ -8,7 +8,7 @@ struct OllamaTagsResponse: Codable, Sendable {
 
 // MARK: - Model
 
-struct OllamaModel: Codable, Identifiable, Sendable {
+struct OllamaModel: Codable, Identifiable, Equatable, Sendable {
     let name: String
     let model: String
     let size: Int
@@ -19,7 +19,7 @@ struct OllamaModel: Codable, Identifiable, Sendable {
 
 // MARK: - Model Details
 
-struct OllamaModelDetails: Codable, Sendable {
+struct OllamaModelDetails: Codable, Equatable, Sendable {
     let parameterSize: String
     let quantizationLevel: String
     let family: String
