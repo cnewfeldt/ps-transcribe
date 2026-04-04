@@ -68,6 +68,55 @@ func parseTranscriptContent(_ content: String) -> [Utterance] {
     }
 }
 
+// MARK: - Analysis Parsing
+
+/// Represents a parsed ## Analysis section from a transcript file.
+struct ParsedAnalysis {
+    let summary: String
+    let actionItems: [String]
+    let keyTopics: [String]
+}
+
+/// Parse analysis from a transcript file. Returns nil if file doesn't exist or has no ## Analysis section.
+func parseAnalysis(at url: URL) -> ParsedAnalysis? {
+    guard let content = try? String(contentsOf: url, encoding: .utf8) else { return nil }
+    return parseAnalysisContent(content)
+}
+
+/// Internal parse function exposed for testing without disk I/O.
+/// Extracts Summary / Action Items / Key Topics from the ## Analysis section.
+func parseAnalysisContent(_ content: String) -> ParsedAnalysis? {
+    guard let analysisStart = content.range(of: "## Analysis") else { return nil }
+    let analysisSection = String(content[analysisStart.upperBound...])
+
+    func extractSection(after marker: String, before nextMarker: String?) -> String {
+        guard let startRange = analysisSection.range(of: marker) else { return "" }
+        let fromStart = String(analysisSection[startRange.upperBound...])
+        if let next = nextMarker, let endRange = fromStart.range(of: next) {
+            return String(fromStart[..<endRange.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return fromStart.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    let summary = extractSection(after: "### Summary", before: "### Action Items")
+    let actionBlock = extractSection(after: "### Action Items", before: "### Key Topics")
+    let topicsBlock = extractSection(after: "### Key Topics", before: nil)
+
+    let actionItems = actionBlock
+        .components(separatedBy: "\n")
+        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        .filter { $0.hasPrefix("- [ ] ") }
+        .map { String($0.dropFirst(6)) }
+        .filter { !$0.isEmpty }
+
+    let keyTopics = topicsBlock
+        .components(separatedBy: ",")
+        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        .filter { !$0.isEmpty }
+
+    return ParsedAnalysis(summary: summary, actionItems: actionItems, keyTopics: keyTopics)
+}
+
 /// Constructs an Obsidian deep link for a transcript file.
 ///
 /// - Parameters:
