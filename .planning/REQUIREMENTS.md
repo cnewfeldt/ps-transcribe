@@ -65,17 +65,17 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [ ] **MICB-01**: Waveform visualizer replaced with a mic icon button
 - [ ] **MICB-02**: Idle state shows static mic icon; clicking starts recording
 - [ ] **MICB-03**: Recording state shows green pulsing ring animation; clicking stops recording
-- [ ] **MICB-04**: Error state shows red mic icon with circle/slash overlay
+- [x] **MICB-04**: Error state shows red mic icon with circle/slash overlay
 - [ ] **MICB-05**: Clicking error state opens settings pane with error message displayed
 - [ ] **MICB-06**: Hovering error state shows error message as tooltip
 
 ### Model Onboarding
 
-- [ ] **ONBR-01**: First launch shows message to download transcription model before recording
-- [ ] **ONBR-02**: Download shows a loading/progress indicator
-- [ ] **ONBR-03**: Successful download shows success message with close button
-- [ ] **ONBR-04**: Failed download shows error message with close button
-- [ ] **ONBR-05**: Recording is disabled until model is successfully downloaded
+- [x] **ONBR-01**: First launch shows message to download transcription model before recording
+- [x] **ONBR-02**: Download shows a loading/progress indicator
+- [x] **ONBR-03**: Successful download shows success message with close button
+- [x] **ONBR-04**: Failed download shows error message with close button
+- [x] **ONBR-05**: Recording is disabled until model is successfully downloaded
 
 ### Ollama Integration
 
@@ -170,14 +170,14 @@ Deferred to future milestone. Tracked but not in current roadmap.
 | MICB-01 | Phase 4 | Pending |
 | MICB-02 | Phase 4 | Pending |
 | MICB-03 | Phase 4 | Pending |
-| MICB-04 | Phase 4 | Pending |
+| MICB-04 | Phase 4 | Complete |
 | MICB-05 | Phase 4 | Pending |
 | MICB-06 | Phase 4 | Pending |
-| ONBR-01 | Phase 4 | Pending |
-| ONBR-02 | Phase 4 | Pending |
-| ONBR-03 | Phase 4 | Pending |
-| ONBR-04 | Phase 4 | Pending |
-| ONBR-05 | Phase 4 | Pending |
+| ONBR-01 | Phase 4 | Complete |
+| ONBR-02 | Phase 4 | Complete |
+| ONBR-03 | Phase 4 | Complete |
+| ONBR-04 | Phase 4 | Complete |
+| ONBR-05 | Phase 4 | Complete |
 | OLMA-01 | Phase 5 | Pending |
 | OLMA-02 | Phase 5 | Pending |
 | OLMA-03 | Phase 5 | Pending |

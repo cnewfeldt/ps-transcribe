@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 4 context gathered
-last_updated: "2026-04-04T01:50:55.269Z"
-last_activity: 2026-04-03
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-04-04T02:40:24.906Z"
+last_activity: 2026-04-04
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 12
-  completed_plans: 12
+  total_plans: 15
+  completed_plans: 13
   percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-01)
 
 **Core value:** Users can record conversations and voice memos with accurate, private, on-device transcription and get live AI-powered insights without anything leaving their machine.
-**Current focus:** Phase 03 — session-management-recording-naming
+**Current focus:** Phase 04 — mic-button-model-onboarding
 
 ## Current Position
 
-Phase: 4
-Plan: Not started
+Phase: 04 (mic-button-model-onboarding) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
-Last activity: 2026-04-03
+Last activity: 2026-04-04
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -59,6 +59,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03-session-management-recording-naming P01 | 208 | 2 tasks | 9 files |
 | Phase 03-session-management-recording-naming P02 | 4 | 2 tasks | 5 files |
 | Phase 03-session-management-recording-naming P03 | 12 | 2 tasks | 4 files |
+| Phase 04-mic-button-model-onboarding P01 | 1 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,9 @@ Recent decisions affecting current work:
 - [Phase 03-session-management-recording-naming]: setName uses existing atomicRewrite infrastructure -- no new file I/O patterns needed
 - [Phase 03-session-management-recording-naming]: renameFinalized extracts date prefix from existing filename prefix(19) rather than re-parsing
 - [Phase 03-session-management-recording-naming]: onRename handler falls back to name-only update when file does not exist (missing file badge scenario)
+- [Phase 04-mic-button-model-onboarding]: activeErrors aggregates mic permission denied, model download failed status, and lastError -- downloadFailed computed from modelStatus contains 'failed' to avoid coupling to specific error strings
+- [Phase 04-mic-button-model-onboarding]: prepareModels() retry enabled by nilifying asrManager and vadManager in catch block -- guard !modelsReady, asrManager == nil handles re-entry correctly without guard change
+- [Phase 04-mic-button-model-onboarding]: lastUsedSessionType defaults to .callCapture per D-03, persisted via didSet/UserDefaults pattern matching existing AppSettings properties
 
 ### Pending Todos
 
@@ -98,6 +102,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-04T01:50:55.266Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-mic-button-model-onboarding/04-CONTEXT.md
+Last session: 2026-04-04T02:40:24.904Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: None
