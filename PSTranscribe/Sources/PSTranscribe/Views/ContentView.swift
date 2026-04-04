@@ -113,7 +113,10 @@ struct ContentView: View {
                 OnboardingView(
                     isPresented: $showOnboarding,
                     modelStatus: transcriptionEngine?.assetStatus ?? "Waiting...",
-                    modelsReady: transcriptionEngine?.modelsReady ?? false
+                    modelsReady: transcriptionEngine?.modelsReady ?? false,
+                    onRetry: {
+                        Task { await transcriptionEngine?.prepareModels() }
+                    }
                 )
                 .transition(.opacity)
             }

@@ -4,6 +4,7 @@ struct OnboardingView: View {
     @Binding var isPresented: Bool
     let modelStatus: String
     let modelsReady: Bool
+    let onRetry: () -> Void
     @State private var currentStep = 0
 
     private let totalSteps = 3
@@ -20,6 +21,10 @@ struct OnboardingView: View {
             "Your conversation is transcribed in real time. \"You\" captures your mic, \"Them\" captures system audio from the other side. The transcript is the primary view -- clean and full-window."
         ),
     ]
+
+    private var downloadFailed: Bool {
+        !modelsReady && modelStatus.lowercased().contains("failed")
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -48,27 +53,64 @@ struct OnboardingView: View {
                     .lineSpacing(3)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
-                // Model download step
-                Image(systemName: modelsReady ? "checkmark.circle" : "arrow.down.circle")
-                    .font(.system(size: 40, weight: .light))
-                    .foregroundStyle(modelsReady ? Color.green : Color.accent1)
-                    .frame(height: 52)
-
-                Spacer().frame(height: 20)
-
-                Text(modelsReady ? "Speech Model Ready" : "Installing Speech Model")
-                    .font(.system(size: 16, weight: .semibold))
-                    .multilineTextAlignment(.center)
-
-                Spacer().frame(height: 10)
-
+                // Model download step -- three states
                 if modelsReady {
+                    // SUCCESS state
+                    Image(systemName: "checkmark.circle")
+                        .font(.system(size: 40, weight: .light))
+                        .foregroundStyle(Color.green)
+                        .frame(height: 52)
+
+                    Spacer().frame(height: 20)
+
+                    Text("Speech Model Ready")
+                        .font(.system(size: 16, weight: .semibold))
+                        .multilineTextAlignment(.center)
+
+                    Spacer().frame(height: 10)
+
                     Text("The on-device speech model is installed. You're ready to start transcribing.")
                         .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                         .lineSpacing(3)
+
+                } else if downloadFailed {
+                    // FAILURE state
+                    Image(systemName: "xmark.circle")
+                        .font(.system(size: 40, weight: .light))
+                        .foregroundStyle(Color.recordRed)
+                        .frame(height: 52)
+
+                    Spacer().frame(height: 20)
+
+                    Text("Download Failed")
+                        .font(.system(size: 16, weight: .semibold))
+                        .multilineTextAlignment(.center)
+
+                    Spacer().frame(height: 10)
+
+                    Text(modelStatus)
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(3)
+
                 } else {
+                    // DOWNLOADING state
+                    Image(systemName: "arrow.down.circle")
+                        .font(.system(size: 40, weight: .light))
+                        .foregroundStyle(Color.accent1)
+                        .frame(height: 52)
+
+                    Spacer().frame(height: 20)
+
+                    Text("Installing Speech Model")
+                        .font(.system(size: 16, weight: .semibold))
+                        .multilineTextAlignment(.center)
+
+                    Spacer().frame(height: 10)
+
                     Text("Downloading and installing the speech recognition model (~500 MB). This is a one-time setup.")
                         .font(.system(size: 13))
                         .foregroundStyle(.secondary)
@@ -138,13 +180,27 @@ struct OnboardingView: View {
                     }
                     .buttonStyle(.plain)
                     .focusable(false)
+                } else if downloadFailed {
+                    // Retry button
+                    Button {
+                        onRetry()
+                    } label: {
+                        Text("Try Again")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 8)
+                            .background(Color.accent1, in: RoundedRectangle(cornerRadius: 8))
+                    }
+                    .buttonStyle(.plain)
+                    .focusable(false)
                 } else {
-                    // Model step -- "Get Started" only enabled when models are ready
+                    // Get Started -- only enabled when models ready
                     Button {
                         finish()
                     } label: {
                         Text("Get Started")
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 20)
                             .padding(.vertical, 8)
