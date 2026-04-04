@@ -90,13 +90,13 @@ struct ControlBar: View {
                     Button(action: { onToggleAnalysis?() }) {
                         Image(systemName: showAnalysisPanel ? "brain.fill" : "brain")
                             .font(.system(size: 14))
-                            .foregroundStyle(showAnalysisPanel ? Color.accent1 : Color.fg2)
+                            .foregroundStyle(showAnalysisPanel ? Color.accent1 : Color.fg1)
                             .frame(width: 28, height: 28)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .focusable(false)
                     .help(showAnalysisPanel ? "Hide Analysis" : "Show Analysis")
-                    .disabled(!isRecording && !hasAnalysisForReview)
-                    .opacity(!isRecording && !hasAnalysisForReview ? 0.4 : 1.0)
                 }
                 .padding(.horizontal, 12)
                 .padding(.top, 6)
