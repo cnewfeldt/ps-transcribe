@@ -5,6 +5,7 @@ status: draft
 shadcn_initialized: false
 preset: none
 created: 2026-04-04
+revised: 2026-04-04
 ---
 
 # Phase 6 -- UI Design Contract
@@ -37,12 +38,14 @@ Tokens declared as Swift constants where needed. Values match existing patterns 
 | Token | Value | Usage |
 |-------|-------|-------|
 | xs | 4px | Icon-to-text gaps, inline dot indicators |
-| sm | 8px | VStack spacing within bars, button inner VStack |
-| md | 12px | Bubble padding, list row spacing, section padding |
+| sm | 8px | VStack spacing within bars, button inner VStack, list row spacing |
+| md | 16px | Bubble/card padding, section padding, ScrollView content padding |
 | lg | 16px | Bar horizontal padding, element separation |
 | xl | 24px | Panel section internal spacing |
 | 2xl | 32px | Major panel section gaps |
 | 3xl | 48px | Empty state padding (matches existing LibrarySidebar pattern) |
+
+Note: `md` and `lg` both resolve to 16px. `md` signals internal component padding; `lg` signals inter-element separation. They share the same value intentionally -- 16px is the established horizontal padding from `ControlBar.swift`.
 
 Exceptions:
 - Analysis panel toggle button touch target: 28x28pt minimum (matches existing mic icon frame in ControlBar)
@@ -54,22 +57,22 @@ Source: Extracted from `ControlBar.swift` (.padding(.horizontal, 16), .padding(.
 
 ## Typography
 
-All sizes use `.system` font (San Francisco). No custom typeface is introduced in this phase.
+All sizes use `.system` font (San Francisco). No custom typeface is introduced in this phase. Maximum 2 weights: regular (400) and semibold (600). Section headings are visually distinguished from labels via `.textCase(.uppercase)` and `.tracking(0.8)`, not a third weight.
 
-| Role | Size | Weight | Line Height |
-|------|------|--------|-------------|
-| Body | 12pt | regular (400) | 1.5 (SwiftUI default) |
-| Label | 11pt | semibold (600) | 1.2 |
-| Caption | 10pt | regular (400) | 1.2 |
-| Section heading | 10pt | bold (700), uppercase, tracking 0.8 | 1.2 |
+| Role | Size | Weight | Line Height | Modifiers |
+|------|------|--------|-------------|-----------|
+| Body | 12pt | regular (400) | 1.5 (SwiftUI default) | none |
+| Label | 11pt | semibold (600) | 1.2 | none |
+| Caption | 10pt | regular (400) | 1.2 | none |
+| Section heading | 10pt | semibold (600) | 1.2 | `.textCase(.uppercase)`, `.tracking(0.8)` |
 
 Notes:
-- Section headings in the analysis panel (Summary, Action Items, Key Topics) use the same 10pt/bold/uppercase/tracking:0.8 pattern as speaker labels in `UtteranceBubble`
+- Section headings in the analysis panel (Summary, Action Items, Key Topics) use 10pt/semibold/uppercase/tracking:0.8 -- matching the visual treatment of speaker labels in `UtteranceBubble` while staying within the 2-weight limit
 - Action item text uses 12pt/regular body role
 - "Updating..." status label uses 10pt/regular caption role
 - No new font sizes are introduced -- all roles map to existing codebase patterns
 
-Source: `TranscriptView.swift` (speaker label: size 10, weight .bold, tracking 0.8; body: size 12; timestamp: size 10), `ControlBar.swift` (button label: size 11 weight .semibold; caption: size 10)
+Source: `TranscriptView.swift` (speaker label: size 10, weight .bold, tracking 0.8; body: size 12; timestamp: size 10), `ControlBar.swift` (button label: size 11 weight .semibold; caption: size 10). Bold (700) consolidated to semibold (600) to satisfy 2-weight maximum; visual distinction preserved via uppercase + tracking modifiers.
 
 ---
 
@@ -110,7 +113,7 @@ A scrollable right-side panel displaying three sections: Summary, Action Items, 
 VStack(spacing: 0) {
   // Panel header
   HStack {
-    Text("Analysis")       // 10pt bold uppercase tracking:0.8 fg2
+    Text("Analysis")       // 10pt semibold uppercase tracking:0.8 fg2
     Spacer()
     StatusDot()            // 4pt circle, accent1, pulsing when update in-flight
   }
@@ -126,7 +129,7 @@ VStack(spacing: 0) {
       AnalysisSectionCard(title: "Action Items", items: actionItems)
       AnalysisSectionCard(title: "Key Topics", topics: keyTopics)
     }
-    .padding(12)
+    .padding(16)
   }
 }
 .frame(minWidth: 220, idealWidth: 260, maxWidth: 300)
@@ -162,9 +165,9 @@ Reusable card for each section in the panel.
 **Structure:**
 ```
 VStack(alignment: .leading, spacing: 8) {
-  // Section header -- same pattern as UtteranceBubble speaker label
+  // Section header -- 10pt semibold uppercase tracking:0.8 (no bold needed)
   Text(title)
-    .font(.system(size: 10, weight: .bold))
+    .font(.system(size: 10, weight: .semibold))
     .textCase(.uppercase)
     .tracking(0.8)
     .foregroundStyle(Color.accent1)
@@ -180,7 +183,7 @@ VStack(alignment: .leading, spacing: 8) {
       .padding(.leading, 8)
   }
 }
-.padding(10)
+.padding(16)
 .background(Color.bg1.opacity(0.7))
 .clipShape(RoundedRectangle(cornerRadius: 10))
 .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.white.opacity(0.06)))
@@ -200,6 +203,8 @@ HStack(alignment: .top, spacing: 6) {
     .fixedSize(horizontal: false, vertical: true)
 }
 ```
+
+Row spacing between action items: 8px (`sm` token).
 
 ### Key Topics Chips
 
@@ -356,6 +361,15 @@ No third-party component registries. No shadcn. No npm packages. All components 
 | REQUIREMENTS.md | 7 (LLMA-01 through LLMA-07) |
 | Codebase scan | All color tokens, typography sizes/weights, spacing values, animation patterns, component structure patterns |
 | User input | 0 (all design questions answered by upstream artifacts and codebase) |
+
+---
+
+## Revision Log
+
+| Date | Change |
+|------|--------|
+| 2026-04-04 | Initial draft |
+| 2026-04-04 | Fix typography: consolidated bold (700) to semibold (600); section heading visual distinction via `.textCase(.uppercase)` + `.tracking(0.8)`. Fix spacing: `md` token changed from 12px to 16px to match standard spacing scale; list row spacing uses `sm` (8px). |
 
 ---
 
