@@ -39,6 +39,8 @@ struct ContentView: View {
     @State private var loadedUtterances: [Utterance] = []
     @State private var savedConfirmation: Bool = false
     @State private var nameDebounceTask: Task<Void, Never>?
+    @State private var sidebarVisibility: NavigationSplitViewVisibility = .automatic
+    @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         VStack(spacing: 0) {
@@ -48,11 +50,19 @@ struct ContentView: View {
                 isSessionActive: activeSessionType != nil,
                 sessionElapsed: sessionElapsed,
                 isRecording: isRunning,
-                savedConfirmation: savedConfirmation
+                savedConfirmation: savedConfirmation,
+                onToggleSidebar: {
+                    withAnimation {
+                        sidebarVisibility = sidebarVisibility == .detailOnly ? .automatic : .detailOnly
+                    }
+                },
+                onOpenSettings: {
+                    openSettings()
+                }
             )
 
             // NavigationSplitView for sidebar + detail
-            NavigationSplitView {
+            NavigationSplitView(columnVisibility: $sidebarVisibility) {
                 LibrarySidebar(
                     entries: libraryEntries,
                     selectedID: $selectedEntryID,
@@ -85,10 +95,13 @@ struct ContentView: View {
                     }
                 )
                 .navigationSplitViewColumnWidth(min: 180, ideal: 220, max: 300)
+                .ignoresSafeArea(.all, edges: .top)
             } detail: {
                 detailView
             }
             .navigationSplitViewStyle(.balanced)
+            .toolbar(removing: .sidebarToggle)
+            .onAppear { hideSidebarToggleButton() }
 
             // ControlBar spans full width
             ControlBar(
@@ -104,11 +117,8 @@ struct ContentView: View {
                 activeErrors: transcriptionEngine?.activeErrors ?? [],
                 onStartCallCapture: { startSession(type: .callCapture) },
                 onStartVoiceMemo: { startSession(type: .voiceMemo) },
-                onStartLastUsed: {
-                    let type = settings.lastUsedSessionType
-                    startSession(type: type)
-                },
-                onStop: stopSession
+                onStop: stopSession,
+                onOpenSettings: { openSettings() }
             )
         }
         .frame(minWidth: 640, minHeight: 400)
@@ -300,6 +310,18 @@ struct ContentView: View {
                     .foregroundStyle(Color.fg3)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    // MARK: - Window Helpers
+
+    /// Remove the built-in sidebar toggle button that macOS places next to the traffic lights.
+    private func hideSidebarToggleButton() {
+        DispatchQueue.main.async {
+            guard let window = NSApp.mainWindow ?? NSApp.windows.first(where: { $0.isVisible }) else { return }
+            // NSSplitViewController inserts a toolbar item with identifier "com.apple.SwiftUI.navigationSplitView.toggleSidebar"
+            // Removing all toolbar items or setting toolbar to nil eliminates it.
+            window.toolbar = nil
         }
     }
 

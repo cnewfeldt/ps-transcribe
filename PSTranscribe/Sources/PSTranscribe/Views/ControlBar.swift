@@ -13,76 +13,27 @@ struct PulsingDot: View {
     }
 }
 
-private struct MicButton: View {
-    enum MicState { case idle, recording, error }
-
-    let state: MicState
-    let errorTooltip: String
-    let modelsReady: Bool
-    let onTap: () -> Void
-
-    @State private var ringScale: CGFloat = 1.0
-    @State private var ringOpacity: Double = 0.6
-
-    private var iconName: String {
-        switch state {
-        case .idle, .recording: return "mic.fill"
-        case .error: return "mic.slash"
-        }
-    }
-
-    private var iconColor: Color {
-        switch state {
-        case .idle: return Color.fg2
-        case .recording: return Color.green
-        case .error: return Color.recordRed
-        }
-    }
+/// Pulsing radar-ring that radiates outward from a mic icon.
+private struct PulsingRing: View {
+    var color: Color = .green
+    var size: CGFloat = 28
+    @State private var scale: CGFloat = 1.0
+    @State private var opacity: Double = 0.6
 
     var body: some View {
-        Button(action: onTap) {
-            ZStack {
-                if state == .recording {
-                    Circle()
-                        .stroke(Color.green.opacity(0.7), lineWidth: 2.5)
-                        .frame(width: 52, height: 52)
-                        .scaleEffect(ringScale)
-                        .opacity(ringOpacity)
+        Circle()
+            .stroke(color.opacity(0.7), lineWidth: 2)
+            .frame(width: size, height: size)
+            .scaleEffect(scale)
+            .opacity(opacity)
+            .onAppear {
+                scale = 1.0
+                opacity = 0.6
+                withAnimation(.easeOut(duration: 1.4).repeatForever(autoreverses: false)) {
+                    scale = 1.8
+                    opacity = 0.0
                 }
-
-                Image(systemName: iconName)
-                    .font(.system(size: 24))
-                    .foregroundStyle(iconColor)
-                    .frame(width: 44, height: 44)
             }
-        }
-        .buttonStyle(.plain)
-        .focusable(false)
-        .disabled(state == .idle && !modelsReady)
-        .opacity(state == .idle && !modelsReady ? 0.4 : 1.0)
-        .help(state == .error ? errorTooltip : (state == .idle ? "Start Recording" : ""))
-        .onChange(of: state) { _, newState in
-            if newState == .recording {
-                startPulse()
-            } else {
-                ringScale = 1.0
-                ringOpacity = 0.6
-            }
-        }
-        .onAppear {
-            if state == .recording {
-                startPulse()
-            }
-        }
-    }
-
-    private func startPulse() {
-        ringScale = 1.0
-        ringOpacity = 0.6
-        withAnimation(.easeOut(duration: 1.4).repeatForever(autoreverses: false)) {
-            ringScale = 1.8
-            ringOpacity = 0.0
-        }
     }
 }
 
@@ -99,29 +50,8 @@ struct ControlBar: View {
     let activeErrors: [String]
     let onStartCallCapture: () -> Void
     let onStartVoiceMemo: () -> Void
-    let onStartLastUsed: () -> Void
     let onStop: () -> Void
-
-    private var micState: MicButton.MicState {
-        if hasError { return .error }
-        if isRecording { return .recording }
-        return .idle
-    }
-
-    private func micTapped() {
-        switch micState {
-        case .idle:
-            onStartLastUsed()
-        case .recording:
-            onStop()
-        case .error:
-            if #available(macOS 14, *) {
-                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-            } else {
-                NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
-            }
-        }
-    }
+    var onOpenSettings: (() -> Void)?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -148,153 +78,153 @@ struct ControlBar: View {
                 .padding(.vertical, 4)
             }
 
-            if isRecording {
-                // Recording state: stop bar + MicButton
-                VStack(spacing: 8) {
-                    Button(action: onStop) {
-                        HStack(spacing: 10) {
-                            PulsingDot(size: 6)
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Stop Recording")
-                                    .font(.system(size: 12, weight: .bold))
-                                    .foregroundStyle(Color.fg1)
-                                Text(activeSessionLabel)
-                                    .font(.system(size: 10))
-                                    .foregroundStyle(Color.fg2)
-                            }
-
-                            Spacer()
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                        .frame(maxWidth: .infinity)
-                        .background(Color.accent1.opacity(0.08))
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.accent1.opacity(0.12)))
-                    }
-                    .buttonStyle(.plain)
-                    .focusable(false)
-                    .keyboardShortcut(".", modifiers: .command)
-
-                    MicButton(
-                        state: micState,
-                        errorTooltip: activeErrors.joined(separator: "\n"),
-                        modelsReady: modelsReady,
-                        onTap: micTapped
+            VStack(spacing: 8) {
+                HStack(spacing: isRecording ? 0 : 10) {
+                    sessionButton(
+                        type: .callCapture,
+                        icon: "phone.fill",
+                        label: "Call Capture",
+                        shortcutHint: "\u{2318}R",
+                        onStart: onStartCallCapture
                     )
+                    .frame(maxWidth: isRecording && activeSessionType != .callCapture ? 0 : .infinity)
+                    .opacity(isRecording && activeSessionType != .callCapture ? 0 : 1)
+                    .clipped()
+
+                    sessionButton(
+                        type: .voiceMemo,
+                        icon: "mic.fill",
+                        label: "Voice Memo",
+                        shortcutHint: "\u{2318}\u{21E7}R",
+                        onStart: onStartVoiceMemo
+                    )
+                    .frame(maxWidth: isRecording && activeSessionType != .voiceMemo ? 0 : .infinity)
+                    .opacity(isRecording && activeSessionType != .voiceMemo ? 0 : 1)
+                    .clipped()
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
+                .animation(.spring(duration: 0.35, bounce: 0.15), value: isRecording)
+                .animation(.spring(duration: 0.35, bounce: 0.15), value: activeSessionType)
 
-                if silenceSeconds >= 90 {
-                    Text("Silence -- auto-stop in \(120 - silenceSeconds)s")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.orange)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 4)
+                // Hidden stop shortcut (⌘.)
+                if isRecording {
+                    Button(action: onStop) { EmptyView() }
+                        .keyboardShortcut(".", modifiers: .command)
+                        .frame(width: 0, height: 0)
+                        .opacity(0)
                 }
-            } else {
-                // Idle state: buttons + MicButton centered
-                VStack(spacing: 8) {
-                    HStack(spacing: 10) {
-                        Button(action: onStartCallCapture) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "phone.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(Color.fg1)
-                                Text("Call Capture")
-                                    .font(.system(size: 11, weight: .semibold))
-                                    .foregroundStyle(Color.fg1)
-                                Text("\u{2318}R")
-                                    .font(.system(size: 10))
-                                    .foregroundStyle(Color.fg3)
-                            }
-                            .lineLimit(1)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .padding(.horizontal, 8)
-                            .background(Color.bg1.opacity(0.7))
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.06)))
-                        }
-                        .buttonStyle(.plain)
-                        .focusable(false)
-                        .keyboardShortcut("r", modifiers: .command)
-                        .disabled(!modelsReady)
-                        .opacity(modelsReady ? 1.0 : 0.4)
 
-                        MicButton(
-                            state: micState,
-                            errorTooltip: activeErrors.joined(separator: "\n"),
-                            modelsReady: modelsReady,
-                            onTap: micTapped
-                        )
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
 
-                        Button(action: onStartVoiceMemo) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "mic.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(Color.fg1)
-                                Text("Voice Memo")
-                                    .font(.system(size: 11, weight: .semibold))
-                                    .foregroundStyle(Color.fg1)
-                                Text("\u{2318}\u{21E7}R")
-                                    .font(.system(size: 10))
-                                    .foregroundStyle(Color.fg3)
-                            }
-                            .lineLimit(1)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .padding(.horizontal, 8)
-                            .background(Color.bg1.opacity(0.7))
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.06)))
-                        }
-                        .buttonStyle(.plain)
-                        .focusable(false)
-                        .keyboardShortcut("r", modifiers: [.command, .shift])
-                        .disabled(!modelsReady)
-                        .opacity(modelsReady ? 1.0 : 0.4)
-                    }
-
-                    // Gear button row -- persistent, not recording-state-dependent
-                    HStack {
-                        Spacer()
-                        Button {
-                            if #available(macOS 14, *) {
-                                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-                            } else {
-                                NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
-                            }
-                        } label: {
-                            Image(systemName: "gearshape")
-                                .font(.system(size: 14))
-                                .foregroundStyle(Color.fg2)
-                                .frame(width: 36, height: 36)
-                                .background(Color.bg1.opacity(0.7))
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.06)))
-                        }
-                        .buttonStyle(.plain)
-                        .focusable(false)
-                        .help("Settings (\u{2318},)")
-                    }
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
+            if isRecording && silenceSeconds >= 90 {
+                Text("Silence -- auto-stop in \(120 - silenceSeconds)s")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.orange)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 4)
             }
         }
         .background(Color.bg1.opacity(0.45))
         .overlay(Divider(), alignment: .top)
     }
 
+    // MARK: - Session Button
+
+    @ViewBuilder
+    private func sessionButton(
+        type: SessionType,
+        icon: String,
+        label: String,
+        shortcutHint: String,
+        onStart: @escaping () -> Void
+    ) -> some View {
+        let isActive = isRecording && activeSessionType == type
+
+        Button(action: {
+            if hasError {
+                onOpenSettings?()
+            } else if isActive {
+                onStop()
+            } else {
+                onStart()
+            }
+        }) {
+            HStack(spacing: isActive ? 10 : 6) {
+                if isActive {
+                    PulsingDot(size: 6)
+                }
+
+                // Mic indicator with pulsing ring when recording
+                ZStack {
+                    if isActive {
+                        PulsingRing(color: .green, size: 28)
+                    }
+                    Image(systemName: hasError ? "mic.slash" : (isActive ? "mic.fill" : icon))
+                        .font(.system(size: 14))
+                        .foregroundStyle(
+                            hasError ? Color.recordRed
+                            : isActive ? Color.green
+                            : Color.fg1
+                        )
+                }
+                .frame(width: 28, height: 28)
+
+                if isActive {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Stop Recording")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(Color.fg1)
+                        Text(activeSessionLabel)
+                            .font(.system(size: 10))
+                            .foregroundStyle(Color.fg2)
+                    }
+                } else {
+                    Text(label)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(Color.fg1)
+                }
+
+                Spacer()
+
+                if !isActive {
+                    Text(shortcutHint)
+                        .font(.system(size: 10))
+                        .foregroundStyle(Color.fg3)
+                }
+            }
+            .lineLimit(1)
+            .padding(.vertical, 12)
+            .padding(.horizontal, isActive ? 16 : 8)
+            .frame(maxWidth: .infinity)
+            .background(isActive ? Color.accent1.opacity(0.08) : Color.bg1.opacity(0.7))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isActive ? Color.accent1.opacity(0.12) : Color.white.opacity(0.06))
+            )
+        }
+        .buttonStyle(.plain)
+        .focusable(false)
+        .keyboardShortcut(
+            type == .callCapture ? "r" : "r",
+            modifiers: type == .callCapture ? .command : [.command, .shift]
+        )
+        .disabled(!isRecording && !modelsReady && !hasError)
+        .opacity(!isRecording && !modelsReady ? 0.4 : 1.0)
+        .help(
+            hasError ? activeErrors.joined(separator: "\n")
+            : isActive ? "Stop Recording (\u{2318}.)"
+            : ""
+        )
+    }
+
     private var activeSessionLabel: String {
         switch activeSessionType {
         case .callCapture:
             if let app = detectedApp {
-                return "Call Capture · \(app)"
+                return "Call Capture \u{00B7} \(app)"
             }
             return "Call Capture"
         case .voiceMemo:

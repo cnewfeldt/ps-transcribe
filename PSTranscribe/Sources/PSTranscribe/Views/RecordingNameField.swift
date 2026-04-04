@@ -6,54 +6,82 @@ struct RecordingNameField: View {
     let sessionElapsed: Int
     let isRecording: Bool
     let savedConfirmation: Bool
+    var onToggleSidebar: (() -> Void)?
+    var onOpenSettings: (() -> Void)?
     @FocusState private var isNameFieldFocused: Bool
 
     var body: some View {
         HStack(spacing: 0) {
-            // Left side: brand label or name field
-            if isSessionActive {
-                TextField("Name this recording", text: $sessionName)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(Color.fg1)
-                    .textFieldStyle(.plain)
-                    .focused($isNameFieldFocused)
-                    .onAppear { isNameFieldFocused = true }
-            } else {
-                Text("PS TRANSCRIBE")
-                    .font(.system(size: 14, weight: .heavy))
-                    .tracking(3)
-                    .foregroundStyle(Color.fg1)
+            // Left side: sidebar toggle + brand label or name field
+            HStack(spacing: 8) {
+                Button {
+                    onToggleSidebar?()
+                } label: {
+                    Image(systemName: "sidebar.left")
+                        .font(.system(size: 14))
+                        .foregroundStyle(Color.fg2)
+                }
+                .buttonStyle(.plain)
+                .focusable(false)
+                .help("Toggle sidebar")
+
+                if isSessionActive {
+                    TextField("Name this recording", text: $sessionName)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(Color.fg1)
+                        .textFieldStyle(.plain)
+                        .focused($isNameFieldFocused)
+                        .onAppear { isNameFieldFocused = true }
+                } else {
+                    Text("PS TRANSCRIBE")
+                        .font(.system(size: 14, weight: .heavy))
+                        .tracking(3)
+                        .foregroundStyle(Color.fg1)
+                }
             }
 
             Spacer()
 
-            // Right side: status indicator
-            HStack(spacing: 6) {
-                if isRecording {
-                    Text(formatTime(sessionElapsed))
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(Color.fg1)
-                    PulsingDot(size: 6)
-                } else if savedConfirmation {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(Color.accent1)
-                    Text("Saved")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(Color.accent1)
-                } else if isSessionActive {
-                    Text("\(formatTime(sessionElapsed)) Done")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(Color.fg2)
-                } else {
-                    Text("Ready")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(Color.fg2)
-                    Circle()
-                        .fill(Color.fg2)
-                        .frame(width: 6, height: 6)
-                        .opacity(0.5)
+            // Right side: status indicator + settings gear
+            HStack(spacing: 8) {
+                HStack(spacing: 6) {
+                    if isRecording {
+                        Text(formatTime(sessionElapsed))
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Color.fg1)
+                        PulsingDot(size: 6)
+                    } else if savedConfirmation {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Color.accent1)
+                        Text("Saved")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Color.accent1)
+                    } else if isSessionActive {
+                        Text("\(formatTime(sessionElapsed)) Done")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Color.fg2)
+                    } else {
+                        Text("Ready")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Color.fg2)
+                        Circle()
+                            .fill(Color.fg2)
+                            .frame(width: 6, height: 6)
+                            .opacity(0.5)
+                    }
                 }
+
+                Button {
+                    onOpenSettings?()
+                } label: {
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 13))
+                        .foregroundStyle(Color.fg2)
+                }
+                .buttonStyle(.plain)
+                .focusable(false)
+                .help("Settings (\u{2318},)")
             }
         }
         .padding(.horizontal, 16)

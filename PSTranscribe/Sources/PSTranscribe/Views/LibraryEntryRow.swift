@@ -10,7 +10,6 @@ struct LibraryEntryRow: View {
 
     @State private var isEditing = false
     @State private var editText = ""
-    @State private var isHovered = false
 
     var body: some View {
         ZStack(alignment: .leading) {
@@ -59,18 +58,16 @@ struct LibraryEntryRow: View {
                                 .foregroundStyle(Color.fg1)
                                 .lineLimit(1)
 
-                            if isHovered {
-                                Button {
-                                    editText = entry.name ?? ""
-                                    isEditing = true
-                                } label: {
-                                    Image(systemName: "pencil")
-                                        .font(.system(size: 10))
-                                        .foregroundStyle(Color.fg2)
-                                }
-                                .buttonStyle(.plain)
-                                .help("Rename")
+                            Button {
+                                editText = entry.name ?? ""
+                                isEditing = true
+                            } label: {
+                                Image(systemName: "pencil")
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(Color.fg2)
                             }
+                            .buttonStyle(.plain)
+                            .help("Rename")
                         }
                     }
 
@@ -81,7 +78,7 @@ struct LibraryEntryRow: View {
                         .lineLimit(1)
 
                     // Clickable file path (SESS-04)
-                    if !entry.filePath.isEmpty && isHovered {
+                    if !entry.filePath.isEmpty {
                         Text(URL(fileURLWithPath: entry.filePath).lastPathComponent)
                             .font(.system(size: 10))
                             .foregroundStyle(Color.accent1.opacity(0.7))
@@ -142,7 +139,6 @@ struct LibraryEntryRow: View {
             .padding(.vertical, 8)
         }
         .frame(height: 72)
-        .onHover { isHovered = $0 }
         .contextMenu {
             Button("Show in Finder") {
                 NSWorkspace.shared.selectFile(
@@ -159,8 +155,6 @@ struct LibraryEntryRow: View {
     private var rowBackground: Color {
         if isSelected {
             return Color.bg1.opacity(0.85)
-        } else if isHovered {
-            return Color.bg1.opacity(0.4)
         }
         return Color.clear
     }
