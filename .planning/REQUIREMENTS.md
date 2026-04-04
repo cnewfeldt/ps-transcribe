@@ -92,9 +92,9 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [ ] **LLMA-02**: Side panel shows live-updating summary of the conversation so far
 - [ ] **LLMA-03**: Side panel shows accumulating action items extracted from the conversation
 - [ ] **LLMA-04**: Side panel shows key topics discussed
-- [ ] **LLMA-05**: LLM analysis updates periodically as new transcript chunks arrive
-- [ ] **LLMA-06**: If Ollama is not available, recording proceeds normally without the analysis panel
-- [ ] **LLMA-07**: Analysis results are saved alongside the transcript when the session ends
+- [x] **LLMA-05**: LLM analysis updates periodically as new transcript chunks arrive
+- [x] **LLMA-06**: If Ollama is not available, recording proceeds normally without the analysis panel
+- [x] **LLMA-07**: Analysis results are saved alongside the transcript when the session ends
 
 ## v2 Requirements
 
@@ -188,9 +188,9 @@ Deferred to future milestone. Tracked but not in current roadmap.
 | LLMA-02 | Phase 6 | Pending |
 | LLMA-03 | Phase 6 | Pending |
 | LLMA-04 | Phase 6 | Pending |
-| LLMA-05 | Phase 6 | Pending |
-| LLMA-06 | Phase 6 | Pending |
-| LLMA-07 | Phase 6 | Pending |
+| LLMA-05 | Phase 6 | Complete |
+| LLMA-06 | Phase 6 | Complete |
+| LLMA-07 | Phase 6 | Complete |
 
 **Coverage:**
 - v1 requirements: 53 total

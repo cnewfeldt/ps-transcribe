@@ -118,8 +118,8 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 06-01-PLAN.md -- AnalysisState types, AnalysisCoordinator actor (threshold/cooldown/in-flight), OllamaService timeout extension, unit tests
-- [ ] 06-02-PLAN.md -- TranscriptLogger.appendAnalysis persistence, TranscriptParser.parseAnalysis for review mode, tests
+- [x] 06-01-PLAN.md -- AnalysisState types, AnalysisCoordinator actor (threshold/cooldown/in-flight), OllamaService timeout extension, unit tests
+- [x] 06-02-PLAN.md -- TranscriptLogger.appendAnalysis persistence, TranscriptParser.parseAnalysis for review mode, tests
 - [ ] 06-03-PLAN.md -- AnalysisPanel view, ControlBar toggle, ContentView wiring, PSTranscribeApp OllamaState passthrough, visual verification
 
 ## Progress
