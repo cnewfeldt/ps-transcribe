@@ -18,7 +18,6 @@ private let conferencingBundleIDs: [String: String] = [
 
 struct ContentView: View {
     @Bindable var settings: AppSettings
-    @Bindable var ollamaState: OllamaState
     @State private var transcriptStore = TranscriptStore()
     @State private var transcriptionEngine: TranscriptionEngine?
     @State private var sessionStore = SessionStore()
@@ -42,12 +41,6 @@ struct ContentView: View {
     @State private var nameDebounceTask: Task<Void, Never>?
     @State private var sidebarVisibility: NavigationSplitViewVisibility = .automatic
     @Environment(\.openSettings) private var openSettings
-
-    // Phase 06-03: Live LLM analysis
-    @State private var analysisState = AnalysisState()
-    @State private var analysisCoordinator = AnalysisCoordinator()
-    @State private var showAnalysisPanel = false
-    @State private var loadedAnalysis: ParsedAnalysis?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -125,15 +118,7 @@ struct ContentView: View {
                 onStartCallCapture: { startSession(type: .callCapture) },
                 onStartVoiceMemo: { startSession(type: .voiceMemo) },
                 onStop: stopSession,
-                onOpenSettings: { openSettings() },
-                isOllamaConnected: ollamaState.connectionStatus == .connected,
-                showAnalysisPanel: showAnalysisPanel,
-                hasAnalysisForReview: loadedAnalysis != nil,
-                onToggleAnalysis: {
-                    withAnimation(.spring(duration: 0.35, bounce: 0.15)) {
-                        showAnalysisPanel.toggle()
-                    }
-                }
+                onOpenSettings: { openSettings() }
             )
         }
         .frame(minWidth: 640, minHeight: 400)
@@ -267,19 +252,16 @@ struct ContentView: View {
                   let entry = libraryEntries.first(where: { $0.id == newID }),
                   activeSessionType == nil else {
                 loadedUtterances = []
-                loadedAnalysis = nil
                 return
             }
             // Skip loading if filePath is empty (entry still being recorded)
             guard !entry.filePath.isEmpty else {
                 loadedUtterances = []
-                loadedAnalysis = nil
                 return
             }
             let url = URL(fileURLWithPath: entry.filePath)
             guard FileManager.default.fileExists(atPath: entry.filePath) else {
                 loadedUtterances = []
-                loadedAnalysis = nil
                 return
             }
             do {
@@ -288,8 +270,6 @@ struct ContentView: View {
                 loadedUtterances = []
                 transcriptionEngine?.lastError = "Couldn't load transcript. The file may be corrupted."
             }
-            // Phase 06-03: load saved analysis for review mode (D-04)
-            loadedAnalysis = parseAnalysis(at: url)
         }
     }
 
@@ -299,51 +279,19 @@ struct ContentView: View {
     private var detailView: some View {
         if activeSessionType != nil || isRunning {
             // Live recording view
-            HStack(spacing: 0) {
-                TranscriptView(
-                    utterances: transcriptStore.utterances,
-                    volatileYouText: transcriptStore.volatileYouText,
-                    volatileThemText: transcriptStore.volatileThemText
-                )
-                .frame(maxWidth: .infinity)
-
-                if showAnalysisPanel && ollamaState.connectionStatus == .connected {
-                    AnalysisPanel(
-                        summary: analysisState.summary,
-                        actionItems: analysisState.actionItems,
-                        keyTopics: analysisState.keyTopics,
-                        isUpdating: analysisState.isUpdating,
-                        isLive: true,
-                        hasData: analysisState.hasData
-                    )
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
-                }
-            }
-            .animation(.spring(duration: 0.35, bounce: 0.15), value: showAnalysisPanel)
+            TranscriptView(
+                utterances: transcriptStore.utterances,
+                volatileYouText: transcriptStore.volatileYouText,
+                volatileThemText: transcriptStore.volatileThemText
+            )
         } else if let selectedID = selectedEntryID,
                   let _ = libraryEntries.first(where: { $0.id == selectedID }) {
             // Past transcript loaded (per D-10)
-            HStack(spacing: 0) {
-                TranscriptView(
-                    utterances: loadedUtterances,
-                    volatileYouText: "",
-                    volatileThemText: ""
-                )
-                .frame(maxWidth: .infinity)
-
-                if showAnalysisPanel, let analysis = loadedAnalysis {
-                    AnalysisPanel(
-                        summary: analysis.summary,
-                        actionItems: analysis.actionItems,
-                        keyTopics: analysis.keyTopics,
-                        isUpdating: false,
-                        isLive: false,
-                        hasData: true
-                    )
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
-                }
-            }
-            .animation(.spring(duration: 0.35, bounce: 0.15), value: showAnalysisPanel)
+            TranscriptView(
+                utterances: loadedUtterances,
+                volatileYouText: "",
+                volatileThemText: ""
+            )
         } else {
             // Empty detail state
             VStack(spacing: 8) {
@@ -407,10 +355,6 @@ struct ContentView: View {
         sessionName = ""
         savedConfirmation = false
 
-        // Phase 06-03: reset analysis state for the new session
-        analysisState.clear()
-        loadedAnalysis = nil
-
         // Determine output folder and app bundle ID based on session type
         let outputPath: String
         let sourceApp: String
@@ -437,9 +381,6 @@ struct ContentView: View {
         let startDate = Date()
 
         Task {
-            // Phase 06-03: reset the analysis coordinator (actor boundary)
-            await analysisCoordinator.reset()
-
             transcriptionEngine?.lastError = nil
             do {
                 try await sessionStore.startSession()
@@ -538,16 +479,6 @@ struct ContentView: View {
             transcriptionEngine?.assetStatus = "Finalizing..."
             let savedPath = await transcriptLogger.finalizeFrontmatter()
 
-            // Phase 06-03: Persist analysis alongside transcript (LLMA-07, D-14)
-            if analysisState.hasData, let savedURL = savedPath {
-                await transcriptLogger.appendAnalysis(
-                    to: savedURL,
-                    summary: analysisState.summary,
-                    actionItems: analysisState.actionItems,
-                    keyTopics: analysisState.keyTopics
-                )
-            }
-
             transcriptionEngine?.assetStatus = "Ready"
 
             // Update library entry with final duration and finalized state
@@ -583,8 +514,6 @@ struct ContentView: View {
                     } catch {
                         loadedUtterances = []
                     }
-                    // Phase 06-03: hydrate review-mode analysis from just-saved file
-                    loadedAnalysis = parseAnalysis(at: finalURL)
                 }
             }
 
@@ -617,29 +546,6 @@ struct ContentView: View {
                 text: last.text,
                 timestamp: last.timestamp
             ))
-        }
-
-        // Phase 06-03: Live analysis trigger (D-06/D-07/D-08)
-        // Coordinator enforces the threshold/cooldown/in-flight gates internally.
-        if showAnalysisPanel,
-           ollamaState.connectionStatus == .connected,
-           !settings.selectedOllamaModel.isEmpty {
-            let utterances = transcriptStore.utterances
-            let model = settings.selectedOllamaModel
-            Task {
-                let fullTranscript = utterances.map {
-                    "\($0.speaker == .you ? "You" : "Them"): \($0.text)"
-                }.joined(separator: "\n")
-
-                analysisState.isUpdating = true
-                if let result = await analysisCoordinator.onNewUtterance(
-                    transcript: fullTranscript,
-                    model: model
-                ) {
-                    analysisState.apply(result)
-                }
-                analysisState.isUpdating = false
-            }
         }
     }
 }

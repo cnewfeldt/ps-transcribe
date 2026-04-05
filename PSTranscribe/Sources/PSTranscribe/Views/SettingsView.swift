@@ -5,9 +5,7 @@ import Sparkle
 struct SettingsView: View {
     @Bindable var settings: AppSettings
     var updater: SPUUpdater
-    var ollamaState: OllamaState
     @State private var inputDevices: [(id: AudioDeviceID, name: String)] = []
-    @State private var showModelBrowser = false
 
     var body: some View {
         Form {
@@ -77,50 +75,6 @@ struct SettingsView: View {
                 .font(.system(size: 12))
             }
 
-            Section("Ollama") {
-                HStack {
-                    if ollamaState.isCheckingConnection {
-                        ProgressView()
-                            .controlSize(.mini)
-                    } else {
-                        Image(systemName: "circle.fill")
-                            .foregroundStyle(connectionColor)
-                            .font(.system(size: 9))
-                    }
-                    Text(connectionLabel)
-                        .font(.system(size: 12))
-                    Spacer()
-                }
-
-                if ollamaState.connectionStatus == .connected && !ollamaState.models.isEmpty {
-                    Picker("Model", selection: $settings.selectedOllamaModel) {
-                        ForEach(ollamaState.models) { model in
-                            Text(model.name).tag(model.name)
-                        }
-                    }
-                    .font(.system(size: 12))
-                }
-
-                if ollamaState.connectionStatus == .connected && ollamaState.models.isEmpty {
-                    Text("No models found -- run `ollama pull llama3.2:3b` in Terminal")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                }
-
-                if ollamaState.connectionStatus == .connected {
-                    Button("Browse Models") {
-                        showModelBrowser = true
-                    }
-                    .font(.system(size: 12))
-                }
-            }
-            .sheet(isPresented: $showModelBrowser) {
-                OllamaModelBrowseSheet(
-                    ollamaState: ollamaState,
-                    selectedModel: $settings.selectedOllamaModel
-                )
-            }
-
             Section("Privacy") {
                 Toggle("Hide from screen sharing", isOn: $settings.hideFromScreenShare)
                     .font(.system(size: 12))
@@ -139,31 +93,8 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .frame(width: 450, height: 520)
-        .onChange(of: ollamaState.models) { _, newModels in
-            guard !newModels.isEmpty else { return }
-            if settings.selectedOllamaModel.isEmpty || !newModels.contains(where: { $0.name == settings.selectedOllamaModel }) {
-                settings.selectedOllamaModel = newModels.first(where: { $0.name == "llama3.2:3b" })?.name ?? newModels.first?.name ?? ""
-            }
-        }
         .onAppear {
             inputDevices = MicCapture.availableInputDevices()
-            Task { await ollamaState.refresh() }
-        }
-    }
-
-    private var connectionColor: Color {
-        switch ollamaState.connectionStatus {
-        case .connected: return .green
-        case .notRunning: return Color.recordRed
-        case .notFound: return Color.fg3
-        }
-    }
-
-    private var connectionLabel: String {
-        switch ollamaState.connectionStatus {
-        case .connected: return "Connected"
-        case .notRunning: return "Not running"
-        case .notFound: return "Not found"
         }
     }
 

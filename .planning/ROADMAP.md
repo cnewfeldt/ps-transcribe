@@ -2,7 +2,9 @@
 
 ## Overview
 
-Six phases transform Tome (v1.2.1) into PS Transcribe: start with the rebrand and all UserDefaults migration to establish the new identity, harden security and stability before any feature work ships, build the session library and recording naming that anchors the app's UX, polish the interaction model with a three-state mic button and model onboarding, integrate Ollama as a decoupled local LLM service, then wire the live analysis panel into the recording pipeline as the product's primary differentiator.
+Four phases transform Tome (v1.2.1) into PS Transcribe: start with the rebrand and all UserDefaults migration to establish the new identity, harden security and stability before any feature work ships, build the session library and recording naming that anchors the app's UX, and polish the interaction model with a three-state mic button and model onboarding.
+
+**2026-04-04 scope reduction:** Phases 5 (Ollama Integration) and 6 (Live LLM Analysis) were abandoned. PS Transcribe is scoped to transcription of meetings and voice memos only; LLM analysis of transcripts is not part of the product. See tag `archive/llm-analysis-attempt` for the preserved implementation.
 
 ## Phases
 
@@ -16,8 +18,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Security + Stability** - Resolve all 12 SCAN findings and fix crash/data-loss bugs (completed 2026-04-03)
 - [ ] **Phase 3: Session Management + Recording Naming** - Session library grid, lifecycle, and flexible recording naming
 - [x] **Phase 4: Mic Button + Model Onboarding** - Three-state mic button and first-launch model download flow (completed 2026-04-03)
-- [x] **Phase 5: Ollama Integration** - Local Ollama detection, model browser, and decoupled LLM service (completed 2026-04-04)
-- [ ] **Phase 6: Live LLM Analysis** - Live insights panel showing summary, action items, and key topics during recording
+- [~] **Phase 5: Ollama Integration** - ABANDONED 2026-04-04 (scope reduction; see tag `archive/llm-analysis-attempt`)
+- [~] **Phase 6: Live LLM Analysis** - ABANDONED 2026-04-04 (scope reduction; see tag `archive/llm-analysis-attempt`)
 
 ## Phase Details
 
@@ -91,41 +93,20 @@ Plans:
 - [x] 04-03-PLAN.md -- Visual verification + ControlBar redesign (session buttons embed mic indicator, expand to full width when recording)
 **UI hint**: yes
 
-### Phase 5: Ollama Integration
-**Goal**: The app detects and connects to a local Ollama instance, exposes its models, and provides a stable decoupled LLM service that never blocks recording
-**Depends on**: Phase 4
-**Requirements**: OLMA-01, OLMA-02, OLMA-03, OLMA-04, OLMA-05, OLMA-06
-**Success Criteria** (what must be TRUE):
-  1. Settings pane shows live Ollama connection status -- connected, not found, or not running -- without the user needing to configure anything manually
-  2. User can browse models available in their local Ollama instance and pull new models from within the app, with download progress visible
-  3. Ollama connection failures or timeouts never affect recording -- the transcription pipeline operates identically whether Ollama is present or absent
-**Plans:** 2/2 plans complete
+### Phase 5: Ollama Integration (ABANDONED 2026-04-04)
+**Status**: Abandoned during scope reduction. PS Transcribe is scoped to transcription only; LLM integration is out of scope.
+**Preserved at**: git tag `archive/llm-analysis-attempt` (full implementation including OllamaService, OllamaState, Settings section, model browse sheet).
+**Original goal**: The app detects and connects to a local Ollama instance, exposes its models, and provides a stable decoupled LLM service.
 
-Plans:
-- [x] 05-01-PLAN.md -- OllamaService actor, Codable types, and unit tests
-- [x] 05-02-PLAN.md -- OllamaState bridge, AppSettings, SettingsView section, Browse Models sheet
-
-### Phase 6: Live LLM Analysis
-**Goal**: During a recording session, a live side panel surfaces an AI-generated summary, action items, and key topics that update as the conversation progresses and are saved with the transcript
-**Depends on**: Phase 5
-**Requirements**: LLMA-01, LLMA-02, LLMA-03, LLMA-04, LLMA-05, LLMA-06, LLMA-07
-**Success Criteria** (what must be TRUE):
-  1. A side panel appears alongside the transcript during recording showing live-updating summary, action items, and key topics
-  2. Analysis updates periodically as new transcript chunks arrive -- it does not update on every utterance and does not block or delay the transcript display
-  3. If Ollama is unavailable, recording and transcription proceed exactly as before -- the panel is simply absent, no error state required
-  4. When a session ends, the analysis results are saved alongside the transcript on disk
-**Plans:** 3 plans
-**UI hint**: yes
-
-Plans:
-- [x] 06-01-PLAN.md -- AnalysisState types, AnalysisCoordinator actor (threshold/cooldown/in-flight), OllamaService timeout extension, unit tests
-- [x] 06-02-PLAN.md -- TranscriptLogger.appendAnalysis persistence, TranscriptParser.parseAnalysis for review mode, tests
-- [ ] 06-03-PLAN.md -- AnalysisPanel view, ControlBar toggle, ContentView wiring, PSTranscribeApp OllamaState passthrough, visual verification
+### Phase 6: Live LLM Analysis (ABANDONED 2026-04-04)
+**Status**: Abandoned during scope reduction alongside Phase 5. Live analysis during recording conflicts with the product's focus on distraction-free transcription.
+**Preserved at**: git tag `archive/llm-analysis-attempt` (AnalysisCoordinator, AnalysisPanel, persistence, full wiring).
+**Original goal**: Live side panel surfacing summary / action items / key topics during recording.
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
+Phases 1 -> 2 -> 3 -> 4. Phases 5 and 6 abandoned.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -133,5 +114,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. Security + Stability | 5/5 | Complete   | 2026-04-03 |
 | 3. Session Management + Recording Naming | 3/4 | In Progress|  |
 | 4. Mic Button + Model Onboarding | 3/3 | Complete   | 2026-04-03 |
-| 5. Ollama Integration | 2/2 | Complete   | 2026-04-04 |
-| 6. Live LLM Analysis | 0/3 | Not started | - |
+| 5. Ollama Integration | -- | Abandoned  | 2026-04-04 |
+| 6. Live LLM Analysis | -- | Abandoned  | 2026-04-04 |

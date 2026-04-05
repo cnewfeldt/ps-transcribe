@@ -2,11 +2,11 @@
 
 ## What This Is
 
-A native macOS application for real-time audio transcription with dual-stream capture (microphone + system audio), on-device speech recognition via FluidAudio/Parakeet-TDT, post-session speaker diarization, and markdown transcript output. Fully offline-first -- all processing runs locally. Being rebranded from "Tome" to "PS Transcribe" with significant UX improvements, local LLM integration via Ollama, and security hardening.
+A native macOS application for real-time audio transcription with dual-stream capture (microphone + system audio), on-device speech recognition via FluidAudio/Parakeet-TDT, post-session speaker diarization, and markdown transcript output. Fully offline-first -- all processing runs locally. Being rebranded from "Tome" to "PS Transcribe" with significant UX improvements and security hardening.
 
 ## Core Value
 
-Users can record conversations and voice memos with accurate, private, on-device transcription and get live AI-powered insights without anything leaving their machine.
+Users can record meetings and voice memos with accurate, private, on-device transcription. All processing stays on-device; no cloud APIs, no telemetry, no LLM analysis of transcript content.
 
 ## Requirements
 
@@ -33,12 +33,11 @@ Users can record conversations and voice memos with accurate, private, on-device
 - [ ] Recording naming (optional at any time -- before/during/after, date-based fallback)
 - [ ] Three-state mic button (idle/recording/error) replacing waveform visualizer
 - [ ] Simple model onboarding (download prompt on first launch, progress indicator, success/fail)
-- [ ] Ollama integration (detect/configure local Ollama, model browser/download)
-- [ ] Live LLM analysis panel (summary, action items, key topics alongside transcript during recording)
 
 ### Out of Scope
 
-- Cloud-based LLM APIs -- offline-first philosophy, Ollama only
+- LLM analysis of transcripts (live or post-hoc) -- **removed 2026-04-04 scope reduction.** Ollama integration and live analysis panel were implemented under phases 5 and 6, then removed. Preserved at git tag `archive/llm-analysis-attempt`.
+- Cloud-based LLM APIs -- offline-first philosophy
 - Mobile/iOS version -- macOS only
 - Real-time collaboration -- single-user app
 - Video recording -- audio transcription only
@@ -47,7 +46,7 @@ Users can record conversations and voice memos with accurate, private, on-device
 
 ## Current Milestone: v1.0 PS Transcribe
 
-**Goal:** Rebrand from Tome, harden security/stability, add session management and recording UX, integrate local LLM via Ollama for live analysis.
+**Goal:** Rebrand from Tome, harden security/stability, add session management and recording UX.
 
 **Target features:**
 - ~~Rebrand to "PS Transcribe" across entire codebase~~ (Phase 1 complete)
@@ -55,7 +54,7 @@ Users can record conversations and voice memos with accurate, private, on-device
 - ~~Stability -- crash recovery, diarization fix, error handling~~ (Phase 2 complete)
 - Session library with grid view, naming, lifecycle
 - Three-state mic button + model onboarding
-- Ollama integration + live LLM analysis panel
+- ~~Ollama integration + live LLM analysis panel~~ (abandoned 2026-04-04 scope reduction)
 
 ## Context
 
@@ -70,9 +69,9 @@ Users can record conversations and voice memos with accurate, private, on-device
 ## Constraints
 
 - **Platform**: macOS 26.0+ only, Swift 6.2, SwiftUI
-- **Privacy**: All processing must remain on-device (ASR + LLM via Ollama)
+- **Privacy**: All processing must remain on-device (ASR only -- no LLM, no cloud)
 - **Architecture**: Actor-based concurrency, @Observable state management -- follow existing patterns
-- **Dependencies**: FluidAudio for ASR/VAD/diarization, Sparkle for updates, Ollama for LLM (new)
+- **Dependencies**: FluidAudio for ASR/VAD/diarization, Sparkle for updates
 - **Distribution**: GitHub Releases with Sparkle appcast, EdDSA signed
 
 ## Key Decisions
@@ -81,7 +80,7 @@ Users can record conversations and voice memos with accurate, private, on-device
 |----------|-----------|---------|
 | Rebrand to "PS Transcribe" | User decision, new identity for the app | -- Pending |
 | Keep Parakeet-TDT for ASR | Good enough quality, proven in existing app | -- Pending |
-| Ollama for LLM (not cloud APIs) | Preserves offline-first philosophy, no API keys needed | -- Pending |
+| No LLM analysis of transcripts | Scope reduction 2026-04-04; product focus is distraction-free transcription, not AI-generated insights | Abandoned after implementation (tag archive/llm-analysis-attempt) |
 | Library/grid view for session history | Better than current "overwrite in place" UX | -- Pending |
 | Three-state mic button replaces waveform | Cleaner UX, single interaction point for recording | -- Pending |
 | Minimal onboarding | No wizard -- just model download prompt with progress | -- Pending |

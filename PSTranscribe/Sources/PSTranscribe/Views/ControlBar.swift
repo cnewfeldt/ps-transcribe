@@ -53,12 +53,6 @@ struct ControlBar: View {
     let onStop: () -> Void
     var onOpenSettings: (() -> Void)?
 
-    // Analysis panel (phase 06-03) -- only rendered when Ollama is connected
-    var isOllamaConnected: Bool = false
-    var showAnalysisPanel: Bool = false
-    var hasAnalysisForReview: Bool = false
-    var onToggleAnalysis: (() -> Void)?
-
     var body: some View {
         VStack(spacing: 0) {
             if let error = errorMessage {
@@ -82,24 +76,6 @@ struct ControlBar: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 4)
-            }
-
-            if isOllamaConnected {
-                HStack {
-                    Spacer()
-                    Button(action: { onToggleAnalysis?() }) {
-                        Image(systemName: showAnalysisPanel ? "brain.fill" : "brain")
-                            .font(.system(size: 14))
-                            .foregroundStyle(showAnalysisPanel ? Color.accent1 : Color.fg1)
-                            .frame(width: 28, height: 28)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .focusable(false)
-                    .help(showAnalysisPanel ? "Hide Analysis" : "Show Analysis")
-                }
-                .padding(.horizontal, 12)
-                .padding(.top, 6)
             }
 
             VStack(spacing: 8) {

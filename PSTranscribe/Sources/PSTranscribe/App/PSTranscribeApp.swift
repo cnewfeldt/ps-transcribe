@@ -6,7 +6,6 @@ import Sparkle
 struct PSTranscribeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var settings: AppSettings
-    @State private var ollamaState = OllamaState()
     private let updaterController = AppUpdaterController()
 
     init() {
@@ -16,12 +15,9 @@ struct PSTranscribeApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(settings: settings, ollamaState: ollamaState)
+            ContentView(settings: settings)
                 .onAppear {
                     settings.applyScreenShareVisibility()
-                }
-                .task {
-                    await ollamaState.refresh()
                 }
         }
         .windowStyle(.hiddenTitleBar)
@@ -32,7 +28,7 @@ struct PSTranscribeApp: App {
             }
         }
         Settings {
-            SettingsView(settings: settings, updater: updaterController.updater, ollamaState: ollamaState)
+            SettingsView(settings: settings, updater: updaterController.updater)
         }
         MenuBarExtra {
             Text("PS Transcribe")

@@ -77,24 +77,17 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **ONBR-04**: Failed download shows error message with close button
 - [x] **ONBR-05**: Recording is disabled until model is successfully downloaded
 
-### Ollama Integration
+### Ollama Integration -- WITHDRAWN 2026-04-04
 
-- [x] **OLMA-01**: App detects whether Ollama is installed and running on the local machine
-- [ ] **OLMA-02**: Settings pane shows Ollama connection status (connected/not found/not running)
-- [x] **OLMA-03**: User can browse available Ollama models from within the app
-- [ ] **OLMA-04**: User can download/pull Ollama models from within the app with progress indication
-- [x] **OLMA-05**: Ollama operations use 2-second timeout and never block the recording pipeline
-- [x] **OLMA-06**: Ollama requests explicitly set num_ctx to handle long transcripts (not default 4096)
+All OLMA-* requirements withdrawn as part of scope reduction. PS Transcribe is scoped to transcription only; LLM integration is not part of the product. Implementation preserved at git tag `archive/llm-analysis-attempt`.
 
-### Live LLM Analysis
+- [~] **OLMA-01..06** -- Withdrawn (see tag archive/llm-analysis-attempt)
 
-- [ ] **LLMA-01**: During recording, a side panel displays alongside the transcript
-- [ ] **LLMA-02**: Side panel shows live-updating summary of the conversation so far
-- [ ] **LLMA-03**: Side panel shows accumulating action items extracted from the conversation
-- [ ] **LLMA-04**: Side panel shows key topics discussed
-- [x] **LLMA-05**: LLM analysis updates periodically as new transcript chunks arrive
-- [x] **LLMA-06**: If Ollama is not available, recording proceeds normally without the analysis panel
-- [x] **LLMA-07**: Analysis results are saved alongside the transcript when the session ends
+### Live LLM Analysis -- WITHDRAWN 2026-04-04
+
+All LLMA-* requirements withdrawn alongside OLMA-*. Live analysis during recording conflicts with the product's focus on distraction-free transcription.
+
+- [~] **LLMA-01..07** -- Withdrawn (see tag archive/llm-analysis-attempt)
 
 ## v2 Requirements
 
@@ -178,19 +171,8 @@ Deferred to future milestone. Tracked but not in current roadmap.
 | ONBR-03 | Phase 4 | Complete |
 | ONBR-04 | Phase 4 | Complete |
 | ONBR-05 | Phase 4 | Complete |
-| OLMA-01 | Phase 5 | Complete |
-| OLMA-02 | Phase 5 | Pending |
-| OLMA-03 | Phase 5 | Complete |
-| OLMA-04 | Phase 5 | Pending |
-| OLMA-05 | Phase 5 | Complete |
-| OLMA-06 | Phase 5 | Complete |
-| LLMA-01 | Phase 6 | Pending |
-| LLMA-02 | Phase 6 | Pending |
-| LLMA-03 | Phase 6 | Pending |
-| LLMA-04 | Phase 6 | Pending |
-| LLMA-05 | Phase 6 | Complete |
-| LLMA-06 | Phase 6 | Complete |
-| LLMA-07 | Phase 6 | Complete |
+| OLMA-01..06 | Phase 5 (abandoned) | Withdrawn 2026-04-04 |
+| LLMA-01..07 | Phase 6 (abandoned) | Withdrawn 2026-04-04 |
 
 **Coverage:**
 - v1 requirements: 53 total

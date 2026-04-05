@@ -2,35 +2,35 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-04-04T18:31:04.169Z"
+status: scope_reduced
+stopped_at: Phases 5 and 6 abandoned 2026-04-04
+last_updated: "2026-04-04T22:00:00.000Z"
 last_activity: 2026-04-04
 progress:
-  total_phases: 6
-  completed_phases: 5
-  total_plans: 20
-  completed_plans: 19
-  percent: 100
+  total_phases: 4
+  completed_phases: 2
+  total_plans: 15
+  completed_plans: 12
+  percent: 80
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-01)
+See: .planning/PROJECT.md (updated 2026-04-04)
 
-**Core value:** Users can record conversations and voice memos with accurate, private, on-device transcription and get live AI-powered insights without anything leaving their machine.
-**Current focus:** Phase 06 — live-llm-analysis
+**Core value:** Users can record conversations and voice memos with accurate, private, on-device transcription. All processing stays on-device.
+**Current focus:** Phases 1 (Rebrand) and 3 (Session Management + Recording Naming) remain in progress.
+
+**2026-04-04 scope reduction:** Phases 5 (Ollama Integration) and 6 (Live LLM Analysis) were abandoned. PS Transcribe is scoped to transcription only; LLM analysis of transcripts is not part of the product. Implementation preserved at git tag `archive/llm-analysis-attempt`.
 
 ## Current Position
 
-Phase: 06 (live-llm-analysis) — EXECUTING
-Plan: 3 of 3
-Status: Ready to execute
+Phase: none active (post scope-reduction, awaiting direction on remaining phases 1 and 3)
 Last activity: 2026-04-04
 
-Progress: [██████████] 100%
+Progress: [████████--] 80% (4 non-abandoned phases, 2 complete)
 
 ## Performance Metrics
 
