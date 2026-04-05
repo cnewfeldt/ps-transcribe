@@ -67,8 +67,6 @@ struct ContentView: View {
                     entries: libraryEntries,
                     selectedID: $selectedEntryID,
                     activeEntryID: activeLibraryEntryID,
-                    obsidianVaultName: settings.obsidianVaultName,
-                    vaultRootPath: currentVaultRootPath,
                     onRename: { id, newName in
                         let capturedID = id
                         let capturedName = newName
@@ -325,14 +323,6 @@ struct ContentView: View {
 
     private var isRunning: Bool {
         transcriptionEngine?.isRunning ?? false
-    }
-
-    private var currentVaultRootPath: String {
-        if let entry = libraryEntries.first(where: { $0.id == selectedEntryID }) {
-            return entry.sessionType == .callCapture
-                ? settings.vaultMeetingsPath : settings.vaultVoicePath
-        }
-        return settings.vaultMeetingsPath
     }
 
     private func refreshLibrary() {

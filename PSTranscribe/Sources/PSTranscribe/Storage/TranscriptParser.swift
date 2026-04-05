@@ -68,20 +68,3 @@ func parseTranscriptContent(_ content: String) -> [Utterance] {
     }
 }
 
-/// Constructs an Obsidian deep link for a transcript file.
-///
-/// - Parameters:
-///   - filePath: Absolute path to the transcript file.
-///   - vaultRoot: Absolute path to the Obsidian vault root directory.
-///   - vaultName: The name of the Obsidian vault (as configured by user).
-/// - Returns: An `obsidian://open?vault=NAME&file=RELATIVE_PATH` URL, or nil if the file
-///   is not within the vault root.
-func obsidianURL(for filePath: String, vaultRoot: String, vaultName: String) -> URL? {
-    guard filePath.hasPrefix(vaultRoot) else { return nil }
-    var relative = String(filePath.dropFirst(vaultRoot.count))
-    if relative.hasPrefix("/") { relative = String(relative.dropFirst()) }
-    if relative.hasSuffix(".md") { relative = String(relative.dropLast(3)) }
-    let pathEncoded = relative.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? relative
-    let vaultEncoded = vaultName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? vaultName
-    return URL(string: "obsidian://open?vault=\(vaultEncoded)&file=\(pathEncoded)")
-}

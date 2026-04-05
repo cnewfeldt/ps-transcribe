@@ -4,8 +4,6 @@ import AppKit
 struct LibraryEntryRow: View {
     let entry: LibraryEntry
     let isSelected: Bool
-    let obsidianVaultName: String
-    let vaultRootPath: String
     var onRename: ((String) -> Void)?
 
     @State private var isEditing = false
@@ -104,36 +102,14 @@ struct LibraryEntryRow: View {
 
                 Spacer(minLength: 0)
 
-                // Right side icons
-                VStack(alignment: .trailing, spacing: 4) {
-                    // Obsidian icon button
-                    if !obsidianVaultName.isEmpty && entry.isFinalized {
-                        Button {
-                            if let url = obsidianURL(
-                                for: entry.filePath,
-                                vaultRoot: vaultRootPath,
-                                vaultName: obsidianVaultName
-                            ) {
-                                NSWorkspace.shared.open(url)
-                            }
-                        } label: {
-                            Image(systemName: "link")
-                                .font(.system(size: 12))
-                                .foregroundStyle(Color.accent1)
-                        }
-                        .buttonStyle(.plain)
-                        .help("Open in Obsidian")
-                    }
-
-                    // Missing file badge
-                    if !FileManager.default.fileExists(atPath: entry.filePath) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.system(size: 10))
-                            .foregroundStyle(Color.recordRed)
-                            .help("File has been moved or deleted")
-                    }
+                // Missing file badge
+                if !FileManager.default.fileExists(atPath: entry.filePath) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Color.recordRed)
+                        .help("File has been moved or deleted")
+                        .padding(.top, 4)
                 }
-                .padding(.top, 4)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)

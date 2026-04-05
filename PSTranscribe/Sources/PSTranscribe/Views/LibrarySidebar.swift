@@ -4,8 +4,6 @@ struct LibrarySidebar: View {
     let entries: [LibraryEntry]
     @Binding var selectedID: UUID?
     let activeEntryID: UUID?
-    let obsidianVaultName: String
-    let vaultRootPath: String
     var onRename: ((UUID, String) -> Void)?
 
     var body: some View {
@@ -16,8 +14,6 @@ struct LibrarySidebar: View {
                 LibraryEntryRow(
                     entry: entry,
                     isSelected: selectedID == entry.id,
-                    obsidianVaultName: obsidianVaultName,
-                    vaultRootPath: vaultRootPath,
                     onRename: { newName in
                         onRename?(entry.id, newName)
                     }

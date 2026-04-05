@@ -23,10 +23,6 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(vaultVoicePath, forKey: "vaultVoicePath") }
     }
 
-    var obsidianVaultName: String {
-        didSet { UserDefaults.standard.set(obsidianVaultName, forKey: "obsidianVaultName") }
-    }
-
     /// When true, all app windows are invisible to screen sharing / recording.
     var hideFromScreenShare: Bool {
         didSet {
@@ -45,7 +41,6 @@ final class AppSettings {
         let defaults = UserDefaults.standard
         self.transcriptionLocale = defaults.string(forKey: "transcriptionLocale") ?? "en-US"
         self.inputDeviceID = AudioDeviceID(defaults.integer(forKey: "inputDeviceID"))
-        self.obsidianVaultName = defaults.string(forKey: "obsidianVaultName") ?? ""
         self.vaultMeetingsPath = defaults.string(forKey: "vaultMeetingsPath") ?? NSString("~/Documents/PSTranscribe/Meetings").expandingTildeInPath
         self.vaultVoicePath = defaults.string(forKey: "vaultVoicePath") ?? NSString("~/Documents/PSTranscribe/Voice").expandingTildeInPath
         // Default to true (hidden) if key has never been set
