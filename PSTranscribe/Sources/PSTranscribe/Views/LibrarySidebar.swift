@@ -5,6 +5,7 @@ struct LibrarySidebar: View {
     @Binding var selectedID: UUID?
     let activeEntryID: UUID?
     var onRename: ((UUID, String) -> Void)?
+    var onDelete: ((UUID) -> Void)?
 
     var body: some View {
         if entries.isEmpty {
@@ -16,6 +17,9 @@ struct LibrarySidebar: View {
                     isSelected: selectedID == entry.id,
                     onRename: { newName in
                         onRename?(entry.id, newName)
+                    },
+                    onDelete: {
+                        onDelete?(entry.id)
                     }
                 )
                 .tag(entry.id)
@@ -26,6 +30,9 @@ struct LibrarySidebar: View {
             .listStyle(.sidebar)
             .scrollContentBackground(.hidden)
             .background(Color.bg2)
+            .overlay(alignment: .trailing) {
+                Divider()
+            }
         }
     }
 
@@ -47,5 +54,8 @@ struct LibrarySidebar: View {
         .padding(48)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.bg2)
+        .overlay(alignment: .trailing) {
+            Divider()
+        }
     }
 }

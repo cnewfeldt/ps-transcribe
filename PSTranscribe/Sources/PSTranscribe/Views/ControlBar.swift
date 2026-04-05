@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct PulsingDot: View {
     var size: CGFloat = 10
@@ -42,6 +43,7 @@ struct ControlBar: View {
     let activeSessionType: SessionType?
     let audioLevel: Float
     let detectedApp: String?
+    var detectedAppBundleID: String? = nil
     let silenceSeconds: Int
     let statusMessage: String?
     let errorMessage: String?
@@ -156,18 +158,25 @@ struct ControlBar: View {
                     PulsingDot(size: 6)
                 }
 
-                // Mic indicator with pulsing ring when recording
+                // Indicator (app icon for active call capture, otherwise SF Symbol) with pulsing ring when recording
                 ZStack {
                     if isActive {
                         PulsingRing(color: .green, size: 28)
                     }
-                    Image(systemName: hasError ? "mic.slash" : (isActive ? "mic.fill" : icon))
-                        .font(.system(size: 14))
-                        .foregroundStyle(
-                            hasError ? Color.recordRed
-                            : isActive ? Color.green
-                            : Color.fg1
-                        )
+                    if isActive, type == .callCapture, let bundleID = detectedAppBundleID, let nsImage = Self.appIcon(for: bundleID) {
+                        Image(nsImage: nsImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 20, height: 20)
+                    } else {
+                        Image(systemName: hasError ? "mic.slash" : (isActive ? "mic.fill" : icon))
+                            .font(.system(size: 14))
+                            .foregroundStyle(
+                                hasError ? Color.recordRed
+                                : isActive ? Color.green
+                                : Color.fg1
+                            )
+                    }
                 }
                 .frame(width: 28, height: 28)
 
@@ -218,6 +227,15 @@ struct ControlBar: View {
             : isActive ? "Stop Recording (\u{2318}.)"
             : ""
         )
+    }
+
+    /// Resolves a running app's icon image from a bundle identifier.
+    /// Returns nil if the app isn't installed or can't be located.
+    private static func appIcon(for bundleID: String) -> NSImage? {
+        guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else {
+            return nil
+        }
+        return NSWorkspace.shared.icon(forFile: url.path)
     }
 
     private var activeSessionLabel: String {

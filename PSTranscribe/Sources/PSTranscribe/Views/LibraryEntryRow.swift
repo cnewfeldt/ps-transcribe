@@ -5,9 +5,7 @@ struct LibraryEntryRow: View {
     let entry: LibraryEntry
     let isSelected: Bool
     var onRename: ((String) -> Void)?
-
-    @State private var isEditing = false
-    @State private var editText = ""
+    var onDelete: (() -> Void)?
 
     var body: some View {
         ZStack(alignment: .leading) {
@@ -37,37 +35,11 @@ struct LibraryEntryRow: View {
 
                 // Center content
                 VStack(alignment: .leading, spacing: 4) {
-                    // Recording name (editable via pencil icon or double-click)
-                    if isEditing {
-                        TextField(entry.displayName, text: $editText)
-                            .font(.system(size: 12))
-                            .foregroundStyle(Color.fg1)
-                            .textFieldStyle(.plain)
-                            .onSubmit {
-                                commitEdit()
-                            }
-                            .onExitCommand {
-                                isEditing = false
-                            }
-                    } else {
-                        HStack(spacing: 4) {
-                            Text(entry.displayName)
-                                .font(.system(size: 12))
-                                .foregroundStyle(Color.fg1)
-                                .lineLimit(1)
-
-                            Button {
-                                editText = entry.name ?? ""
-                                isEditing = true
-                            } label: {
-                                Image(systemName: "pencil")
-                                    .font(.system(size: 10))
-                                    .foregroundStyle(Color.fg2)
-                            }
-                            .buttonStyle(.plain)
-                            .help("Rename")
-                        }
-                    }
+                    // Recording name (edit via right-click -> Rename)
+                    Text(entry.displayName)
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.fg1)
+                        .lineLimit(1)
 
                     // Metadata line
                     Text(metadataLine)
@@ -116,12 +88,24 @@ struct LibraryEntryRow: View {
         }
         .frame(height: 72)
         .contextMenu {
+            Button("Rename...") {
+                Self.presentRenameDialog(
+                    currentName: entry.name ?? entry.displayName,
+                    onConfirm: { newName in
+                        onRename?(newName)
+                    }
+                )
+            }
             Button("Show in Finder") {
                 NSWorkspace.shared.selectFile(
                     entry.filePath,
                     inFileViewerRootedAtPath: URL(fileURLWithPath: entry.filePath)
                         .deletingLastPathComponent().path
                 )
+            }
+            Divider()
+            Button("Delete", role: .destructive) {
+                onDelete?()
             }
         }
     }
@@ -174,11 +158,37 @@ struct LibraryEntryRow: View {
         return "\(s)s"
     }
 
-    private func commitEdit() {
-        let trimmed = editText.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmed.isEmpty {
-            onRename?(trimmed)
+    // MARK: - Rename Dialog
+
+    /// Presents a native NSAlert with an accessory text field for renaming a recording.
+    /// Calls `onConfirm` with the trimmed new name if the user clicks Rename and the name is non-empty.
+    @MainActor
+    fileprivate static func presentRenameDialog(currentName: String, onConfirm: @escaping (String) -> Void) {
+        let alert = NSAlert()
+        alert.messageText = "Rename Recording"
+        alert.informativeText = "Enter a new name for this recording. The transcript file on disk will be renamed to match."
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "Rename")
+        alert.addButton(withTitle: "Cancel")
+
+        let textField = NSTextField(frame: NSRect(x: 0, y: 0, width: 280, height: 24))
+        textField.stringValue = currentName
+        textField.placeholderString = "Recording name"
+        textField.lineBreakMode = .byTruncatingTail
+        textField.cell?.usesSingleLineMode = true
+        alert.accessoryView = textField
+
+        // Focus + select all on open so the user can type-to-replace.
+        DispatchQueue.main.async {
+            alert.window.initialFirstResponder = textField
+            textField.selectText(nil)
         }
-        isEditing = false
+
+        let response = alert.runModal()
+        guard response == .alertFirstButtonReturn else { return }
+
+        let trimmed = textField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed != currentName else { return }
+        onConfirm(trimmed)
     }
 }

@@ -16,10 +16,21 @@ sleep 1
 if [[ "${1:-}" == "--reset" ]]; then
   echo "=== Wiping app data (first-launch reset) ==="
   defaults delete com.pstranscribe.app 2>/dev/null || true
-  rm -f ~/Library/Application\ Support/PSTranscribe/library.json
-  rm -rf ~/Library/Application\ Support/PSTranscribe/.checkpoints
+
+  # App state: library index + session checkpoints (the .jsonl session files and
+  # their .checkpoints/ live under PSTranscribe/sessions/, NOT PSTranscribe/ directly).
+  rm -f  ~/Library/Application\ Support/PSTranscribe/library.json
+  rm -rf ~/Library/Application\ Support/PSTranscribe/sessions
+  rm -rf ~/Library/Application\ Support/PSTranscribe/.checkpoints  # legacy path, harmless if absent
+
+  # Speech models (forces re-download on next launch)
   rm -rf ~/Library/Application\ Support/FluidAudio/Models
-  echo "UserDefaults, library, checkpoints, and speech models cleared"
+
+  # Actual transcript files in the configured vault folders (default paths)
+  rm -rf ~/Documents/PSTranscribe/Meetings
+  rm -rf ~/Documents/PSTranscribe/Voice
+
+  echo "UserDefaults, library, sessions, checkpoints, speech models, and vault transcripts cleared"
 fi
 
 echo "=== Building app bundle ==="

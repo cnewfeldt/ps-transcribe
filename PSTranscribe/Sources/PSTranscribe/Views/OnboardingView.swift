@@ -119,11 +119,12 @@ struct OnboardingView: View {
 
                     Spacer().frame(height: 16)
 
-                    // Stage-based progress bar
-                    VStack(spacing: 8) {
-                        ProgressView(value: downloadProgress)
+                    // Indeterminate loading indicator + stage text
+                    VStack(spacing: 12) {
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                            .controlSize(.small)
                             .tint(Color.accent1)
-                            .frame(maxWidth: 240)
 
                         Text(modelStatus)
                             .font(.system(size: 11))
@@ -218,23 +219,6 @@ struct OnboardingView: View {
         .padding(28)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.bg0)
-    }
-
-    /// Maps status text to approximate progress (0.0 - 1.0)
-    private var downloadProgress: Double {
-        if modelsReady { return 1.0 }
-        switch modelStatus {
-        case let s where s.contains("Downloading"):
-            return 0.2
-        case let s where s.contains("Initializing"):
-            return 0.6
-        case let s where s.contains("voice activity"):
-            return 0.8
-        case let s where s.contains("Ready"):
-            return 1.0
-        default:
-            return 0.05
-        }
     }
 
     private func finish() {

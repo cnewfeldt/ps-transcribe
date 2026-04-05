@@ -27,6 +27,7 @@ struct ContentView: View {
     @State private var audioLevel: Float = 0
     @State private var activeSessionType: SessionType?
     @State private var detectedAppName: String?
+    @State private var detectedAppBundleID: String?
     @State private var silenceSeconds: Int = 0
     @State private var sessionElapsed: Int = 0
 
@@ -39,12 +40,11 @@ struct ContentView: View {
     @State private var loadedUtterances: [Utterance] = []
     @State private var savedConfirmation: Bool = false
     @State private var nameDebounceTask: Task<Void, Never>?
-    @State private var sidebarVisibility: NavigationSplitViewVisibility = .automatic
+    @State private var isSidebarVisible: Bool = true
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         VStack(spacing: 0) {
-            // Top bar spans full width
             RecordingNameField(
                 sessionName: $sessionName,
                 isSessionActive: activeSessionType != nil,
@@ -52,8 +52,8 @@ struct ContentView: View {
                 isRecording: isRunning,
                 savedConfirmation: savedConfirmation,
                 onToggleSidebar: {
-                    withAnimation {
-                        sidebarVisibility = sidebarVisibility == .detailOnly ? .automatic : .detailOnly
+                    withAnimation(.spring(duration: 0.3, bounce: 0.1)) {
+                        isSidebarVisible.toggle()
                     }
                 },
                 onOpenSettings: {
@@ -61,52 +61,62 @@ struct ContentView: View {
                 }
             )
 
-            // NavigationSplitView for sidebar + detail
-            NavigationSplitView(columnVisibility: $sidebarVisibility) {
-                LibrarySidebar(
-                    entries: libraryEntries,
-                    selectedID: $selectedEntryID,
-                    activeEntryID: activeLibraryEntryID,
-                    onRename: { id, newName in
-                        let capturedID = id
-                        let capturedName = newName
-                        Task {
-                            guard let entry = await libraryStore.entries.first(where: { $0.id == capturedID }) else { return }
-                            do {
-                                let newPath = try await transcriptLogger.renameFinalized(
-                                    at: URL(fileURLWithPath: entry.filePath),
-                                    to: capturedName
-                                )
-                                await libraryStore.updateEntry(id: capturedID) { @Sendable e in
-                                    e.name = capturedName
-                                    e.filePath = newPath.path
+            HStack(spacing: 0) {
+                if isSidebarVisible {
+                    LibrarySidebar(
+                        entries: libraryEntries,
+                        selectedID: $selectedEntryID,
+                        activeEntryID: activeLibraryEntryID,
+                        onRename: { id, newName in
+                            let capturedID = id
+                            let capturedName = newName
+                            Task {
+                                guard let entry = await libraryStore.entries.first(where: { $0.id == capturedID }) else { return }
+                                do {
+                                    let newPath = try await transcriptLogger.renameFinalized(
+                                        at: URL(fileURLWithPath: entry.filePath),
+                                        to: capturedName
+                                    )
+                                    await libraryStore.updateEntry(id: capturedID) { @Sendable e in
+                                        e.name = capturedName
+                                        e.filePath = newPath.path
+                                    }
+                                } catch {
+                                    await libraryStore.updateEntry(id: capturedID) { @Sendable e in
+                                        e.name = capturedName
+                                    }
+                                    transcriptionEngine?.lastError = "Rename failed: \(error.localizedDescription)"
                                 }
-                            } catch {
-                                // File may not exist or name is invalid -- update name only
-                                await libraryStore.updateEntry(id: capturedID) { @Sendable e in
-                                    e.name = capturedName
-                                }
-                                transcriptionEngine?.lastError = "Rename failed: \(error.localizedDescription)"
+                                refreshLibrary()
                             }
-                            refreshLibrary()
+                        },
+                        onDelete: { id in
+                            let capturedID = id
+                            Task {
+                                await libraryStore.removeEntry(id: capturedID)
+                                if selectedEntryID == capturedID {
+                                    selectedEntryID = nil
+                                    loadedUtterances = []
+                                }
+                                refreshLibrary()
+                            }
                         }
-                    }
-                )
-                .navigationSplitViewColumnWidth(min: 180, ideal: 220, max: 300)
-                .ignoresSafeArea(.all, edges: .top)
-            } detail: {
-                detailView
-            }
-            .navigationSplitViewStyle(.balanced)
-            .toolbar(removing: .sidebarToggle)
-            .onAppear { hideSidebarToggleButton() }
+                    )
+                    .frame(width: 220)
+                    .transition(.move(edge: .leading).combined(with: .opacity))
+                }
 
-            // ControlBar spans full width
+                detailView
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .frame(maxHeight: .infinity)
+
             ControlBar(
                 isRecording: isRunning,
                 activeSessionType: activeSessionType,
                 audioLevel: audioLevel,
                 detectedApp: detectedAppName,
+                detectedAppBundleID: detectedAppBundleID,
                 silenceSeconds: silenceSeconds,
                 statusMessage: transcriptionEngine?.assetStatus,
                 errorMessage: transcriptionEngine?.lastError,
@@ -307,18 +317,6 @@ struct ContentView: View {
         }
     }
 
-    // MARK: - Window Helpers
-
-    /// Remove the built-in sidebar toggle button that macOS places next to the traffic lights.
-    private func hideSidebarToggleButton() {
-        DispatchQueue.main.async {
-            guard let window = NSApp.mainWindow ?? NSApp.windows.first(where: { $0.isVisible }) else { return }
-            // NSSplitViewController inserts a toolbar item with identifier "com.apple.SwiftUI.navigationSplitView.toggleSidebar"
-            // Removing all toolbar items or setting toolbar to nil eliminates it.
-            window.toolbar = nil
-        }
-    }
-
     // MARK: - Helpers
 
     private var isRunning: Bool {
@@ -411,6 +409,7 @@ struct ContentView: View {
             activeLibraryEntryID = newEntryID
             activeSessionType = type
             detectedAppName = resolvedAppName
+            detectedAppBundleID = appBundleID
 
             refreshLibrary()
             selectedEntryID = newEntryID
@@ -441,6 +440,7 @@ struct ContentView: View {
 
         activeSessionType = nil
         detectedAppName = nil
+        detectedAppBundleID = nil
         silenceSeconds = 0
         activeLibraryEntryID = nil
 
