@@ -18,6 +18,7 @@ private let conferencingBundleIDs: [String: String] = [
 
 struct ContentView: View {
     @Bindable var settings: AppSettings
+    let notionService: NotionService
     @State private var transcriptStore = TranscriptStore()
     @State private var transcriptionEngine: TranscriptionEngine?
     @State private var sessionStore = SessionStore()
@@ -42,6 +43,15 @@ struct ContentView: View {
     @State private var nameDebounceTask: Task<Void, Never>?
     @State private var isSidebarVisible: Bool = true
     @Environment(\.openSettings) private var openSettings
+
+    // Notion send state
+    @State private var notionSendEntry: LibraryEntry?
+    @State private var isNotionSending: Bool = false
+    @State private var notionSendError: String?
+
+    private var isNotionConfigured: Bool {
+        !settings.notionDatabaseID.isEmpty
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -100,6 +110,12 @@ struct ContentView: View {
                                 }
                                 refreshLibrary()
                             }
+                        },
+                        isNotionConfigured: isNotionConfigured,
+                        onSendToNotion: { id in
+                            if let entry = libraryEntries.first(where: { $0.id == id }) {
+                                notionSendEntry = entry
+                            }
                         }
                     )
                     .frame(width: 220)
@@ -132,6 +148,29 @@ struct ContentView: View {
         .frame(minWidth: 640, minHeight: 400)
         .background(Color.bg0)
         .preferredColorScheme(.dark)
+        .sheet(item: $notionSendEntry) { entry in
+            NotionTagSheet(
+                entryTitle: entry.displayName,
+                entryDate: entry.startDate,
+                isPresented: Binding(
+                    get: { notionSendEntry != nil },
+                    set: { if !$0 { notionSendEntry = nil } }
+                ),
+                onSend: { tags in
+                    sendToNotion(entry: entry, tags: tags)
+                }
+            )
+            .overlay {
+                if isNotionSending {
+                    ZStack {
+                        Color.black.opacity(0.4)
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                            .tint(.white)
+                    }
+                }
+            }
+        }
         .overlay {
             if showOnboarding {
                 OnboardingView(
@@ -314,6 +353,39 @@ struct ContentView: View {
                     .foregroundStyle(Color.fg3)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    // MARK: - Notion
+
+    private func sendToNotion(entry: LibraryEntry, tags: [String]) {
+        isNotionSending = true
+        notionSendError = nil
+        Task {
+            do {
+                let markdown = try String(contentsOfFile: entry.filePath, encoding: .utf8)
+                let speakers = notionService.extractSpeakers(markdown)
+                let pageURL = try await notionService.sendTranscript(
+                    databaseID: settings.notionDatabaseID,
+                    title: entry.displayName,
+                    date: entry.startDate,
+                    duration: entry.duration,
+                    sourceApp: entry.sourceApp,
+                    sessionType: entry.sessionType == .callCapture ? "Call Capture" : "Voice Memo",
+                    speakers: speakers,
+                    tags: tags,
+                    transcriptMarkdown: markdown
+                )
+                await libraryStore.updateEntry(id: entry.id) { @Sendable e in
+                    e.notionPageURL = pageURL.absoluteString
+                }
+                refreshLibrary()
+                notionSendEntry = nil
+                isNotionSending = false
+            } catch {
+                notionSendError = error.localizedDescription
+                isNotionSending = false
+            }
         }
     }
 

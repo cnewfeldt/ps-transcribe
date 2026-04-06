@@ -6,6 +6,8 @@ struct LibraryEntryRow: View {
     let isSelected: Bool
     var onRename: ((String) -> Void)?
     var onDelete: (() -> Void)?
+    var isNotionConfigured: Bool = false
+    var onSendToNotion: (() -> Void)?
 
     var body: some View {
         ZStack(alignment: .leading) {
@@ -103,6 +105,26 @@ struct LibraryEntryRow: View {
                         .deletingLastPathComponent().path
                 )
             }
+
+            if isNotionConfigured {
+                Divider()
+                if entry.notionPageURL == nil {
+                    Button("Send to Notion...") {
+                        onSendToNotion?()
+                    }
+                } else {
+                    Button("Open in Notion") {
+                        if let urlString = entry.notionPageURL,
+                           let url = URL(string: urlString) {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
+                    Button("Resend to Notion...") {
+                        onSendToNotion?()
+                    }
+                }
+            }
+
             Divider()
             Button("Delete", role: .destructive) {
                 onDelete?()

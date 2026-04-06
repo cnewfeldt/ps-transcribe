@@ -6,6 +6,8 @@ struct LibrarySidebar: View {
     let activeEntryID: UUID?
     var onRename: ((UUID, String) -> Void)?
     var onDelete: ((UUID) -> Void)?
+    var isNotionConfigured: Bool = false
+    var onSendToNotion: ((UUID) -> Void)?
 
     var body: some View {
         if entries.isEmpty {
@@ -20,6 +22,10 @@ struct LibrarySidebar: View {
                     },
                     onDelete: {
                         onDelete?(entry.id)
+                    },
+                    isNotionConfigured: isNotionConfigured,
+                    onSendToNotion: {
+                        onSendToNotion?(entry.id)
                     }
                 )
                 .tag(entry.id)

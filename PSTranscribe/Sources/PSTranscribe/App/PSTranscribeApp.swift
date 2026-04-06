@@ -16,7 +16,7 @@ struct PSTranscribeApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(settings: settings)
+            ContentView(settings: settings, notionService: notionService)
                 .onAppear {
                     settings.applyScreenShareVisibility()
                 }
