@@ -37,6 +37,11 @@ final class AppSettings {
         }
     }
 
+    /// Notion database ID (not a secret -- stored in UserDefaults, not Keychain).
+    var notionDatabaseID: String {
+        didSet { UserDefaults.standard.set(notionDatabaseID, forKey: "notionDatabaseID") }
+    }
+
     init() {
         let defaults = UserDefaults.standard
         self.transcriptionLocale = defaults.string(forKey: "transcriptionLocale") ?? "en-US"
@@ -51,6 +56,7 @@ final class AppSettings {
         }
         let rawType = defaults.string(forKey: "lastUsedSessionType") ?? SessionType.callCapture.rawValue
         self.lastUsedSessionType = SessionType(rawValue: rawType) ?? .callCapture
+        self.notionDatabaseID = defaults.string(forKey: "notionDatabaseID") ?? ""
     }
 
     /// Apply current screen-share visibility to all app windows.

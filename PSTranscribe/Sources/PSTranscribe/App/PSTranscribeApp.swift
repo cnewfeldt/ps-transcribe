@@ -7,6 +7,7 @@ struct PSTranscribeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var settings: AppSettings
     private let updaterController = AppUpdaterController()
+    @State private var notionService = NotionService()
 
     init() {
         PSTranscribeApp.migrateUserDefaultsIfNeeded()
@@ -28,7 +29,7 @@ struct PSTranscribeApp: App {
             }
         }
         Settings {
-            SettingsView(settings: settings, updater: updaterController.updater)
+            SettingsView(settings: settings, updater: updaterController.updater, notionService: notionService)
         }
         MenuBarExtra {
             Text("PS Transcribe")
