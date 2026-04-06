@@ -20,6 +20,7 @@ struct LibraryEntry: Identifiable, Codable, Sendable {
     let sourceApp: String
     var isFinalized: Bool
     var firstLinePreview: String?
+    var notionPageURL: String?  // set after successful Notion send
 
     var displayName: String {
         if let name, !name.isEmpty { return name }
