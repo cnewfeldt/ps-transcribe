@@ -20,6 +20,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Mic Button + Model Onboarding** - Three-state mic button and first-launch model download flow (completed 2026-04-03)
 - [~] **Phase 5: Ollama Integration** - ABANDONED 2026-04-04 (scope reduction; see tag `archive/llm-analysis-attempt`)
 - [~] **Phase 6: Live LLM Analysis** - ABANDONED 2026-04-04 (scope reduction; see tag `archive/llm-analysis-attempt`)
+- [ ] **Phase 7: Notion Integration** - On-demand export of finalized transcripts to a Notion database with structured properties and tag workflow
 
 ## Phase Details
 
@@ -93,6 +94,24 @@ Plans:
 - [x] 04-03-PLAN.md -- Visual verification + ControlBar redesign (session buttons embed mic indicator, expand to full width when recording)
 **UI hint**: yes
 
+### Phase 7: Notion Integration
+**Goal**: Users can export any finalized transcript to a configured Notion database with structured properties and optional tags, via an on-demand "Send to Notion" context menu action
+**Depends on**: Phase 4 (recording + library must work)
+**Requirements**: NOTN-01 (Keychain-backed API key), NOTN-02 (database validation), NOTN-03 (send with properties + blocks), NOTN-04 (tag workflow), NOTN-05 (duplicate prevention)
+**Success Criteria** (what must be TRUE):
+  1. User configures a Notion internal integration API key in Settings, stored securely in macOS Keychain (not UserDefaults)
+  2. User pastes a Notion database URL/ID in Settings, the app validates it and shows the database title
+  3. Right-clicking a finalized library entry shows "Send to Notion..." which opens a tag sheet, then creates a Notion database row with Title, Date, Duration, Source App, Session Type, Speakers, Tags, and full transcript as page content
+  4. After successful send, the context menu changes to "Open in Notion" (opens page in browser) + "Resend to Notion..."
+  5. If Notion is not configured, all Notion-related UI is hidden -- no error states, no orphan buttons
+**Plans:** 3 plans
+**Design:** `docs/plans/2026-04-05-notion-integration-design.md`
+
+Plans:
+- [ ] 07-01-PLAN.md -- KeychainHelper + NotionService actor (Keychain storage, connection/database validation, markdown-to-blocks conversion, sendTranscript)
+- [ ] 07-02-PLAN.md -- Settings Notion section (API key field, database ID/URL field, connection status, validation flow)
+- [ ] 07-03-PLAN.md -- NotionTagSheet + send flow + context menu wiring (tag input, LibraryEntry.notionPageURL, duplicate prevention, human verification)
+
 ### Phase 5: Ollama Integration (ABANDONED 2026-04-04)
 **Status**: Abandoned during scope reduction. PS Transcribe is scoped to transcription only; LLM integration is out of scope.
 **Preserved at**: git tag `archive/llm-analysis-attempt` (full implementation including OllamaService, OllamaState, Settings section, model browse sheet).
@@ -106,7 +125,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases 1 -> 2 -> 3 -> 4. Phases 5 and 6 abandoned.
+Phases 1 -> 2 -> 3 -> 4 -> 7. Phases 5 and 6 abandoned.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -116,3 +135,4 @@ Phases 1 -> 2 -> 3 -> 4. Phases 5 and 6 abandoned.
 | 4. Mic Button + Model Onboarding | 3/3 | Complete   | 2026-04-03 |
 | 5. Ollama Integration | -- | Abandoned  | 2026-04-04 |
 | 6. Live LLM Analysis | -- | Abandoned  | 2026-04-04 |
+| 7. Notion Integration | 0/3 | Planned    | -          |
