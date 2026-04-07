@@ -128,8 +128,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 08-01-PLAN.md -- Speaker enum .named(String) case, backward-compat Codable, TranscriptParser fix, TranscriptView colored badges
-- [ ] 08-02-PLAN.md -- Incomplete badge, LibraryEntryRow caching, source/pstranscribe tag, print->os.Logger, transcriptStore.clear() on stop
+- [x] 08-01-PLAN.md -- Speaker enum .named(String) case, backward-compat Codable, TranscriptParser fix, TranscriptView colored badges
+- [x] 08-02-PLAN.md -- Incomplete badge, LibraryEntryRow caching, source/pstranscribe tag, print->os.Logger, transcriptStore.clear() on stop
 
 ### Phase 9: Verification Sweep + Tracking Reconciliation
 **Goal**: Every implemented requirement has a formal VERIFICATION.md, REQUIREMENTS.md checkboxes and traceability table match verified reality, and ROADMAP.md progress is accurate
