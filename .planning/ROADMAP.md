@@ -14,14 +14,14 @@ Four phases transform Tome (v1.2.1) into PS Transcribe: start with the rebrand a
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Rebrand** - Rename Tome to PS Transcribe across all code, config, CI, and user settings
+- [x] **Phase 1: Rebrand** - Rename Tome to PS Transcribe across all code, config, CI, and user settings (completed 2026-04-02)
 - [x] **Phase 2: Security + Stability** - Resolve all 12 SCAN findings and fix crash/data-loss bugs (completed 2026-04-03)
-- [ ] **Phase 3: Session Management + Recording Naming** - Session library grid, lifecycle, and flexible recording naming
+- [x] **Phase 3: Session Management + Recording Naming** - Session library grid, lifecycle, and flexible recording naming (completed 2026-04-04)
 - [x] **Phase 4: Mic Button + Model Onboarding** - Three-state mic button and first-launch model download flow (completed 2026-04-03)
 - [~] **Phase 5: Ollama Integration** - ABANDONED 2026-04-04 (scope reduction; see tag `archive/llm-analysis-attempt`)
 - [~] **Phase 6: Live LLM Analysis** - ABANDONED 2026-04-04 (scope reduction; see tag `archive/llm-analysis-attempt`)
-- [ ] **Phase 7: Notion Integration** - On-demand export of finalized transcripts to a Notion database with structured properties and tag workflow
-- [ ] **Phase 8: Code Defect Fixes** - Fix crash recovery path, speaker label collapse, source/tome tag, stray print() calls, and tech debt
+- [x] **Phase 7: Notion Integration** - On-demand export of finalized transcripts to a Notion database with structured properties and tag workflow (completed 2026-04-06)
+- [x] **Phase 8: Code Defect Fixes** - Fix crash recovery path, speaker label collapse, source/tome tag, stray print() calls, and tech debt (completed 2026-04-07)
 - [ ] **Phase 9: Verification Sweep + Tracking Reconciliation** - Formal verification for Phases 4 and 7, fix REQUIREMENTS.md tracking discrepancies
 
 ## Phase Details
@@ -35,7 +35,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Existing user settings (vault paths, device ID, locale) are preserved after upgrading from Tome -- user does not need to re-configure anything
   3. Sparkle update check resolves against the new appcast URL without breaking the update chain
   4. CI builds and releases use PS Transcribe names throughout; no Tome artifact names appear in GitHub Releases
-**Plans:** 1/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 01-01-PLAN.md -- Rename directories and update all Swift source content
@@ -71,13 +71,13 @@ Plans:
   3. Stopping a recording saves it to the library and clears the transcript view -- the next recording start creates a fresh session with no risk of overwriting the previous one
   4. Session library persists across app restarts -- no recordings disappear after quitting and relaunching
   5. User can name a recording before starting, rename it mid-session, or rename it later from the library -- unnamed recordings get a date-based filename automatically, and renaming updates the file on disk
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [x] 03-01-PLAN.md -- Data models, LibraryStore actor, TranscriptParser, test infrastructure
 - [x] 03-02-PLAN.md -- UI components (LibrarySidebar, LibraryEntryRow, RecordingNameField) and ContentView NavigationSplitView restructure
 - [x] 03-03-PLAN.md -- Session lifecycle wiring, name flow, inline rename, Obsidian settings
-- [ ] 03-04-PLAN.md -- End-to-end manual verification of all session library features
+- [x] 03-04-PLAN.md -- End-to-end manual verification of all session library features
 **UI hint**: yes
 
 ### Phase 4: Mic Button + Model Onboarding
@@ -106,7 +106,7 @@ Plans:
   3. Right-clicking a finalized library entry shows "Send to Notion..." which opens a tag sheet, then creates a Notion database row with Title, Date, Duration, Source App, Session Type, Speakers, Tags, and full transcript as page content
   4. After successful send, the context menu changes to "Open in Notion" (opens page in browser) + "Resend to Notion..."
   5. If Notion is not configured, all Notion-related UI is hidden -- no error states, no orphan buttons
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 **Design:** `docs/plans/2026-04-05-notion-integration-design.md`
 
 Plans:
@@ -125,7 +125,7 @@ Plans:
   3. New transcripts write `source/pstranscribe` (not `source/tome`) in YAML frontmatter
   4. All error-path logging uses os.Logger -- no print() calls on error paths
   5. Stopping a recording clears transcriptStore state; LibraryEntryRow caches file-exists checks
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 08-01-PLAN.md -- Speaker enum .named(String) case, backward-compat Codable, TranscriptParser fix, TranscriptView colored badges
@@ -171,6 +171,6 @@ Phases 1 -> 2 -> 3 -> 4 -> 7 -> 8 -> 9. Phases 5 and 6 abandoned.
 | 4. Mic Button + Model Onboarding | 3/3 | Complete   | 2026-04-03 |
 | 5. Ollama Integration | -- | Abandoned  | 2026-04-04 |
 | 6. Live LLM Analysis | -- | Abandoned  | 2026-04-04 |
-| 7. Notion Integration | 3/3 | Complete   | 2026-04-05 |
-| 8. Code Defect Fixes | 0/2 | Planned    | -          |
-| 9. Verification Sweep | 0/1 | Planned    | -          |
+| 7. Notion Integration | 3/3 | Complete   | 2026-04-06 |
+| 8. Code Defect Fixes | 2/2 | Complete   | 2026-04-07 |
+| 9. Verification Sweep | 0/2 | In Progress | -          |
