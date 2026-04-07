@@ -56,7 +56,12 @@ func parseTranscriptContent(_ content: String) -> [Utterance] {
 
         guard !text.isEmpty else { return nil }
 
-        let speaker: Speaker = speakerStr == "You" ? .you : .them
+        let speaker: Speaker
+        switch speakerStr {
+        case "You":  speaker = .you
+        case "Them": speaker = .them
+        default:     speaker = .named(speakerStr)
+        }
 
         // Parse HH:mm:ss into a Date offset from distantPast
         let parts = timeStr.split(separator: ":").compactMap { Int($0) }

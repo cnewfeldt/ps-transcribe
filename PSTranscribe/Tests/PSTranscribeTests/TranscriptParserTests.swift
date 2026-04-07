@@ -48,7 +48,7 @@ created: "2026-04-02"
         #expect(utterances[0].text == "Hello world")
         #expect(utterances[0].speaker == .you)
         #expect(utterances[1].text == "Hi there")
-        #expect(utterances[1].speaker == .them)
+        #expect(utterances[1].speaker == .named("Speaker 2"))
     }
 
     @Test func returnsEmptyForFrontmatterOnly() {
@@ -71,9 +71,43 @@ created: "2026-04-02"
         #expect(utterances.first?.speaker == .you)
     }
 
-    @Test func otherSpeakerMapsToSpeakerThem() {
+    @Test func otherSpeakerMapsToNamed() {
         let utterances = parseTranscriptContent(sampleTranscript)
-        #expect(utterances.last?.speaker == .them)
+        #expect(utterances.last?.speaker == .named("Speaker 2"))
+    }
+
+    @Test func diarizedSpeakerMapsToNamed() {
+        let transcript = """
+---
+type: meeting
+created: "2026-04-02"
+---
+
+## Transcript
+
+**Speaker 3** (00:02:00)
+Third person
+
+"""
+        let utterances = parseTranscriptContent(transcript)
+        #expect(utterances.first?.speaker == .named("Speaker 3"))
+    }
+
+    @Test func themSpeakerStillMapsThem() {
+        let transcript = """
+---
+type: meeting
+created: "2026-04-02"
+---
+
+## Transcript
+
+**Them** (00:01:00)
+Something
+
+"""
+        let utterances = parseTranscriptContent(transcript)
+        #expect(utterances.first?.speaker == .them)
     }
 
 }
