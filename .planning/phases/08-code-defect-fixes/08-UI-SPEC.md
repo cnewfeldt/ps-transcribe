@@ -37,16 +37,14 @@ Source: Codebase inspection -- no `components.json`, no Tailwind config, no web 
 
 Declared values (multiples of 4 or established SwiftUI conventions):
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| xs | 4px | Icon top padding (`.padding(.top, 4)` in badges) |
-| sm | 8px | HStack element spacing in LibraryEntryRow |
-| md | 10px | Bubble internal padding (`.padding(10)`) |
-| lg | 12px | LazyVStack utterance spacing, transcript horizontal/vertical padding |
-| xl | 16px | LibraryEntryRow horizontal padding (`.padding(.horizontal, 16)`) |
-| row-height | 72pt | LibraryEntryRow fixed height -- do not change |
-
-Exceptions: Row height is 72pt (not a multiple of 4) -- established in Phase 3, do not alter.
+| Token | Value | Usage | Exception Note |
+|-------|-------|-------|----------------|
+| xs | 4px | Icon top padding (`.padding(.top, 4)` in badges) | -- |
+| sm | 8px | HStack element spacing in LibraryEntryRow | -- |
+| md | 10px | Bubble internal padding (`.padding(10)`) | Pre-existing codebase value (`.padding(10)` in TranscriptView.swift) -- not a multiple of 4; do not change |
+| lg | 12px | LazyVStack utterance spacing, transcript horizontal/vertical padding | Pre-existing codebase value -- not in standard set {4, 8, 16, 24, 32, 48, 64}; do not change |
+| xl | 16px | LibraryEntryRow horizontal padding (`.padding(.horizontal, 16)`) | -- |
+| row-height | 72pt | LibraryEntryRow fixed height -- do not change | Established in Phase 3 -- not a multiple of 4; do not change |
 
 Source: Verified from LibraryEntryRow.swift and TranscriptView.swift.
 
