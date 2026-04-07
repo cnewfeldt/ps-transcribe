@@ -708,7 +708,12 @@ struct ContentView: View {
 
         silenceSeconds = 0
 
-        let speakerName = last.speaker == .you ? "You" : "Them"
+        let speakerName: String
+        switch last.speaker {
+        case .you:              speakerName = "You"
+        case .them:             speakerName = "Them"
+        case .named(let label): speakerName = label
+        }
         Task {
             await transcriptLogger.append(
                 speaker: speakerName,

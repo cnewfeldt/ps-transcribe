@@ -58,7 +58,19 @@ private struct UtteranceBubble: View {
     let utterance: Utterance
 
     private var accentColor: Color {
-        utterance.speaker == .you ? .accent1 : .fg2
+        switch utterance.speaker {
+        case .you:              return .accent1
+        case .them:             return .fg2
+        case .named(let label): return namedSpeakerColor(for: label)
+        }
+    }
+
+    private var speakerDisplayName: String {
+        switch utterance.speaker {
+        case .you:              return "You"
+        case .them:             return "Them"
+        case .named(let label): return label
+        }
     }
 
     var body: some View {
@@ -66,7 +78,7 @@ private struct UtteranceBubble: View {
             if utterance.speaker == .you { Spacer() }
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(utterance.speaker == .you ? "You" : "Them")
+                Text(speakerDisplayName)
                     .font(.system(size: 10, weight: .bold))
                     .textCase(.uppercase)
                     .tracking(0.8)
@@ -92,9 +104,19 @@ private struct UtteranceBubble: View {
                     .frame(width: 3)
             }
 
-            if utterance.speaker == .them { Spacer() }
+            if utterance.speaker != .you { Spacer() }
         }
     }
+}
+
+// MARK: - Named speaker color (shared by UtteranceBubble and VolatileIndicator)
+
+private func namedSpeakerColor(for label: String) -> Color {
+    let palette: [Color] = [.speakerTeal, .speakerAmber]
+    if let n = label.split(separator: " ").last.flatMap({ Int($0) }), n >= 2 {
+        return palette[(n - 2) % palette.count]
+    }
+    return .fg2
 }
 
 // MARK: - Volatile Indicator
@@ -105,7 +127,11 @@ private struct VolatileIndicator: View {
     @State private var pulse = false
 
     private var accentColor: Color {
-        speaker == .you ? .accent1 : .fg2
+        switch speaker {
+        case .you:              return .accent1
+        case .them:             return .fg2
+        case .named(let label): return namedSpeakerColor(for: label)
+        }
     }
 
     var body: some View {
@@ -134,7 +160,7 @@ private struct VolatileIndicator: View {
             .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: pulse)
             .onAppear { pulse = true }
 
-            if speaker == .them { Spacer() }
+            if speaker != .you { Spacer() }
         }
     }
 }
@@ -158,4 +184,8 @@ extension Color {
 
     // Recording red
     static let recordRed = Color(red: 0.91, green: 0.36, blue: 0.36) // #E85B5B
+
+    // Named speaker palette
+    static let speakerTeal = Color(red: 0.60, green: 0.85, blue: 0.75)
+    static let speakerAmber = Color(red: 0.95, green: 0.75, blue: 0.45)
 }
