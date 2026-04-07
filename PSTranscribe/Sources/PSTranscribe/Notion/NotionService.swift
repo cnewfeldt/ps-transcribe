@@ -35,6 +35,9 @@ actor NotionService {
 
     private let logger = Logger(subsystem: "com.pstranscribe.app", category: "NotionService")
 
+    /// The name of the title property in the connected database (default "Name", may vary)
+    private(set) var titlePropertyName: String = "Name"
+
     // MARK: - Keychain-backed API key
 
     func apiKey() -> String? {
@@ -89,7 +92,137 @@ actor NotionService {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw NotionError.invalidResponse
         }
+
+        // Detect the title property name
+        let existingProps = (json["properties"] as? [String: Any]) ?? [:]
+        for (name, value) in existingProps {
+            if let propDict = value as? [String: Any],
+               let type = propDict["type"] as? String,
+               type == "title" {
+                titlePropertyName = name
+                logger.info("Title property detected as: \(name)")
+                break
+            }
+        }
+
         return extractDatabaseTitle(from: json)
+    }
+
+
+    // MARK: - Page management
+
+    /// Archives (soft-deletes) a Notion page by URL.
+    func archivePage(urlString: String) async throws {
+        guard let key = apiKey() else { throw NotionError.notAuthenticated }
+        let pageID = extractPageID(from: urlString)
+        guard !pageID.isEmpty else { return }
+
+        let url = URL(string: "\(baseURL)/pages/\(pageID)")!
+        var request = makeRequest(url: url, method: "PATCH", apiKey: key)
+        let body: [String: Any] = ["archived": true]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response) = try await performRequest(request)
+        try checkHTTPStatus(response, data: data)
+        logger.info("Archived Notion page: \(pageID)")
+    }
+
+    /// Updates an existing Notion page with fresh transcript content.
+    /// Fetches database schema to detect title property name and available properties.
+    func updateTranscript(
+        pageURLString: String,
+        databaseID: String,
+        title: String,
+        date: Date,
+        duration: TimeInterval,
+        sourceApp: String,
+        sessionType: String,
+        speakers: [String],
+        tags: [String],
+        transcriptMarkdown: String
+    ) async throws {
+        guard let key = apiKey() else { throw NotionError.notAuthenticated }
+        let pageID = extractPageID(from: pageURLString)
+        guard !pageID.isEmpty else { return }
+        let cleanID = cleanDatabaseID(databaseID)
+
+        // Fetch database schema for property detection (same as sendTranscript)
+        let dbURL = URL(string: "\(baseURL)/databases/\(cleanID)")!
+        let dbRequest = makeRequest(url: dbURL, method: "GET", apiKey: key)
+        var availableProps = Set<String>()
+        var detectedTitleProp = "Name"
+        if let (dbData, _) = try? await URLSession.shared.data(for: dbRequest),
+           let dbJSON = try? JSONSerialization.jsonObject(with: dbData) as? [String: Any],
+           let props = dbJSON["properties"] as? [String: Any] {
+            availableProps = Set(props.keys)
+            for (name, value) in props {
+                if let propDict = value as? [String: Any],
+                   let type = propDict["type"] as? String,
+                   type == "title" {
+                    detectedTitleProp = name
+                    break
+                }
+            }
+        }
+
+        let allBlocks = transcriptToBlocks(transcriptMarkdown)
+        let allProperties = buildProperties(
+            title: title, date: date, duration: duration,
+            sourceApp: sourceApp, sessionType: sessionType,
+            speakers: speakers, tags: tags,
+            titlePropertyName: detectedTitleProp
+        )
+
+        // Filter to available properties
+        var properties: [String: Any] = [:]
+        for (k, v) in allProperties {
+            if availableProps.isEmpty || availableProps.contains(k) {
+                properties[k] = v
+            }
+        }
+
+        // 1. Update properties
+        let pageURL = URL(string: "\(baseURL)/pages/\(pageID)")!
+        var propRequest = makeRequest(url: pageURL, method: "PATCH", apiKey: key)
+        propRequest.httpBody = try JSONSerialization.data(withJSONObject: ["properties": properties])
+        let (propData, propResponse) = try await performRequest(propRequest)
+        try checkHTTPStatus(propResponse, data: propData)
+
+        // 2. Delete existing child blocks
+        let childrenURL = URL(string: "\(baseURL)/blocks/\(pageID)/children?page_size=100")!
+        let listRequest = makeRequest(url: childrenURL, method: "GET", apiKey: key)
+        let (listData, listResponse) = try await performRequest(listRequest)
+        try checkHTTPStatus(listResponse, data: listData)
+
+        if let listJSON = try? JSONSerialization.jsonObject(with: listData) as? [String: Any],
+           let results = listJSON["results"] as? [[String: Any]] {
+            for block in results {
+                if let blockID = block["id"] as? String {
+                    let deleteURL = URL(string: "\(baseURL)/blocks/\(blockID)")!
+                    let deleteRequest = makeRequest(url: deleteURL, method: "DELETE", apiKey: key)
+                    let (_, deleteResponse) = try await performRequest(deleteRequest)
+                    // Ignore 404s (already deleted)
+                    if deleteResponse.statusCode != 404 {
+                        try checkHTTPStatus(deleteResponse, data: Data())
+                    }
+                }
+            }
+        }
+
+        // 3. Add new blocks
+        try await appendBlocks(pageID: pageID, blocks: allBlocks, apiKey: key)
+        logger.info("Updated Notion page: \(pageID)")
+    }
+
+    /// Extracts a 32-hex-char page ID from a Notion URL.
+    private nonisolated func extractPageID(from urlString: String) -> String {
+        let cleaned = urlString.components(separatedBy: "?").first ?? urlString
+        let pattern = #"([a-f0-9]{32}|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})"#
+        guard let regex = try? NSRegularExpression(pattern: pattern),
+              let match = regex.matches(in: cleaned, range: NSRange(location: 0, length: (cleaned as NSString).length)).last else {
+            return ""
+        }
+        return (cleaned as NSString).substring(with: match.range(at: 1)).replacingOccurrences(of: "-", with: "")
     }
 
     // MARK: - Core send
@@ -111,16 +244,48 @@ actor NotionService {
         let cleanID = cleanDatabaseID(databaseID)
         guard !cleanID.isEmpty else { throw NotionError.invalidDatabaseID }
 
+        // Fetch database schema to know which properties exist
+        let dbURL = URL(string: "\(baseURL)/databases/\(cleanID)")!
+        let dbRequest = makeRequest(url: dbURL, method: "GET", apiKey: key)
+        var availableProps = Set<String>()
+        var detectedTitleProp = titlePropertyName
+        if let (dbData, _) = try? await URLSession.shared.data(for: dbRequest),
+           let dbJSON = try? JSONSerialization.jsonObject(with: dbData) as? [String: Any],
+           let props = dbJSON["properties"] as? [String: Any] {
+            availableProps = Set(props.keys)
+            logger.info("Database properties: \(availableProps.sorted())")
+            // Detect title property name
+            for (name, value) in props {
+                if let propDict = value as? [String: Any],
+                   let type = propDict["type"] as? String,
+                   type == "title" {
+                    detectedTitleProp = name
+                    break
+                }
+            }
+        }
+
         let allBlocks = transcriptToBlocks(transcriptMarkdown)
-        let properties = buildProperties(
+        let allProperties = buildProperties(
             title: title,
             date: date,
             duration: duration,
             sourceApp: sourceApp,
             sessionType: sessionType,
             speakers: speakers,
-            tags: tags
+            tags: tags,
+            titlePropertyName: detectedTitleProp
         )
+
+        // Only include properties that exist on the database -- skip unknown ones
+        var properties: [String: Any] = [:]
+        for (key, value) in allProperties {
+            if availableProps.isEmpty || availableProps.contains(key) {
+                properties[key] = value
+            } else {
+                logger.info("Skipping property '\(key)' -- not on database")
+            }
+        }
 
         // First 100 blocks go in the initial page creation
         let firstBatch = Array(allBlocks.prefix(100))
@@ -198,6 +363,35 @@ actor NotionService {
                 continue
             }
 
+            // Headings: # H1, ## H2, ### H3
+            if trimmed.hasPrefix("# ") {
+                let text = String(trimmed.dropFirst(2))
+                blocks.append([
+                    "object": "block",
+                    "type": "heading_1",
+                    "heading_1": ["rich_text": parseInlineBold(text)],
+                ])
+                continue
+            }
+            if trimmed.hasPrefix("## ") {
+                let text = String(trimmed.dropFirst(3))
+                blocks.append([
+                    "object": "block",
+                    "type": "heading_2",
+                    "heading_2": ["rich_text": parseInlineBold(text)],
+                ])
+                continue
+            }
+            if trimmed.hasPrefix("### ") {
+                let text = String(trimmed.dropFirst(4))
+                blocks.append([
+                    "object": "block",
+                    "type": "heading_3",
+                    "heading_3": ["rich_text": parseInlineBold(text)],
+                ])
+                continue
+            }
+
             // Check if this is a speaker header line
             let nsLine = trimmed as NSString
             if let pattern = speakerPattern,
@@ -220,19 +414,59 @@ actor NotionService {
                 continue
             }
 
-            // Plain text paragraph
-            let richText: [String: Any] = [
-                "type": "text",
-                "text": ["content": trimmed],
-            ]
+            // Paragraph with inline bold parsing
             blocks.append([
                 "object": "block",
                 "type": "paragraph",
-                "paragraph": ["rich_text": [richText]],
+                "paragraph": ["rich_text": parseInlineBold(trimmed)],
             ])
         }
 
         return blocks
+    }
+
+    /// Parses inline **bold** markers into Notion rich_text segments.
+    /// "Hello **world** today" becomes [{text:"Hello "}, {text:"world", bold:true}, {text:" today"}]
+    private nonisolated func parseInlineBold(_ text: String) -> [[String: Any]] {
+        let boldPattern = try? NSRegularExpression(pattern: #"\*\*(.+?)\*\*"#)
+        guard let pattern = boldPattern else {
+            return [["type": "text", "text": ["content": text]]]
+        }
+
+        let ns = text as NSString
+        let matches = pattern.matches(in: text, range: NSRange(location: 0, length: ns.length))
+
+        if matches.isEmpty {
+            return [["type": "text", "text": ["content": text]]]
+        }
+
+        var segments: [[String: Any]] = []
+        var cursor = 0
+
+        for match in matches {
+            let fullRange = match.range
+            // Text before the bold
+            if fullRange.location > cursor {
+                let before = ns.substring(with: NSRange(location: cursor, length: fullRange.location - cursor))
+                segments.append(["type": "text", "text": ["content": before]])
+            }
+            // The bold text (group 1, without **)
+            let boldText = ns.substring(with: match.range(at: 1))
+            segments.append([
+                "type": "text",
+                "text": ["content": boldText],
+                "annotations": ["bold": true],
+            ])
+            cursor = fullRange.location + fullRange.length
+        }
+
+        // Text after the last bold
+        if cursor < ns.length {
+            let after = ns.substring(from: cursor)
+            segments.append(["type": "text", "text": ["content": after]])
+        }
+
+        return segments
     }
 
     /// Extracts unique speaker names from a markdown transcript.
@@ -262,13 +496,14 @@ actor NotionService {
         sourceApp: String,
         sessionType: String,
         speakers: [String],
-        tags: [String]
+        tags: [String],
+        titlePropertyName: String = "Name"
     ) -> [String: Any] {
         let dateStr = ISO8601DateFormatter().string(from: date).prefix(10).description // "YYYY-MM-DD"
         let durationStr = formatDuration(duration)
 
         return [
-            "Title": [
+            titlePropertyName: [
                 "title": [["type": "text", "text": ["content": title]]]
             ],
             "Date": [
@@ -340,6 +575,8 @@ actor NotionService {
 
     private func checkHTTPStatus(_ response: HTTPURLResponse, data: Data) throws {
         guard response.statusCode >= 200 && response.statusCode < 300 else {
+            let fullBody = String(data: data, encoding: .utf8) ?? "(no body)"
+            logger.error("Notion API \(response.statusCode): \(fullBody)")
             let message = extractErrorMessage(from: data) ?? "Unknown error"
             throw NotionError.httpError(statusCode: response.statusCode, message: message)
         }

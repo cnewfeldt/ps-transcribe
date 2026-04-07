@@ -108,9 +108,9 @@ Plans:
 **Design:** `docs/plans/2026-04-05-notion-integration-design.md`
 
 Plans:
-- [ ] 07-01-PLAN.md -- KeychainHelper + NotionService actor (Keychain storage, connection/database validation, markdown-to-blocks conversion, sendTranscript)
-- [ ] 07-02-PLAN.md -- Settings Notion section (API key field, database ID/URL field, connection status, validation flow)
-- [ ] 07-03-PLAN.md -- NotionTagSheet + send flow + context menu wiring (tag input, LibraryEntry.notionPageURL, duplicate prevention, human verification)
+- [x] 07-01-PLAN.md -- KeychainHelper + NotionService actor (Keychain storage, connection/database validation, markdown-to-blocks conversion, sendTranscript)
+- [x] 07-02-PLAN.md -- Settings Notion section (API key field, database ID/URL field, connection status, validation flow)
+- [x] 07-03-PLAN.md -- NotionTagSheet + send flow + context menu wiring (tag input, LibraryEntry.notionPageURL, duplicate prevention, human verification)
 
 ### Phase 5: Ollama Integration (ABANDONED 2026-04-04)
 **Status**: Abandoned during scope reduction. PS Transcribe is scoped to transcription only; LLM integration is out of scope.

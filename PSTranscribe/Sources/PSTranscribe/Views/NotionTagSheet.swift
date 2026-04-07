@@ -4,6 +4,7 @@ struct NotionTagSheet: View {
     let entryTitle: String
     let entryDate: Date
     @Binding var isPresented: Bool
+    var errorMessage: String?
     let onSend: ([String]) -> Void
 
     @State private var tagInput: String = ""
@@ -94,6 +95,18 @@ struct NotionTagSheet: View {
 
             Spacer(minLength: 0)
 
+            // Error display
+            if let errorMessage, !errorMessage.isEmpty {
+                Text(errorMessage)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.red)
+                    .textSelection(.enabled)
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.red.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+            }
+
             // Footer buttons
             HStack {
                 Button("Cancel") {
@@ -104,6 +117,7 @@ struct NotionTagSheet: View {
                 Spacer()
 
                 Button("Send to Notion") {
+                    persistTags(selectedTags)
                     onSend(selectedTags)
                 }
                 .keyboardShortcut(.return)

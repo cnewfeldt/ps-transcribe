@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import Combine
+import os
 
 private let conferencingBundleIDs: [String: String] = [
     "com.microsoft.teams2": "Teams",
@@ -103,6 +104,20 @@ struct ContentView: View {
                         onDelete: { id in
                             let capturedID = id
                             Task {
+                                // Get entry details before removing
+                                let entry = await libraryStore.entries.first(where: { $0.id == capturedID })
+
+                                // 1. Delete transcript file from disk
+                                if let filePath = entry?.filePath, !filePath.isEmpty {
+                                    try? FileManager.default.removeItem(atPath: filePath)
+                                }
+
+                                // 2. Archive Notion page if it was sent
+                                if let notionURL = entry?.notionPageURL {
+                                    try? await notionService.archivePage(urlString: notionURL)
+                                }
+
+                                // 3. Remove from library
                                 await libraryStore.removeEntry(id: capturedID)
                                 if selectedEntryID == capturedID {
                                     selectedEntryID = nil
@@ -156,6 +171,7 @@ struct ContentView: View {
                     get: { notionSendEntry != nil },
                     set: { if !$0 { notionSendEntry = nil } }
                 ),
+                errorMessage: notionSendError,
                 onSend: { tags in
                     sendToNotion(entry: entry, tags: tags)
                 }
@@ -332,12 +348,15 @@ struct ContentView: View {
                 volatileThemText: transcriptStore.volatileThemText
             )
         } else if let selectedID = selectedEntryID,
-                  let _ = libraryEntries.first(where: { $0.id == selectedID }) {
+                  let entry = libraryEntries.first(where: { $0.id == selectedID }) {
             // Past transcript loaded (per D-10)
             TranscriptView(
                 utterances: loadedUtterances,
                 volatileYouText: "",
-                volatileThemText: ""
+                volatileThemText: "",
+                onRemoveUtterance: { utteranceID in
+                    removeUtterance(utteranceID, from: entry)
+                }
             )
         } else {
             // Empty detail state
@@ -361,30 +380,126 @@ struct ContentView: View {
     private func sendToNotion(entry: LibraryEntry, tags: [String]) {
         isNotionSending = true
         notionSendError = nil
+        let logger = Logger(subsystem: "com.pstranscribe.app", category: "NotionSend")
         Task {
             do {
+                logger.info("Sending to Notion: \(entry.displayName) at \(entry.filePath)")
                 let markdown = try String(contentsOfFile: entry.filePath, encoding: .utf8)
                 let speakers = notionService.extractSpeakers(markdown)
-                let pageURL = try await notionService.sendTranscript(
-                    databaseID: settings.notionDatabaseID,
-                    title: entry.displayName,
-                    date: entry.startDate,
-                    duration: entry.duration,
-                    sourceApp: entry.sourceApp,
-                    sessionType: entry.sessionType == .callCapture ? "Call Capture" : "Voice Memo",
-                    speakers: speakers,
-                    tags: tags,
-                    transcriptMarkdown: markdown
-                )
-                await libraryStore.updateEntry(id: entry.id) { @Sendable e in
-                    e.notionPageURL = pageURL.absoluteString
+
+                if let existingURL = entry.notionPageURL {
+                    // Resend: update existing page in place
+                    logger.info("Resend: updating existing page")
+                    try await notionService.updateTranscript(
+                        pageURLString: existingURL,
+                        databaseID: settings.notionDatabaseID,
+                        title: entry.displayName,
+                        date: entry.startDate,
+                        duration: entry.duration,
+                        sourceApp: entry.sourceApp,
+                        sessionType: entry.sessionType == .callCapture ? "Call Capture" : "Voice Memo",
+                        speakers: speakers,
+                        tags: tags,
+                        transcriptMarkdown: markdown
+                    )
+                } else {
+                    // First send: create new page
+                    let pageURL = try await notionService.sendTranscript(
+                        databaseID: settings.notionDatabaseID,
+                        title: entry.displayName,
+                        date: entry.startDate,
+                        duration: entry.duration,
+                        sourceApp: entry.sourceApp,
+                        sessionType: entry.sessionType == .callCapture ? "Call Capture" : "Voice Memo",
+                        speakers: speakers,
+                        tags: tags,
+                        transcriptMarkdown: markdown
+                    )
+                    await libraryStore.updateEntry(id: entry.id) { @Sendable e in
+                        e.notionPageURL = pageURL.absoluteString
+                    }
                 }
                 refreshLibrary()
                 notionSendEntry = nil
                 isNotionSending = false
             } catch {
+                logger.error("Notion send failed: \(error)")
                 notionSendError = error.localizedDescription
                 isNotionSending = false
+            }
+        }
+    }
+
+    // MARK: - Utterance Removal
+
+    private func removeUtterance(_ utteranceID: UUID, from entry: LibraryEntry) {
+        // Remove from in-memory list
+        guard let index = loadedUtterances.firstIndex(where: { $0.id == utteranceID }) else { return }
+        let removed = loadedUtterances.remove(at: index)
+
+        // Rewrite the markdown file without the removed utterance's block
+        guard !entry.filePath.isEmpty else { return }
+        Task {
+            do {
+                let fileURL = URL(fileURLWithPath: entry.filePath)
+                let content = try String(contentsOf: fileURL, encoding: .utf8)
+                let lines = content.components(separatedBy: "\n")
+
+                // Find the speaker line matching this utterance's timestamp and text
+                let speakerLabel = removed.speaker == .you ? "You" : "Them"
+                let offset = removed.timestamp.timeIntervalSince(.distantPast)
+                let h = Int(offset) / 3600
+                let m = (Int(offset) % 3600) / 60
+                let s = Int(offset) % 60
+                let timeStr = String(format: "%02d:%02d:%02d", h, m, s)
+                let headerLine = "**\(speakerLabel)** (\(timeStr))"
+
+                // Find and remove the block: header line + text lines + trailing blank line
+                var newLines: [String] = []
+                var skip = false
+                for line in lines {
+                    if line.trimmingCharacters(in: .whitespaces) == headerLine {
+                        skip = true
+                        continue
+                    }
+                    if skip {
+                        // Skip text lines until we hit a blank line or next speaker header
+                        if line.trimmingCharacters(in: .whitespaces).isEmpty {
+                            skip = false
+                            continue  // skip the blank separator too
+                        }
+                        if line.hasPrefix("**") {
+                            // Next speaker block -- stop skipping
+                            skip = false
+                            newLines.append(line)
+                        }
+                        // else skip this text line
+                        continue
+                    }
+                    newLines.append(line)
+                }
+
+                let newContent = newLines.joined(separator: "\n")
+                try newContent.write(to: fileURL, atomically: true, encoding: .utf8)
+
+                // Update Notion page if it was sent
+                if let notionURL = entry.notionPageURL {
+                    let speakers = notionService.extractSpeakers(newContent)
+                    try? await notionService.updateTranscript(
+                        pageURLString: notionURL,
+                        databaseID: settings.notionDatabaseID,
+                        title: entry.displayName,
+                        date: entry.startDate,
+                        duration: entry.duration,
+                        sourceApp: entry.sourceApp,
+                        sessionType: entry.sessionType == .callCapture ? "Call Capture" : "Voice Memo",
+                        speakers: speakers,
+                        tags: [],
+                        transcriptMarkdown: newContent
+                    )
+                }
+            } catch {
+                transcriptionEngine?.lastError = "Failed to remove utterance: \(error.localizedDescription)"
             }
         }
     }

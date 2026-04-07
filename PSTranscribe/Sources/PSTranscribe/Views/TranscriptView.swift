@@ -4,6 +4,7 @@ struct TranscriptView: View {
     let utterances: [Utterance]
     let volatileYouText: String
     let volatileThemText: String
+    var onRemoveUtterance: ((UUID) -> Void)?
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -12,6 +13,13 @@ struct TranscriptView: View {
                     ForEach(utterances) { utterance in
                         UtteranceBubble(utterance: utterance)
                             .id(utterance.id)
+                            .contextMenu {
+                                if onRemoveUtterance != nil {
+                                    Button("Remove", role: .destructive) {
+                                        onRemoveUtterance?(utterance.id)
+                                    }
+                                }
+                            }
                     }
 
                     if !volatileYouText.isEmpty {

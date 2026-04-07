@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.4.0] — 2026-04-06
+
+### Notion Integration
+- KeychainHelper for secure API key storage (save/read/delete via Security framework)
+- NotionService actor: connection validation, database validation, transcript-to-blocks conversion, page creation
+- Settings UI: 4-state Notion section (not configured, validating, connected, fully configured) with database URL parsing
+- NotionTagSheet: tag input with persistence across sends, previously-used tag suggestions
+- Context menu: "Send to Notion...", "Open in Notion", "Resend to Notion..." on library entries
+- Markdown-to-Notion-blocks converter with heading support (H1/H2/H3) and inline bold parsing
+- Adaptive property filtering: skips properties the database doesn't have instead of failing
+- Resend updates existing page in-place (properties + content blocks replaced, no duplicates)
+
+### Transcript Management
+- Right-click individual transcript utterances to remove them (updates file on disk + Notion page)
+- Enhanced delete: removing a library entry also deletes the .md file from disk and archives the Notion page
+
+### Testing
+- 10 new tests: 3 KeychainHelper + 7 NotionService (block conversion, speaker extraction, properties)
+
 ## [1.3.0] — 2026-04-04
 
 ### Scope reduction

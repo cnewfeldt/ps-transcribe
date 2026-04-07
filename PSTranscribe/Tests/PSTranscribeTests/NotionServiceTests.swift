@@ -137,7 +137,8 @@ After divider
             sourceApp: "Teams",
             sessionType: "Call Capture",
             speakers: ["You", "Speaker 2"],
-            tags: ["engineering"]
+            tags: ["engineering"],
+            titlePropertyName: "Title"
         )
 
         // Title
