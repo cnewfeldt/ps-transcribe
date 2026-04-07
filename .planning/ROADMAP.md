@@ -145,8 +145,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 09-01-PLAN.md -- Create VERIFICATION.md for Phases 4 and 7
-- [ ] 09-02-PLAN.md -- Reconcile REQUIREMENTS.md and ROADMAP.md tracking
+- [x] 09-01-PLAN.md -- Create VERIFICATION.md for Phases 4 and 7
+- [x] 09-02-PLAN.md -- Reconcile REQUIREMENTS.md and ROADMAP.md tracking
 
 ### Phase 5: Ollama Integration (ABANDONED 2026-04-04)
 **Status**: Abandoned during scope reduction. PS Transcribe is scoped to transcription only; LLM integration is out of scope.
@@ -173,4 +173,4 @@ Phases 1 -> 2 -> 3 -> 4 -> 7 -> 8 -> 9. Phases 5 and 6 abandoned.
 | 6. Live LLM Analysis | -- | Abandoned  | 2026-04-04 |
 | 7. Notion Integration | 3/3 | Complete   | 2026-04-06 |
 | 8. Code Defect Fixes | 2/2 | Complete   | 2026-04-07 |
-| 9. Verification Sweep | 0/2 | In Progress | -          |
+| 9. Verification Sweep | 2/2 | In Progress | -          |
