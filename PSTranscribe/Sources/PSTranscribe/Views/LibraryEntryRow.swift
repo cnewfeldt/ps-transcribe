@@ -8,6 +8,7 @@ struct LibraryEntryRow: View {
     var onDelete: (() -> Void)?
     var isNotionConfigured: Bool = false
     var onSendToNotion: (() -> Void)?
+    @State private var fileExists: Bool = true
 
     var body: some View {
         ZStack(alignment: .leading) {
@@ -76,8 +77,16 @@ struct LibraryEntryRow: View {
 
                 Spacer(minLength: 0)
 
-                // Missing file badge
-                if !FileManager.default.fileExists(atPath: entry.filePath) {
+                // Incomplete badge (D-03) -- crash-recovered sessions
+                if !entry.isFinalized {
+                    Image(systemName: "clock.badge.exclamationmark.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Color.yellow.opacity(0.85))
+                        .help("Session was interrupted -- transcript may be incomplete")
+                        .padding(.top, 4)
+                }
+                // Missing file badge -- only when finalized (incomplete overrides missing per D-03)
+                else if !fileExists && !entry.filePath.isEmpty {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.system(size: 10))
                         .foregroundStyle(Color.recordRed)
@@ -89,6 +98,10 @@ struct LibraryEntryRow: View {
             .padding(.vertical, 8)
         }
         .frame(height: 72)
+        .onAppear {
+            guard !entry.filePath.isEmpty else { fileExists = true; return }
+            fileExists = FileManager.default.fileExists(atPath: entry.filePath)
+        }
         .contextMenu {
             Button("Rename...") {
                 Self.presentRenameDialog(
