@@ -125,10 +125,11 @@ Plans:
   3. New transcripts write `source/pstranscribe` (not `source/tome`) in YAML frontmatter
   4. All error-path logging uses os.Logger -- no print() calls on error paths
   5. Stopping a recording clears transcriptStore state; LibraryEntryRow caches file-exists checks
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
-- [ ] 08-01-PLAN.md -- TBD
+- [ ] 08-01-PLAN.md -- Speaker enum .named(String) case, backward-compat Codable, TranscriptParser fix, TranscriptView colored badges
+- [ ] 08-02-PLAN.md -- Incomplete badge, LibraryEntryRow caching, source/pstranscribe tag, print->os.Logger, transcriptStore.clear() on stop
 
 ### Phase 9: Verification Sweep + Tracking Reconciliation
 **Goal**: Every implemented requirement has a formal VERIFICATION.md, REQUIREMENTS.md checkboxes and traceability table match verified reality, and ROADMAP.md progress is accurate
@@ -170,5 +171,5 @@ Phases 1 -> 2 -> 3 -> 4 -> 7 -> 8 -> 9. Phases 5 and 6 abandoned.
 | 5. Ollama Integration | -- | Abandoned  | 2026-04-04 |
 | 6. Live LLM Analysis | -- | Abandoned  | 2026-04-04 |
 | 7. Notion Integration | 3/3 | Complete   | 2026-04-05 |
-| 8. Code Defect Fixes | 0/1 | Planned    | -          |
+| 8. Code Defect Fixes | 0/2 | Planned    | -          |
 | 9. Verification Sweep | 0/1 | Planned    | -          |
