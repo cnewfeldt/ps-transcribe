@@ -21,6 +21,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [~] **Phase 5: Ollama Integration** - ABANDONED 2026-04-04 (scope reduction; see tag `archive/llm-analysis-attempt`)
 - [~] **Phase 6: Live LLM Analysis** - ABANDONED 2026-04-04 (scope reduction; see tag `archive/llm-analysis-attempt`)
 - [ ] **Phase 7: Notion Integration** - On-demand export of finalized transcripts to a Notion database with structured properties and tag workflow
+- [ ] **Phase 8: Code Defect Fixes** - Fix crash recovery path, speaker label collapse, source/tome tag, stray print() calls, and tech debt
+- [ ] **Phase 9: Verification Sweep + Tracking Reconciliation** - Formal verification for Phases 4 and 7, fix REQUIREMENTS.md tracking discrepancies
 
 ## Phase Details
 
@@ -112,6 +114,38 @@ Plans:
 - [x] 07-02-PLAN.md -- Settings Notion section (API key field, database ID/URL field, connection status, validation flow)
 - [x] 07-03-PLAN.md -- NotionTagSheet + send flow + context menu wiring (tag input, LibraryEntry.notionPageURL, duplicate prevention, human verification)
 
+### Phase 8: Code Defect Fixes
+**Goal**: All code-level defects identified by the v1.0 audit and integration check are resolved -- crash recovery produces usable entries, diarized speaker labels survive library reload, rebrand artifacts are cleaned, and stray print() calls use os.Logger
+**Depends on**: Phase 7 (all feature phases complete)
+**Requirements**: STAB-01, STAB-03, REBR-03
+**Gap Closure**: Closes defects from v1.0 audit + integration check
+**Success Criteria** (what must be TRUE):
+  1. After a crash mid-session, the next launch surfaces the incomplete session with the correct vault markdown path -- selecting it loads the transcript content
+  2. Loading a diarized transcript from the library preserves Speaker 1, Speaker 2, etc. labels instead of collapsing all to "Them"
+  3. New transcripts write `source/pstranscribe` (not `source/tome`) in YAML frontmatter
+  4. All error-path logging uses os.Logger -- no print() calls on error paths
+  5. Stopping a recording clears transcriptStore state; LibraryEntryRow caches file-exists checks
+**Plans:** 0 plans
+
+Plans:
+- [ ] 08-01-PLAN.md -- TBD
+
+### Phase 9: Verification Sweep + Tracking Reconciliation
+**Goal**: Every implemented requirement has a formal VERIFICATION.md, REQUIREMENTS.md checkboxes and traceability table match verified reality, and ROADMAP.md progress is accurate
+**Depends on**: Phase 8 (defects fixed before verification)
+**Requirements**: MICB-01..06, ONBR-01..05, NOTN-01..05
+**Gap Closure**: Closes verification and tracking gaps from v1.0 audit
+**Success Criteria** (what must be TRUE):
+  1. Phase 4 has a VERIFICATION.md with pass/fail for all 11 requirements (MICB-01..06, ONBR-01..05)
+  2. Phase 7 has a VERIFICATION.md with pass/fail for all 5 requirements (NOTN-01..05)
+  3. Every satisfied requirement in REQUIREMENTS.md is marked [x] -- no false negatives
+  4. ROADMAP.md progress table reflects actual plan completion status
+  5. NOTN-01..05 appear in REQUIREMENTS.md traceability table
+**Plans:** 0 plans
+
+Plans:
+- [ ] 09-01-PLAN.md -- TBD
+
 ### Phase 5: Ollama Integration (ABANDONED 2026-04-04)
 **Status**: Abandoned during scope reduction. PS Transcribe is scoped to transcription only; LLM integration is out of scope.
 **Preserved at**: git tag `archive/llm-analysis-attempt` (full implementation including OllamaService, OllamaState, Settings section, model browse sheet).
@@ -125,14 +159,16 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases 1 -> 2 -> 3 -> 4 -> 7. Phases 5 and 6 abandoned.
+Phases 1 -> 2 -> 3 -> 4 -> 7 -> 8 -> 9. Phases 5 and 6 abandoned.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Rebrand | 1/3 | In Progress|  |
+| 1. Rebrand | 3/3 | Complete   | 2026-04-02 |
 | 2. Security + Stability | 5/5 | Complete   | 2026-04-03 |
-| 3. Session Management + Recording Naming | 3/4 | In Progress|  |
+| 3. Session Management + Recording Naming | 4/4 | Complete   | 2026-04-04 |
 | 4. Mic Button + Model Onboarding | 3/3 | Complete   | 2026-04-03 |
 | 5. Ollama Integration | -- | Abandoned  | 2026-04-04 |
 | 6. Live LLM Analysis | -- | Abandoned  | 2026-04-04 |
-| 7. Notion Integration | 0/3 | Planned    | -          |
+| 7. Notion Integration | 3/3 | Complete   | 2026-04-05 |
+| 8. Code Defect Fixes | 0/1 | Planned    | -          |
+| 9. Verification Sweep | 0/1 | Planned    | -          |

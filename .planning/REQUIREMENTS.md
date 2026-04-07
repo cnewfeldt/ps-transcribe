@@ -35,9 +35,9 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Stability
 
-- [x] **STAB-01**: App recovers incomplete sessions on next launch (marks as incomplete, surfaces in library)
+- [ ] **STAB-01**: App recovers incomplete sessions on next launch (marks as incomplete, surfaces in library)
 - [x] **STAB-02**: Diarization timestamps use session-relative offsets, not clock time (fixes midnight crossing bug)
-- [x] **STAB-03**: Session finalization (endSession + frontmatter + diarization) is atomic or recoverable
+- [ ] **STAB-03**: Session finalization (endSession + frontmatter + diarization) is atomic or recoverable
 - [x] **STAB-04**: MicCapture errors propagate to UI via TranscriptionEngine.lastError
 
 ### Session Management
@@ -76,6 +76,14 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **ONBR-03**: Successful download shows success message with close button
 - [x] **ONBR-04**: Failed download shows error message with close button
 - [x] **ONBR-05**: Recording is disabled until model is successfully downloaded
+
+### Notion Integration
+
+- [x] **NOTN-01**: Notion API key stored in macOS Keychain (not UserDefaults)
+- [x] **NOTN-02**: Database URL/ID validated with title display on success
+- [x] **NOTN-03**: Send transcript creates Notion page with properties (Title, Date, Duration, Source App, Session Type, Speakers, Tags) and full transcript as page content
+- [x] **NOTN-04**: Tag workflow via sheet before send; resend updates existing page
+- [x] **NOTN-05**: Duplicate prevention via stored notionPageURL; context menu shows "Open in Notion" + "Resend" after first send
 
 ### Ollama Integration -- WITHDRAWN 2026-04-04
 
@@ -124,7 +132,7 @@ Deferred to future milestone. Tracked but not in current roadmap.
 |-------------|-------|--------|
 | REBR-01 | Phase 1 | Pending |
 | REBR-02 | Phase 1 | Pending |
-| REBR-03 | Phase 1 | Pending |
+| REBR-03 | Phase 8 | Pending |
 | REBR-04 | Phase 1 | Pending |
 | REBR-05 | Phase 1 | Complete |
 | REBR-06 | Phase 1 | Complete |
@@ -142,9 +150,9 @@ Deferred to future milestone. Tracked but not in current roadmap.
 | SECR-10 | Phase 2 | Pending |
 | SECR-11 | Phase 2 | Complete |
 | SECR-12 | Phase 2 | Pending |
-| STAB-01 | Phase 2 | Complete |
+| STAB-01 | Phase 8 | Pending |
 | STAB-02 | Phase 2 | Complete |
-| STAB-03 | Phase 2 | Complete |
+| STAB-03 | Phase 8 | Pending |
 | STAB-04 | Phase 2 | Complete |
 | SESS-01 | Phase 3 | Complete |
 | SESS-02 | Phase 3 | Complete |
@@ -171,12 +179,17 @@ Deferred to future milestone. Tracked but not in current roadmap.
 | ONBR-03 | Phase 4 | Complete |
 | ONBR-04 | Phase 4 | Complete |
 | ONBR-05 | Phase 4 | Complete |
+| NOTN-01 | Phase 7 | Complete |
+| NOTN-02 | Phase 7 | Complete |
+| NOTN-03 | Phase 7 | Complete |
+| NOTN-04 | Phase 7 | Complete |
+| NOTN-05 | Phase 7 | Complete |
 | OLMA-01..06 | Phase 5 (abandoned) | Withdrawn 2026-04-04 |
 | LLMA-01..07 | Phase 6 (abandoned) | Withdrawn 2026-04-04 |
 
 **Coverage:**
-- v1 requirements: 53 total
-- Mapped to phases: 53
+- v1 requirements: 58 total (53 original + 5 NOTN)
+- Mapped to phases: 58
 - Unmapped: 0 ✓
 
 ---
