@@ -100,7 +100,7 @@ attendees: ["You", "Speaker 2"]
 tags:
   - log/meeting
   - status/inbox
-  - source/tome
+  - source/pstranscribe
 ---
 
 # Call Recording — 2026-03-23 10:00

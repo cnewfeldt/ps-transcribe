@@ -148,7 +148,7 @@ tags:
   - \(logTag)
   - status/inbox
   - \(sourceTag)
-  - source/tome
+  - source/pstranscribe
 ---
 
 # \(fileLabel) — \(dateStr) \(timeStr)

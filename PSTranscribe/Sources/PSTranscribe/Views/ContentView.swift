@@ -662,6 +662,7 @@ struct ContentView: View {
             let finalDuration = TimeInterval(sessionElapsed)
             let finalPath = savedPath?.path ?? ""
             let firstLine = transcriptStore.utterances.first?.text
+            transcriptStore.clear()  // D-09: clear stale utterances after session ends
 
             if let entryID = stoppedEntryID {
                 let capturedDuration = finalDuration

@@ -1,6 +1,9 @@
 @preconcurrency import AVFoundation
 import CoreAudio
 import Foundation
+import os
+
+private let log = Logger(subsystem: "com.pstranscribe.app", category: "MicCapture")
 
 final class MicCapture: @unchecked Sendable {
     private let engine = AVAudioEngine()
@@ -92,7 +95,7 @@ final class MicCapture: @unchecked Sendable {
                 diagLog("[MIC-8] engine started successfully, isRunning=\(self.engine.isRunning)")
             } catch {
                 let msg = "Mic failed: \(error.localizedDescription)"
-                print("[MIC-8-FAIL] \(msg)")
+                log.error("Mic failed: \(error.localizedDescription, privacy: .public)")
                 errorHolder.value = msg
                 continuation.finish()
             }

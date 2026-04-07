@@ -174,7 +174,7 @@ final class SystemAudioCapture: NSObject, @unchecked Sendable, SCStreamDelegate,
     // MARK: - SCStreamDelegate
 
     nonisolated func stream(_ stream: SCStream, didStopWithError error: any Error) {
-        print("SystemAudioCapture: stream stopped with error: \(error)")
+        log.error("Stream stopped with error: \(error.localizedDescription, privacy: .public)")
         _sysContinuation.withLock { $0?.finish(); $0 = nil }
     }
 

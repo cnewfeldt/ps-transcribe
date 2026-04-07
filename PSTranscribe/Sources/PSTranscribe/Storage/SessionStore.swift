@@ -154,7 +154,7 @@ actor SessionStore {
             fileHandle.write(data)
             fileHandle.write("\n".data(using: .utf8)!)
         } catch {
-            print("SessionStore: failed to write record: \(error)")
+            log.error("Failed to write record: \(error.localizedDescription, privacy: .public)")
         }
     }
 
