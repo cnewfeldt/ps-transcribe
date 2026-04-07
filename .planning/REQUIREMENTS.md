@@ -9,35 +9,35 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Rebrand
 
-- [ ] **REBR-01**: App name changed from "Tome" to "PS Transcribe" in all user-facing strings
-- [ ] **REBR-02**: Bundle identifier updated across project configuration
-- [ ] **REBR-03**: Package.swift target names and module references updated
-- [ ] **REBR-04**: Source directory structure renamed (Tome/ to PSTranscribe/)
+- [x] **REBR-01**: App name changed from "Tome" to "PS Transcribe" in all user-facing strings
+- [x] **REBR-02**: Bundle identifier updated across project configuration
+- [x] **REBR-03**: Package.swift target names and module references updated
+- [x] **REBR-04**: Source directory structure renamed (Tome/ to PSTranscribe/)
 - [x] **REBR-05**: CI/CD workflows (release-dmg.yml, build-check.yml) reference new names
 - [x] **REBR-06**: Sparkle update feed URL and appcast references updated
 - [x] **REBR-07**: Info.plist and entitlements updated with new app identity
-- [ ] **REBR-08**: UserDefaults migration preserves existing user settings (vault paths, device ID, locale) on first launch after rebrand
+- [ ] **REBR-08**: UserDefaults migration preserves existing user settings (vault paths, device ID, locale) on first launch after rebrand (HUMAN_NEEDED -- code verified correct, runtime test on Tome-to-PSTranscribe upgrade required)
 
 ### Security
 
-- [ ] **SECR-01**: GH_TOKEN no longer exposed in CI git clone URLs (SCAN-001)
+- [x] **SECR-01**: GH_TOKEN no longer exposed in CI git clone URLs (SCAN-001)
 - [x] **SECR-02**: Debug log uses os.Logger instead of world-readable /tmp file (SCAN-002)
-- [ ] **SECR-03**: Vault path validated against directory traversal before file creation (SCAN-003)
+- [x] **SECR-03**: Vault path validated against directory traversal before file creation (SCAN-003)
 - [x] **SECR-04**: System audio temp files use restricted permissions and reliable cleanup (SCAN-004)
-- [ ] **SECR-05**: CI keychain file created via mktemp instead of predictable path (SCAN-005)
+- [x] **SECR-05**: CI keychain file created via mktemp instead of predictable path (SCAN-005)
 - [x] **SECR-06**: Transcript and session files created with restrictive file permissions (SCAN-006)
-- [ ] **SECR-07**: GitHub Actions pinned to commit SHAs (SCAN-007)
-- [ ] **SECR-08**: .gitignore includes secret file patterns (.env, *.p12, *.cer, *.pem, *.key) (SCAN-008)
-- [ ] **SECR-09**: File I/O operations use explicit error handling with rollback, not try? (SCAN-009)
-- [ ] **SECR-10**: Filename sanitization uses whitelist approach for all filesystem-special characters (SCAN-010)
+- [x] **SECR-07**: GitHub Actions pinned to commit SHAs (SCAN-007)
+- [x] **SECR-08**: .gitignore includes secret file patterns (.env, *.p12, *.cer, *.pem, *.key) (SCAN-008)
+- [x] **SECR-09**: File I/O operations use explicit error handling with rollback, not try? (SCAN-009)
+- [x] **SECR-10**: Filename sanitization uses whitelist approach for all filesystem-special characters (SCAN-010)
 - [x] **SECR-11**: Audio buffer memory cleared with removeAll(keepingCapacity: false) (SCAN-011)
-- [ ] **SECR-12**: CI cleanup logs errors instead of suppressing with 2>/dev/null (SCAN-012)
+- [x] **SECR-12**: CI cleanup logs errors instead of suppressing with 2>/dev/null (SCAN-012)
 
 ### Stability
 
-- [ ] **STAB-01**: App recovers incomplete sessions on next launch (marks as incomplete, surfaces in library)
+- [x] **STAB-01**: App recovers incomplete sessions on next launch (marks as incomplete, surfaces in library)
 - [x] **STAB-02**: Diarization timestamps use session-relative offsets, not clock time (fixes midnight crossing bug)
-- [ ] **STAB-03**: Session finalization (endSession + frontmatter + diarization) is atomic or recoverable
+- [x] **STAB-03**: Session finalization (endSession + frontmatter + diarization) is atomic or recoverable
 - [x] **STAB-04**: MicCapture errors propagate to UI via TranscriptionEngine.lastError
 
 ### Session Management
@@ -62,12 +62,12 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Mic Button
 
-- [ ] **MICB-01**: Waveform visualizer replaced with a mic icon button
-- [ ] **MICB-02**: Idle state shows static mic icon; clicking starts recording
-- [ ] **MICB-03**: Recording state shows green pulsing ring animation; clicking stops recording
+- [x] **MICB-01**: Waveform visualizer replaced with a mic icon button
+- [x] **MICB-02**: Idle state shows static mic icon; clicking starts recording
+- [x] **MICB-03**: Recording state shows green pulsing ring animation; clicking stops recording
 - [x] **MICB-04**: Error state shows red mic icon with circle/slash overlay
-- [ ] **MICB-05**: Clicking error state opens settings pane with error message displayed
-- [ ] **MICB-06**: Hovering error state shows error message as tooltip
+- [x] **MICB-05**: Clicking error state opens settings pane with error message displayed
+- [x] **MICB-06**: Hovering error state shows error message as tooltip
 
 ### Model Onboarding
 
@@ -130,29 +130,29 @@ Deferred to future milestone. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REBR-01 | Phase 1 | Pending |
-| REBR-02 | Phase 1 | Pending |
-| REBR-03 | Phase 8 | Pending |
-| REBR-04 | Phase 1 | Pending |
+| REBR-01 | Phase 1 | Complete |
+| REBR-02 | Phase 1 | Complete |
+| REBR-03 | Phase 8 | Complete |
+| REBR-04 | Phase 1 | Complete |
 | REBR-05 | Phase 1 | Complete |
 | REBR-06 | Phase 1 | Complete |
 | REBR-07 | Phase 1 | Complete |
-| REBR-08 | Phase 1 | Pending |
-| SECR-01 | Phase 2 | Pending |
+| REBR-08 | Phase 1 | Pending (HUMAN_NEEDED) |
+| SECR-01 | Phase 2 | Complete |
 | SECR-02 | Phase 2 | Complete |
-| SECR-03 | Phase 2 | Pending |
+| SECR-03 | Phase 2 | Complete |
 | SECR-04 | Phase 2 | Complete |
-| SECR-05 | Phase 2 | Pending |
+| SECR-05 | Phase 2 | Complete |
 | SECR-06 | Phase 2 | Complete |
-| SECR-07 | Phase 2 | Pending |
-| SECR-08 | Phase 2 | Pending |
-| SECR-09 | Phase 2 | Pending |
-| SECR-10 | Phase 2 | Pending |
+| SECR-07 | Phase 2 | Complete |
+| SECR-08 | Phase 2 | Complete |
+| SECR-09 | Phase 2 | Complete |
+| SECR-10 | Phase 2 | Complete |
 | SECR-11 | Phase 2 | Complete |
-| SECR-12 | Phase 2 | Pending |
-| STAB-01 | Phase 8 | Pending |
+| SECR-12 | Phase 2 | Complete |
+| STAB-01 | Phase 8 | Complete |
 | STAB-02 | Phase 2 | Complete |
-| STAB-03 | Phase 8 | Pending |
+| STAB-03 | Phase 8 | Complete |
 | STAB-04 | Phase 2 | Complete |
 | SESS-01 | Phase 3 | Complete |
 | SESS-02 | Phase 3 | Complete |
@@ -160,20 +160,20 @@ Deferred to future milestone. Tracked but not in current roadmap.
 | SESS-04 | Phase 3 | Complete |
 | SESS-05 | Phase 3 | Complete |
 | SESS-06 | Phase 3 | Complete |
-| SESS-07 | Phase 3 | Pending |
-| SESS-08 | Phase 3 | Pending |
+| SESS-07 | Phase 3 | Complete |
+| SESS-08 | Phase 3 | Complete |
 | SESS-09 | Phase 3 | Complete |
 | NAME-01 | Phase 3 | Complete |
 | NAME-02 | Phase 3 | Complete |
-| NAME-03 | Phase 3 | Pending |
+| NAME-03 | Phase 3 | Complete |
 | NAME-04 | Phase 3 | Complete |
-| NAME-05 | Phase 3 | Pending |
-| MICB-01 | Phase 4 | Pending |
-| MICB-02 | Phase 4 | Pending |
-| MICB-03 | Phase 4 | Pending |
+| NAME-05 | Phase 3 | Complete |
+| MICB-01 | Phase 4 | Complete |
+| MICB-02 | Phase 4 | Complete |
+| MICB-03 | Phase 4 | Complete |
 | MICB-04 | Phase 4 | Complete |
-| MICB-05 | Phase 4 | Pending |
-| MICB-06 | Phase 4 | Pending |
+| MICB-05 | Phase 4 | Complete |
+| MICB-06 | Phase 4 | Complete |
 | ONBR-01 | Phase 4 | Complete |
 | ONBR-02 | Phase 4 | Complete |
 | ONBR-03 | Phase 4 | Complete |
@@ -190,8 +190,11 @@ Deferred to future milestone. Tracked but not in current roadmap.
 **Coverage:**
 - v1 requirements: 58 total (53 original + 5 NOTN)
 - Mapped to phases: 58
-- Unmapped: 0 ✓
+- Unmapped: 0
+- Completed: 44 (all non-withdrawn v1 requirements except REBR-08)
+- Pending: 1 (REBR-08 -- HUMAN_NEEDED for runtime upgrade test)
+- Withdrawn: 13 (OLMA-01..06, LLMA-01..07)
 
 ---
 *Requirements defined: 2026-03-31*
-*Last updated: 2026-03-31 after initial definition*
+*Last updated: 2026-04-07 after Phase 9 verification sweep*
