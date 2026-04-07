@@ -142,10 +142,11 @@ Plans:
   3. Every satisfied requirement in REQUIREMENTS.md is marked [x] -- no false negatives
   4. ROADMAP.md progress table reflects actual plan completion status
   5. NOTN-01..05 appear in REQUIREMENTS.md traceability table
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
-- [ ] 09-01-PLAN.md -- TBD
+- [ ] 09-01-PLAN.md -- Create VERIFICATION.md for Phases 4 and 7
+- [ ] 09-02-PLAN.md -- Reconcile REQUIREMENTS.md and ROADMAP.md tracking
 
 ### Phase 5: Ollama Integration (ABANDONED 2026-04-04)
 **Status**: Abandoned during scope reduction. PS Transcribe is scoped to transcription only; LLM integration is out of scope.
