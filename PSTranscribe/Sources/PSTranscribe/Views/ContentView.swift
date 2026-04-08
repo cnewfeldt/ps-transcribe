@@ -61,18 +61,9 @@ struct ContentView: View {
     }
 
     private func obsidianURLForEntry(_ entry: LibraryEntry) -> URL? {
-        guard !entry.filePath.isEmpty else { return nil }
-        let vaultSubPath: String
-        switch entry.sessionType {
-        case .voiceMemo:
-            vaultSubPath = settings.vaultVoicePath
-        case .callCapture:
-            vaultSubPath = settings.vaultMeetingsPath
-        }
-        guard !vaultSubPath.isEmpty else { return nil }
-        let vaultRoot = URL(fileURLWithPath: vaultSubPath).deletingLastPathComponent().path
-        guard let vaultName = obsidianVaultName(from: vaultSubPath) else { return nil }
-        return makeObsidianURL(filePath: entry.filePath, vaultRoot: vaultRoot, vaultName: vaultName)
+        guard !entry.filePath.isEmpty,
+              let vault = obsidianVaultForPath(entry.filePath) else { return nil }
+        return makeObsidianURL(filePath: entry.filePath, vaultRoot: vault.root, vaultName: vault.name)
     }
 
     var body: some View {

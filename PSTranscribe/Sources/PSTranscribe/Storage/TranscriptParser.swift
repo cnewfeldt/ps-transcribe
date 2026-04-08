@@ -73,16 +73,27 @@ func parseTranscriptContent(_ content: String) -> [Utterance] {
     }
 }
 
-/// Derives the Obsidian vault name from a vault subfolder path.
-/// Given "/Users/cary/Documents/MyVault/Meetings", returns "MyVault".
-/// Returns nil if the path is empty or has no meaningful parent.
-func obsidianVaultName(from vaultSubPath: String) -> String? {
-    guard !vaultSubPath.isEmpty else { return nil }
-    let url = URL(fileURLWithPath: vaultSubPath)
-    let name = url.deletingLastPathComponent().lastPathComponent
-    // Guard against root paths where lastPathComponent is "/" or empty
-    guard !name.isEmpty, name != "/" else { return nil }
-    return name
+/// Finds the Obsidian vault that contains the given file path by reading
+/// `~/Library/Application Support/obsidian/obsidian.json`.
+/// Returns `(vaultRoot, vaultName)` or nil if no matching vault is found.
+func obsidianVaultForPath(_ filePath: String) -> (root: String, name: String)? {
+    guard !filePath.isEmpty else { return nil }
+    let configURL = FileManager.default.homeDirectoryForCurrentUser
+        .appendingPathComponent("Library/Application Support/obsidian/obsidian.json")
+    guard let data = try? Data(contentsOf: configURL),
+          let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+          let vaults = json["vaults"] as? [String: Any] else { return nil }
+    for (_, info) in vaults {
+        guard let vaultInfo = info as? [String: Any],
+              let path = vaultInfo["path"] as? String,
+              !path.isEmpty else { continue }
+        let normalized = path.hasSuffix("/") ? String(path.dropLast()) : path
+        if filePath.hasPrefix(normalized + "/") || filePath == normalized {
+            let name = URL(fileURLWithPath: normalized).lastPathComponent
+            return (root: normalized, name: name)
+        }
+    }
+    return nil
 }
 
 /// Constructs an obsidian://open URL for a transcript file.

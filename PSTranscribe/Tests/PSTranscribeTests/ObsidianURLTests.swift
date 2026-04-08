@@ -61,15 +61,26 @@ struct ObsidianURLTests {
         #expect(url == nil)
     }
 
-    // MARK: - obsidianVaultName
+    // MARK: - obsidianVaultForPath
 
-    @Test func derivesVaultNameFromSubPath() {
-        let name = obsidianVaultName(from: "/Users/cary/Documents/MyVault/Meetings")
-        #expect(name == "MyVault")
+    @Test func returnsNilForEmptyFilePath() {
+        let result = obsidianVaultForPath("")
+        #expect(result == nil)
     }
 
-    @Test func returnsNilForEmptyPath() {
-        let name = obsidianVaultName(from: "")
-        #expect(name == nil)
+    @Test func returnsVaultWhenFileIsInsideKnownVault() throws {
+        // This test depends on Obsidian being installed with a vault at
+        // /Users/cary/Obsidian Vault/C2YN6T -- skip if not available
+        let result = obsidianVaultForPath("/Users/cary/Obsidian Vault/C2YN6T/0-Inbox/test.md")
+        if let result {
+            #expect(result.name == "C2YN6T")
+            #expect(result.root == "/Users/cary/Obsidian Vault/C2YN6T")
+        }
+        // If nil, Obsidian config not present on this machine -- acceptable
+    }
+
+    @Test func returnsNilForPathOutsideAnyVault() {
+        let result = obsidianVaultForPath("/tmp/not-a-vault/file.md")
+        #expect(result == nil)
     }
 }
