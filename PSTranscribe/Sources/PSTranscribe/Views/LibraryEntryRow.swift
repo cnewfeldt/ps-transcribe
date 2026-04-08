@@ -8,6 +8,8 @@ struct LibraryEntryRow: View {
     var onDelete: (() -> Void)?
     var isNotionConfigured: Bool = false
     var onSendToNotion: (() -> Void)?
+    var obsidianURL: URL? = nil
+    var isObsidianAvailable: Bool = false
     @State private var fileExists: Bool = true
 
     var body: some View {
@@ -118,6 +120,15 @@ struct LibraryEntryRow: View {
                         .deletingLastPathComponent().path
                 )
             }
+
+            Divider()
+            Button("Open in Obsidian") {
+                if let url = obsidianURL {
+                    NSWorkspace.shared.open(url)
+                }
+            }
+            .disabled(!isObsidianAvailable || obsidianURL == nil)
+            .help(isObsidianAvailable ? "" : "Configure vault paths in Settings")
 
             if isNotionConfigured {
                 Divider()

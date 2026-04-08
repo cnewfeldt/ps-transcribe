@@ -54,6 +54,27 @@ struct ContentView: View {
         !settings.notionDatabaseID.isEmpty
     }
 
+    private var isObsidianAvailable: Bool {
+        let hasVaultPath = !settings.vaultMeetingsPath.isEmpty || !settings.vaultVoicePath.isEmpty
+        let isInstalled = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "md.obsidian") != nil
+        return hasVaultPath && isInstalled
+    }
+
+    private func obsidianURLForEntry(_ entry: LibraryEntry) -> URL? {
+        guard !entry.filePath.isEmpty else { return nil }
+        let vaultSubPath: String
+        switch entry.sessionType {
+        case .voiceMemo:
+            vaultSubPath = settings.vaultVoicePath
+        case .callCapture:
+            vaultSubPath = settings.vaultMeetingsPath
+        }
+        guard !vaultSubPath.isEmpty else { return nil }
+        let vaultRoot = URL(fileURLWithPath: vaultSubPath).deletingLastPathComponent().path
+        guard let vaultName = obsidianVaultName(from: vaultSubPath) else { return nil }
+        return makeObsidianURL(filePath: entry.filePath, vaultRoot: vaultRoot, vaultName: vaultName)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             RecordingNameField(
@@ -131,6 +152,10 @@ struct ContentView: View {
                             if let entry = libraryEntries.first(where: { $0.id == id }) {
                                 notionSendEntry = entry
                             }
+                        },
+                        isObsidianAvailable: isObsidianAvailable,
+                        obsidianURLForEntry: { entry in
+                            obsidianURLForEntry(entry)
                         }
                     )
                     .frame(width: 220)

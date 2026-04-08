@@ -8,6 +8,8 @@ struct LibrarySidebar: View {
     var onDelete: ((UUID) -> Void)?
     var isNotionConfigured: Bool = false
     var onSendToNotion: ((UUID) -> Void)?
+    var isObsidianAvailable: Bool = false
+    var obsidianURLForEntry: ((LibraryEntry) -> URL?) = { _ in nil }
 
     var body: some View {
         if entries.isEmpty {
@@ -26,7 +28,9 @@ struct LibrarySidebar: View {
                     isNotionConfigured: isNotionConfigured,
                     onSendToNotion: {
                         onSendToNotion?(entry.id)
-                    }
+                    },
+                    obsidianURL: obsidianURLForEntry(entry),
+                    isObsidianAvailable: isObsidianAvailable
                 )
                 .tag(entry.id)
                 .listRowInsets(EdgeInsets())
