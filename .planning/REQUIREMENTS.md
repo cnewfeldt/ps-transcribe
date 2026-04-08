@@ -45,9 +45,9 @@ Requirements for this milestone. Each maps to roadmap phases.
 - [x] **SESS-01**: User sees a library/grid view of all past recordings
 - [x] **SESS-02**: Each library entry shows recording name, date, duration, and file status
 - [x] **SESS-03**: Clicking a library entry loads the transcript content in the app
-- [x] **SESS-04**: Each library entry has a clickable file path to the transcript on disk
+- [x] **SESS-04**: Each library entry has a right-click "Show in Finder" action to locate the transcript on disk
 - [x] **SESS-05**: Library entries show "missing" indicator if transcript file has been moved or deleted
-- [x] **SESS-06**: Each library entry has an Obsidian deep link that opens the transcript in Obsidian
+- [ ] **SESS-06**: Each library entry has an Obsidian deep link that opens the transcript in Obsidian
 - [x] **SESS-07**: Stopping a recording clears the transcript view and saves the session to the library
 - [x] **SESS-08**: Starting a new recording creates a fresh session (no overwriting previous content)
 - [x] **SESS-09**: Session index persists across app restarts
@@ -159,7 +159,7 @@ Deferred to future milestone. Tracked but not in current roadmap.
 | SESS-03 | Phase 3 | Complete |
 | SESS-04 | Phase 3 | Complete |
 | SESS-05 | Phase 3 | Complete |
-| SESS-06 | Phase 3 | Complete |
+| SESS-06 | Phase 10 | Pending |
 | SESS-07 | Phase 3 | Complete |
 | SESS-08 | Phase 3 | Complete |
 | SESS-09 | Phase 3 | Complete |
@@ -191,8 +191,8 @@ Deferred to future milestone. Tracked but not in current roadmap.
 - v1 requirements: 58 total (53 original + 5 NOTN)
 - Mapped to phases: 58
 - Unmapped: 0
-- Completed: 44 (all non-withdrawn v1 requirements except REBR-08)
-- Pending: 1 (REBR-08 -- HUMAN_NEEDED for runtime upgrade test)
+- Completed: 43 (all non-withdrawn v1 requirements except REBR-08 and SESS-06)
+- Pending: 2 (REBR-08 -- HUMAN_NEEDED for runtime upgrade test; SESS-06 -- re-implementation in Phase 10)
 - Withdrawn: 13 (OLMA-01..06, LLMA-01..07)
 
 ---

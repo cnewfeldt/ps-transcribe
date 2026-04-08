@@ -22,7 +22,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [~] **Phase 6: Live LLM Analysis** - ABANDONED 2026-04-04 (scope reduction; see tag `archive/llm-analysis-attempt`)
 - [x] **Phase 7: Notion Integration** - On-demand export of finalized transcripts to a Notion database with structured properties and tag workflow (completed 2026-04-06)
 - [x] **Phase 8: Code Defect Fixes** - Fix crash recovery path, speaker label collapse, source/tome tag, stray print() calls, and tech debt (completed 2026-04-07)
-- [ ] **Phase 9: Verification Sweep + Tracking Reconciliation** - Formal verification for Phases 4 and 7, fix REQUIREMENTS.md tracking discrepancies
+- [x] **Phase 9: Verification Sweep + Tracking Reconciliation** - Formal verification for Phases 4 and 7, fix REQUIREMENTS.md tracking discrepancies (completed 2026-04-07)
+- [ ] **Phase 10: Final Defect Fixes + Obsidian Deep-Link** - Fix named speaker removal, crash recovery sessionType, re-implement Obsidian deep-link, accept SESS-04
 
 ## Phase Details
 
@@ -148,6 +149,21 @@ Plans:
 - [x] 09-01-PLAN.md -- Create VERIFICATION.md for Phases 4 and 7
 - [x] 09-02-PLAN.md -- Reconcile REQUIREMENTS.md and ROADMAP.md tracking
 
+### Phase 10: Final Defect Fixes + Obsidian Deep-Link
+**Goal**: All remaining code defects from the v1.0 audit are resolved and the Obsidian deep-link feature is re-implemented -- named speaker utterance removal works correctly, crash-recovered entries have the right session type, and library entries link to Obsidian
+**Depends on**: Phase 9 (verification sweep complete)
+**Requirements**: SESS-06
+**Gap Closure**: Closes remaining gaps from v1.0 milestone audit
+**Success Criteria** (what must be TRUE):
+  1. Removing an utterance from a diarized multi-speaker transcript works for all speaker types (.you, .them, .named("Speaker 2"), etc.) -- not just binary You/Them
+  2. Crash-recovered sessions display the correct session type icon (voice memo vs call capture) based on the original recording
+  3. Each library entry shows an Obsidian deep-link that opens the transcript in the user's configured Obsidian vault
+  4. SESS-04 requirement text updated to match accepted right-click "Show in Finder" implementation
+**Plans:** 0/0 (not yet planned)
+
+Plans:
+- (none yet)
+
 ### Phase 5: Ollama Integration (ABANDONED 2026-04-04)
 **Status**: Abandoned during scope reduction. PS Transcribe is scoped to transcription only; LLM integration is out of scope.
 **Preserved at**: git tag `archive/llm-analysis-attempt` (full implementation including OllamaService, OllamaState, Settings section, model browse sheet).
@@ -161,7 +177,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases 1 -> 2 -> 3 -> 4 -> 7 -> 8 -> 9. Phases 5 and 6 abandoned.
+Phases 1 -> 2 -> 3 -> 4 -> 7 -> 8 -> 9 -> 10. Phases 5 and 6 abandoned.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -173,4 +189,5 @@ Phases 1 -> 2 -> 3 -> 4 -> 7 -> 8 -> 9. Phases 5 and 6 abandoned.
 | 6. Live LLM Analysis | -- | Abandoned  | 2026-04-04 |
 | 7. Notion Integration | 3/3 | Complete   | 2026-04-06 |
 | 8. Code Defect Fixes | 2/2 | Complete   | 2026-04-07 |
-| 9. Verification Sweep | 2/2 | In Progress | -          |
+| 9. Verification Sweep | 2/2 | Complete   | 2026-04-07 |
+| 10. Final Defect Fixes + Obsidian Deep-Link | 0/0 | Not Started | -          |
