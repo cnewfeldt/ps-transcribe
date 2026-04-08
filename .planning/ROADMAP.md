@@ -23,7 +23,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 7: Notion Integration** - On-demand export of finalized transcripts to a Notion database with structured properties and tag workflow (completed 2026-04-06)
 - [x] **Phase 8: Code Defect Fixes** - Fix crash recovery path, speaker label collapse, source/tome tag, stray print() calls, and tech debt (completed 2026-04-07)
 - [x] **Phase 9: Verification Sweep + Tracking Reconciliation** - Formal verification for Phases 4 and 7, fix REQUIREMENTS.md tracking discrepancies (completed 2026-04-07)
-- [ ] **Phase 10: Final Defect Fixes + Obsidian Deep-Link** - Fix named speaker removal, crash recovery sessionType, re-implement Obsidian deep-link, accept SESS-04
+- [x] **Phase 10: Final Defect Fixes + Obsidian Deep-Link** - Fix named speaker removal, crash recovery sessionType, re-implement Obsidian deep-link, accept SESS-04 (completed 2026-04-08)
 
 ## Phase Details
 
@@ -159,11 +159,11 @@ Plans:
   2. Crash-recovered sessions display the correct session type icon (voice memo vs call capture) based on the original recording
   3. Each library entry shows an Obsidian deep-link that opens the transcript in the user's configured Obsidian vault
   4. SESS-04 requirement text updated to match accepted right-click "Show in Finder" implementation
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 10-01-PLAN.md -- Fix speaker label mapping, crash recovery session type, SESS-04 requirement text
-- [ ] 10-02-PLAN.md -- Obsidian deep-link: helper function with tests, context menu wiring, human verification
+- [x] 10-01-PLAN.md -- Fix speaker label mapping, crash recovery session type, SESS-04 requirement text
+- [x] 10-02-PLAN.md -- Obsidian deep-link: helper function with tests, context menu wiring, human verification
 
 ### Phase 5: Ollama Integration (ABANDONED 2026-04-04)
 **Status**: Abandoned during scope reduction. PS Transcribe is scoped to transcription only; LLM integration is out of scope.
@@ -191,4 +191,4 @@ Phases 1 -> 2 -> 3 -> 4 -> 7 -> 8 -> 9 -> 10. Phases 5 and 6 abandoned.
 | 7. Notion Integration | 3/3 | Complete   | 2026-04-06 |
 | 8. Code Defect Fixes | 2/2 | Complete   | 2026-04-07 |
 | 9. Verification Sweep | 2/2 | Complete   | 2026-04-07 |
-| 10. Final Defect Fixes + Obsidian Deep-Link | 0/2 | In Progress | -          |
+| 10. Final Defect Fixes + Obsidian Deep-Link | 2/2 | Complete   | 2026-04-08 |
