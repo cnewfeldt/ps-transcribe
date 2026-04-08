@@ -145,11 +145,9 @@ struct ControlBar: View {
         let isActive = isRecording && activeSessionType == type
 
         Button(action: {
-            if hasError {
-                onOpenSettings?()
-            } else if isActive {
+            if isActive {
                 onStop()
-            } else {
+            } else if !hasError {
                 onStart()
             }
         }) {
