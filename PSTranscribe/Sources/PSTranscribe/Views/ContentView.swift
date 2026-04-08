@@ -221,10 +221,16 @@ struct ContentView: View {
                     $0.filePath == checkpoint.transcriptPath
                 }
                 if !existsInLibrary {
+                    let recoveredType: SessionType
+                    if checkpoint.transcriptPath.hasPrefix(settings.vaultVoicePath) {
+                        recoveredType = .voiceMemo
+                    } else {
+                        recoveredType = .callCapture
+                    }
                     let entry = LibraryEntry(
                         id: UUID(),
                         name: nil,
-                        sessionType: .callCapture,
+                        sessionType: recoveredType,
                         startDate: checkpoint.sessionStartTime,
                         duration: 0,
                         filePath: checkpoint.transcriptPath,
@@ -446,7 +452,12 @@ struct ContentView: View {
                 let lines = content.components(separatedBy: "\n")
 
                 // Find the speaker line matching this utterance's timestamp and text
-                let speakerLabel = removed.speaker == .you ? "You" : "Them"
+                let speakerLabel: String
+                switch removed.speaker {
+                case .you:             speakerLabel = "You"
+                case .them:            speakerLabel = "Them"
+                case .named(let lbl):  speakerLabel = lbl
+                }
                 let offset = removed.timestamp.timeIntervalSince(.distantPast)
                 let h = Int(offset) / 3600
                 let m = (Int(offset) % 3600) / 60
