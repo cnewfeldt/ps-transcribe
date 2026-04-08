@@ -95,6 +95,14 @@ struct ContentView: View {
                             let capturedName = newName
                             Task {
                                 guard let entry = await libraryStore.entries.first(where: { $0.id == capturedID }) else { return }
+                                guard !entry.filePath.isEmpty else {
+                                    // No file on disk yet -- just update the display name
+                                    await libraryStore.updateEntry(id: capturedID) { @Sendable e in
+                                        e.name = capturedName
+                                    }
+                                    refreshLibrary()
+                                    return
+                                }
                                 do {
                                     let newPath = try await transcriptLogger.renameFinalized(
                                         at: URL(fileURLWithPath: entry.filePath),
