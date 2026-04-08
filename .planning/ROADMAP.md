@@ -159,10 +159,11 @@ Plans:
   2. Crash-recovered sessions display the correct session type icon (voice memo vs call capture) based on the original recording
   3. Each library entry shows an Obsidian deep-link that opens the transcript in the user's configured Obsidian vault
   4. SESS-04 requirement text updated to match accepted right-click "Show in Finder" implementation
-**Plans:** 0/0 (not yet planned)
+**Plans:** 2 plans
 
 Plans:
-- (none yet)
+- [ ] 10-01-PLAN.md -- Fix speaker label mapping, crash recovery session type, SESS-04 requirement text
+- [ ] 10-02-PLAN.md -- Obsidian deep-link: helper function with tests, context menu wiring, human verification
 
 ### Phase 5: Ollama Integration (ABANDONED 2026-04-04)
 **Status**: Abandoned during scope reduction. PS Transcribe is scoped to transcription only; LLM integration is out of scope.
@@ -190,4 +191,4 @@ Phases 1 -> 2 -> 3 -> 4 -> 7 -> 8 -> 9 -> 10. Phases 5 and 6 abandoned.
 | 7. Notion Integration | 3/3 | Complete   | 2026-04-06 |
 | 8. Code Defect Fixes | 2/2 | Complete   | 2026-04-07 |
 | 9. Verification Sweep | 2/2 | Complete   | 2026-04-07 |
-| 10. Final Defect Fixes + Obsidian Deep-Link | 0/0 | Not Started | -          |
+| 10. Final Defect Fixes + Obsidian Deep-Link | 0/2 | In Progress | -          |
