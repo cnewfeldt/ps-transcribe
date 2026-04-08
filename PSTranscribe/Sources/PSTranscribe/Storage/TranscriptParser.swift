@@ -73,3 +73,41 @@ func parseTranscriptContent(_ content: String) -> [Utterance] {
     }
 }
 
+/// Derives the Obsidian vault name from a vault subfolder path.
+/// Given "/Users/cary/Documents/MyVault/Meetings", returns "MyVault".
+/// Returns nil if the path is empty or has no meaningful parent.
+func obsidianVaultName(from vaultSubPath: String) -> String? {
+    guard !vaultSubPath.isEmpty else { return nil }
+    let url = URL(fileURLWithPath: vaultSubPath)
+    let name = url.deletingLastPathComponent().lastPathComponent
+    // Guard against root paths where lastPathComponent is "/" or empty
+    guard !name.isEmpty, name != "/" else { return nil }
+    return name
+}
+
+/// Constructs an obsidian://open URL for a transcript file.
+/// - Parameters:
+///   - filePath: Absolute path to the transcript file on disk
+///   - vaultRoot: Absolute path to the Obsidian vault root directory
+///   - vaultName: Name of the Obsidian vault (typically vaultRoot's lastPathComponent)
+/// - Returns: An obsidian://open URL with vault and file query parameters, or nil if inputs are invalid
+func makeObsidianURL(filePath: String, vaultRoot: String, vaultName: String) -> URL? {
+    guard !filePath.isEmpty,
+          !vaultRoot.isEmpty,
+          !vaultName.isEmpty,
+          filePath.hasPrefix(vaultRoot) else { return nil }
+
+    // Strip vault root prefix and leading separator to get vault-relative path
+    var relative = String(filePath.dropFirst(vaultRoot.count))
+    if relative.hasPrefix("/") { relative = String(relative.dropFirst()) }
+    guard !relative.isEmpty else { return nil }
+
+    var components = URLComponents()
+    components.scheme = "obsidian"
+    components.host = "open"
+    components.queryItems = [
+        URLQueryItem(name: "vault", value: vaultName),
+        URLQueryItem(name: "file", value: relative)
+    ]
+    return components.url
+}
