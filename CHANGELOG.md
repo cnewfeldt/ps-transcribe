@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1] — 2026-04-14
+
+### Housekeeping
+- Save-point release. No functional changes.
+- Phase 6 (Live LLM Analysis) remains descoped per the 2026-04-04 scope reduction. An execution attempt landed LLM/Ollama code and was fully reverted in the same session once the prior abandonment was reconfirmed.
+- Worktree cleanup: pruned stale GSD agent worktrees.
+
 ## [1.4.0] — 2026-04-06
 
 ### Notion Integration
