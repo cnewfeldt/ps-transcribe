@@ -26,3 +26,12 @@ build/
 *.keychain-db
 *.mobileprovision
 *.xcconfig
+
+# Claude Code local settings
+.claude/
+
+# GSD agent worktrees (transient)
+.worktrees/
+
+# Security scan reports (kept local, not shipped)
+SECURITY-SCAN.md
