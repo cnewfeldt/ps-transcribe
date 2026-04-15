@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
+milestone: none
 milestone_name: milestone
-status: Milestone complete
-stopped_at: Phase 10 context gathered
-last_updated: "2026-04-08T09:28:27.823Z"
-last_activity: 2026-04-08
+status: Between milestones
+stopped_at: v1.0 shipped and archived
+last_updated: "2026-04-14T00:00:00Z"
+last_activity: 2026-04-14
 progress:
-  total_phases: 10
-  completed_phases: 9
-  total_plans: 29
-  completed_plans: 28
-  percent: 97
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,7 +21,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-04)
 
 **Core value:** Users can record conversations and voice memos with accurate, private, on-device transcription. All processing stays on-device.
-**Current focus:** Phase 10 — final-defect-fixes-obsidian-deeplink
+**Current focus:** v1.0 milestone shipped 2026-04-14. Between milestones — run `/gsd-new-milestone` to scope v1.1.
 
 **2026-04-04 scope reduction:** Phases 5 (Ollama Integration) and 6 (Live LLM Analysis) were abandoned. PS Transcribe is scoped to transcription only; LLM analysis of transcripts is not part of the product. Implementation preserved at git tag `archive/llm-analysis-attempt`.
 

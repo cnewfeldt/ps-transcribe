@@ -44,7 +44,19 @@ Users can record meetings and voice memos with accurate, private, on-device tran
 - Multi-language simultaneous transcription -- single locale per session
 - Complex onboarding wizard -- minimal setup, user owns troubleshooting
 
-## Current Milestone: v1.0 PS Transcribe
+## Current State
+
+**Shipped:** v1.0 PS Transcribe (2026-04-14). Full rebrand from Tome, all 12 security findings resolved, crash recovery + diarization fixes, session library with right-click "Show in Finder" and Obsidian deep-link, recording naming + lifecycle, three-state mic button, model onboarding, Notion integration. 8 active phases, 45 requirements satisfied, 28 plans shipped. See [`milestones/v1.0-ROADMAP.md`](milestones/v1.0-ROADMAP.md).
+
+## Next Milestone Goals
+
+None scoped yet. Run `/gsd-new-milestone` to define v1.1. Candidate areas informed by v1.0 deferrals and tech debt:
+- OWNER placeholder in SUFeedURL and release-dmg.yml — replace with the real GitHub repo URL once finalized.
+- Nyquist validation gaps across phases 1/2/3/8/10 (full `/gsd-validate-phase` sweep).
+- Process improvement: `requirements_completed` frontmatter on future SUMMARY.md files.
+
+<details>
+<summary>Archived: v1.0 milestone goal</summary>
 
 **Goal:** Rebrand from Tome, harden security/stability, add session management and recording UX.
 
@@ -52,9 +64,12 @@ Users can record meetings and voice memos with accurate, private, on-device tran
 - ~~Rebrand to "PS Transcribe" across entire codebase~~ (Phase 1 complete)
 - ~~Security fixes for all 12 SCAN findings~~ (Phase 2 complete)
 - ~~Stability -- crash recovery, diarization fix, error handling~~ (Phase 2 complete)
-- Session library with grid view, naming, lifecycle
-- Three-state mic button + model onboarding
+- ~~Session library with grid view, naming, lifecycle~~ (Phase 3 complete)
+- ~~Three-state mic button + model onboarding~~ (Phase 4 complete)
 - ~~Ollama integration + live LLM analysis panel~~ (abandoned 2026-04-04 scope reduction)
+- ~~Notion integration~~ (Phase 7 complete)
+- ~~Obsidian deep-link + final defect cleanup~~ (Phase 10 complete)
+</details>
 
 ## Context
 
