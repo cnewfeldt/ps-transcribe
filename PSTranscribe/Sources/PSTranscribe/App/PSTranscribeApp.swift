@@ -10,7 +10,6 @@ struct PSTranscribeApp: App {
     @State private var notionService = NotionService()
 
     init() {
-        PSTranscribeApp.migrateUserDefaultsIfNeeded()
         _settings = State(initialValue: AppSettings())
     }
 
@@ -43,43 +42,6 @@ struct PSTranscribeApp: App {
             Image(systemName: "book.closed")
                 .symbolRenderingMode(.monochrome)
         }
-    }
-    private static func migrateUserDefaultsIfNeeded() {
-        let oldDomain = "io.gremble.tome"
-        let sentinelKey = "hasMigratedFromTome"
-
-        // Already migrated -- skip
-        guard !UserDefaults.standard.bool(forKey: sentinelKey) else { return }
-
-        // Open the old bundle ID's UserDefaults domain
-        guard let oldDefaults = UserDefaults(suiteName: oldDomain) else { return }
-
-        // Only migrate keys AppSettings and ContentView actually read
-        let keysToMigrate = [
-            "transcriptionLocale",
-            "inputDeviceID",
-            "vaultMeetingsPath",
-            "vaultVoicePath",
-            "hideFromScreenShare",
-            "hasCompletedOnboarding",
-        ]
-
-        let newDefaults = UserDefaults.standard
-        for key in keysToMigrate {
-            if let value = oldDefaults.object(forKey: key) {
-                newDefaults.set(value, forKey: key)
-            }
-        }
-
-        // Mark migration complete
-        newDefaults.set(true, forKey: sentinelKey)
-        newDefaults.synchronize()
-
-        // Delete old keys (clean break, no rollback)
-        for key in keysToMigrate {
-            oldDefaults.removeObject(forKey: key)
-        }
-        oldDefaults.synchronize()
     }
 }
 
