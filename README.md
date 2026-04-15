@@ -1,4 +1,4 @@
-<h1 align="center">Tome</h1>
+<h1 align="center">PS Transcribe</h1>
 
 <p align="center">
   <strong>Local meeting capture → Obsidian vault → AI agent pipeline. No cloud. No API keys. Your data.</strong>
@@ -13,12 +13,7 @@
 
 ---
 
-Tome is a macOS app that captures meetings and voice memos, transcribes them locally with Parakeet-TDT v3, and drops structured `.md` files straight into your Obsidian vault. Everything runs on-device. Nothing phones home.
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/Gremble-io/Tome/main/assets/screenshot-idle.png" width="350" alt="Tome — idle state" />
-  <img src="https://raw.githubusercontent.com/Gremble-io/Tome/main/assets/screenshot-recording.png" width="350" alt="Tome — recording with spectrum visualizer" />
-</p>
+PS Transcribe is a macOS app that captures meetings and voice memos, transcribes them locally with Parakeet-TDT v3, and drops structured `.md` files straight into your Obsidian vault. Everything runs on-device. Nothing phones home.
 
 ## Background
 
@@ -30,17 +25,17 @@ I looked at Otter, Granola, Fireflies. They all lock your data in their cloud, t
 
 I started from [OpenGranola](https://github.com/yazinsai/OpenGranola), learned Swift along the way, and rebuilt it with a different audio pipeline, local ASR, speaker diarization, and vault-native output. If you're running Obsidian with any kind of AI agent setup, you probably have the same gap.
 
-## Why Tome?
+## Why PS Transcribe?
 
 - **Plain markdown out.** YAML frontmatter, tags, timestamps. Your vault already knows what to do with it. No proprietary export, no copy-paste, no middleman.
-- **Built for the agent pipeline.** Tome is just the capture layer. You talk, it transcribes, your agent picks up the `.md` and does whatever you've wired it to do.
+- **Built for the agent pipeline.** PS Transcribe is just the capture layer. You talk, it transcribes, your agent picks up the `.md` and does whatever you've wired it to do.
 - **Runs on your machine.** Parakeet-TDT v3 on Apple Silicon. No API keys, no accounts, no subscriptions, no data leaving the building.
 
 ```
 speak → capture → vault → agent → knowledge base
 ```
 
-Tome does the first three. Your agent does the rest.
+PS Transcribe does the first three. Your agent does the rest.
 
 ## Features
 
@@ -49,6 +44,8 @@ Tome does the first three. Your agent does the rest.
 - **Voice Memo** is mic only. For quick thoughts, verbal notes, stream of consciousness. Saves to a separate folder so it doesn't clutter your meeting transcripts.
 - **Speaker diarization** runs after the call ends. pyannote splits the remote audio into Speaker 2, Speaker 3, Speaker 4. Not perfect, but way better than one wall of unattributed text.
 - **Vault-native output** writes `.md` with frontmatter: `type`, `created`, `attendees`, `tags`, `source_app`. Lands in your vault ready to process.
+- **Obsidian deep-link.** Each library entry has an "Open in Obsidian" action that jumps straight to the transcript in your vault.
+- **Notion export.** On-demand send of finalized transcripts to a Notion database with structured properties and tag workflow.
 - **Privacy.** Hidden from screen sharing by default. No audio saved. Transcripts only.
 - **Silence auto-stop.** 120 seconds of dead air and it stops itself.
 
@@ -57,7 +54,7 @@ Tome does the first three. Your agent does the rest.
 ```
 ┌─────────────┐     ┌──────────────────┐     ┌───────────────┐
 │  Microphone  │────▶│                  │     │               │
-└─────────────┘     │  Tome            │     │  Obsidian     │
+└─────────────┘     │  PS Transcribe   │     │  Obsidian     │
                     │  ┌────────────┐  │────▶│  Vault        │
 ┌─────────────┐     │  │ Parakeet   │  │     │  (.md files)  │
 │  System      │────▶│  │ TDT v3    │  │     │               │
@@ -80,14 +77,6 @@ Tome does the first three. Your agent does the rest.
 5. **Agent picks up** whatever you've got downstream processes the transcript.
 
 ## Output
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/Gremble-io/Tome/main/assets/screenshot-vault-frontmatter.png?v=2" width="600" alt="Vault note with YAML frontmatter" />
-</p>
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/Gremble-io/Tome/main/assets/screenshot-vault-transcript.png?v=2" width="600" alt="Vault note transcript view" />
-</p>
 
 ```markdown
 ---
@@ -120,8 +109,8 @@ Voice memos use `type: fleeting` with a single speaker. Same structure, same fro
 **Requirements:** Apple Silicon Mac, macOS 26+, Xcode 26.3+
 
 ```bash
-git clone https://github.com/Gremble-io/Tome.git
-cd Tome
+git clone https://github.com/cnewfeldt/ps-transcribe.git
+cd ps-transcribe
 ./scripts/build_swift_app.sh
 ```
 
@@ -130,7 +119,7 @@ Builds and installs to `/Applications`. First launch downloads the Parakeet ASR 
 **Dev build:**
 
 ```bash
-cd Tome
+cd PSTranscribe
 swift build
 ```
 
@@ -141,29 +130,35 @@ swift build
 | **Microphone** | All modes | Captures your voice |
 | **Screen Recording** | Call Capture only | ScreenCaptureKit needs this for system audio from conferencing apps |
 
-macOS re-prompts for Screen Recording permission roughly monthly. That's an OS thing, not Tome.
+macOS re-prompts for Screen Recording permission roughly monthly. That's an OS thing, not PS Transcribe.
 
 ## Architecture
 
 ```
-Tome/Sources/Tome/
+PSTranscribe/Sources/PSTranscribe/
 ├── App/
-│   ├── TomeApp.swift               # App entry point
-│   └── AppUpdaterController.swift  # Sparkle update controller
+│   ├── PSTranscribeApp.swift        # App entry point
+│   └── AppUpdaterController.swift   # Sparkle update controller
 ├── Audio/
-│   ├── SystemAudioCapture.swift    # ScreenCaptureKit + per-app filtering
-│   └── MicCapture.swift            # AVAudioEngine mic input
+│   ├── SystemAudioCapture.swift     # ScreenCaptureKit + per-app filtering
+│   └── MicCapture.swift             # AVAudioEngine mic input
+├── LLM/                             # (reserved — no live LLM analysis in v1.0)
 ├── Models/
-│   ├── Models.swift                # Domain types (Utterance, Speaker, etc.)
-│   └── TranscriptStore.swift       # Observable transcript state
+│   ├── Models.swift                 # Domain types (Utterance, Speaker, etc.)
+│   └── TranscriptStore.swift        # Observable transcript state
 ├── Transcription/
-│   ├── TranscriptionEngine.swift   # Dual-stream capture + diarization
-│   └── StreamingTranscriber.swift  # VAD + Parakeet ASR pipeline
+│   ├── TranscriptionEngine.swift    # Dual-stream capture + diarization
+│   └── StreamingTranscriber.swift   # VAD + Parakeet ASR pipeline
 ├── Storage/
-│   ├── TranscriptLogger.swift      # .md output with YAML frontmatter
-│   └── SessionStore.swift          # Session metadata
+│   ├── TranscriptLogger.swift       # .md output with YAML frontmatter
+│   ├── TranscriptParser.swift       # Parsing + Obsidian URL helpers
+│   ├── LibraryStore.swift           # Library entries
+│   └── SessionStore.swift           # Session metadata
 ├── Settings/
-│   └── AppSettings.swift
+│   ├── AppSettings.swift
+│   └── KeychainHelper.swift         # Secure Notion API key storage
+├── Notion/
+│   └── NotionService.swift          # On-demand transcript export
 └── Views/
     ├── ContentView.swift
     ├── ControlBar.swift
@@ -177,7 +172,7 @@ Tome/Sources/Tome/
 ## Privacy
 
 - Transcription runs entirely on-device. No audio is ever sent anywhere.
-- No network calls. No analytics. No telemetry.
+- No network calls (except the optional, on-demand Notion export and Sparkle update checks). No analytics. No telemetry.
 - No audio is saved to disk. Only text transcripts.
 - The app window is hidden from screen sharing by default.
 - Transcripts are saved as plain `.md` files to a folder you choose.
@@ -192,21 +187,21 @@ Tome/Sources/Tome/
 
 ## Troubleshooting
 
-**"Tome is damaged and can't be opened"**
+**"PS Transcribe is damaged and can't be opened"**
 
 This is macOS Gatekeeper blocking an unsigned app. Until a signed release is available:
 
-1. Right-click (or Control-click) `Tome.app` in `/Applications`
+1. Right-click (or Control-click) `PS Transcribe.app` in `/Applications`
 2. Click **Open**
 3. In the dialog, click **Open** again
 
-You only need to do this once — after that, Tome launches normally.
+You only need to do this once — after that, PS Transcribe launches normally.
 
 Alternatively, build from source (see [Build](#build) above) to avoid Gatekeeper entirely.
 
-## Credits
+## Acknowledgments
 
-Started from [OpenGranola](https://github.com/yazinsai/OpenGranola). Substantially rewritten from there.
+PS Transcribe evolved from [**Tome**](https://github.com/Gremble-io/Tome), the foundation application this project was rebuilt and rebranded from. Tome itself started from [OpenGranola](https://github.com/yazinsai/OpenGranola). Thanks to both projects for the runway.
 
 ## License
 
