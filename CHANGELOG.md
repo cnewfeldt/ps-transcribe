@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.0.0] — 2026-04-14
+
+### Breaking
+- **Tome → PS Transcribe migration removed.** `migrateUserDefaultsIfNeeded()`, its `init()` call site, and the `hasMigratedFromTome` sentinel deleted. Users upgrading from the original Tome binary after this release will no longer have their settings carried over — they must have already upgraded through a v1.x build for their preferences to persist.
+
+### Repo / Distribution
+- Renamed GitHub repo `cnewfeldt/Tome` → `cnewfeldt/ps-transcribe`. GitHub redirect covers inbound links.
+- `Info.plist` `SUFeedURL` now points at `https://raw.githubusercontent.com/cnewfeldt/ps-transcribe/gh-pages/appcast.xml` (OWNER placeholder removed).
+- `release-dmg.yml` OWNER placeholders replaced; stale TODO comments removed.
+
+### Docs
+- `README.md` rewritten: title, body, architecture tree, troubleshooting, and clone URL all reference PS Transcribe. Screenshot blocks removed. New **Acknowledgments** section credits the original [Tome](https://github.com/Gremble-io/Tome) repo as the foundation app and OpenGranola as its upstream.
+
+### Milestone
+- v1.0 milestone archived. ROADMAP.md and REQUIREMENTS.md moved under `.planning/milestones/v1.0-*.md`; active ROADMAP collapsed to a one-line summary. PROJECT.md updated with Current State / Next Milestone sections. Git tag `v1.0` created and pushed.
+- All 45 active v1 requirements satisfied, including REBR-08 verified via live Tome → PS Transcribe upgrade on a test machine.
+
 ## [1.4.1] — 2026-04-14
 
 ### Housekeeping
