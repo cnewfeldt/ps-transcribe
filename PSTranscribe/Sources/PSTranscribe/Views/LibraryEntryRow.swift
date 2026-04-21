@@ -13,93 +13,49 @@ struct LibraryEntryRow: View {
     @State private var fileExists: Bool = true
 
     var body: some View {
-        ZStack(alignment: .leading) {
-            // Background
-            RoundedRectangle(cornerRadius: 6)
-                .fill(rowBackground)
+        HStack(alignment: .top, spacing: Spacing.x10) {
+            iconChip
 
-            // Selected left stripe
-            if isSelected {
-                HStack(spacing: 0) {
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(Color.accent1)
-                        .frame(width: 3)
-                    Spacer()
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+            VStack(alignment: .leading, spacing: 3) {
+                Text(entry.displayName)
+                    .font(.chronicleSans(12.5, weight: .semibold))
+                    .foregroundStyle(Color.ink)
+                    .lineLimit(1)
+
+                Text(metadataLine)
+                    .font(.chronicleMono(11))
+                    .foregroundStyle(Color.inkFaint)
+                    .lineLimit(1)
+
+                Text(previewText)
+                    .font(.chronicleSans(11.5))
+                    .foregroundStyle(
+                        previewText == "No transcript" ? Color.inkFaint : Color.inkMuted
+                    )
+                    .italic(previewText == "No transcript")
+                    .opacity(previewText == "No transcript" ? 0.55 : 0.85)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
             }
 
-            // Row content
-            HStack(alignment: .top, spacing: 8) {
-                // Type icon
-                Image(systemName: typeIconName)
-                    .font(.system(size: 14))
-                    .foregroundStyle(Color.fg2)
-                    .frame(width: 18, alignment: .center)
-                    .padding(.top, 4)
+            Spacer(minLength: 0)
 
-                // Center content
-                VStack(alignment: .leading, spacing: 4) {
-                    // Recording name (edit via right-click -> Rename)
-                    Text(entry.displayName)
-                        .font(.system(size: 12))
-                        .foregroundStyle(Color.fg1)
-                        .lineLimit(1)
-
-                    // Metadata line
-                    Text(metadataLine)
-                        .font(.system(size: 11))
-                        .foregroundStyle(Color.fg2)
-                        .lineLimit(1)
-
-                    // Clickable file path (SESS-04)
-                    if !entry.filePath.isEmpty {
-                        Text(URL(fileURLWithPath: entry.filePath).lastPathComponent)
-                            .font(.system(size: 10))
-                            .foregroundStyle(Color.accent1.opacity(0.7))
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                            .onTapGesture {
-                                NSWorkspace.shared.selectFile(
-                                    entry.filePath,
-                                    inFileViewerRootedAtPath: URL(fileURLWithPath: entry.filePath)
-                                        .deletingLastPathComponent().path
-                                )
-                            }
-                            .help(entry.filePath)
-                    }
-
-                    // First-line preview
-                    Text(entry.firstLinePreview?.isEmpty == false ? entry.firstLinePreview! : "No transcript")
-                        .font(.system(size: 11))
-                        .foregroundStyle(Color.fg3)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                }
-
-                Spacer(minLength: 0)
-
-                // Incomplete badge (D-03) -- crash-recovered sessions
-                if !entry.isFinalized {
-                    Image(systemName: "clock.badge.exclamationmark.fill")
-                        .font(.system(size: 10))
-                        .foregroundStyle(Color.yellow.opacity(0.85))
-                        .help("Session was interrupted -- transcript may be incomplete")
-                        .padding(.top, 4)
-                }
-                // Missing file badge -- only when finalized (incomplete overrides missing per D-03)
-                else if !fileExists && !entry.filePath.isEmpty {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 10))
-                        .foregroundStyle(Color.recordRed)
-                        .help("File has been moved or deleted")
-                        .padding(.top, 4)
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
+            statusBadge
         }
-        .frame(height: 72)
+        .padding(.horizontal, Spacing.x14)
+        .padding(.vertical, 9)
+        .background(
+            RoundedRectangle(cornerRadius: Radius.button)
+                .fill(isSelected ? Color.paper : Color.clear)
+                .overlay(
+                    RoundedRectangle(cornerRadius: Radius.button)
+                        .stroke(Color.rule, lineWidth: isSelected ? 0.5 : 0)
+                )
+                .shadow(
+                    color: isSelected ? Color(red: 30/255, green: 30/255, blue: 28/255).opacity(0.08) : .clear,
+                    radius: 3, x: 0, y: 1
+                )
+        )
         .onAppear {
             guard !entry.filePath.isEmpty else { fileExists = true; return }
             fileExists = FileManager.default.fileExists(atPath: entry.filePath)
@@ -158,11 +114,38 @@ struct LibraryEntryRow: View {
 
     // MARK: - Helpers
 
-    private var rowBackground: Color {
-        if isSelected {
-            return Color.bg1.opacity(0.85)
+    private var iconChip: some View {
+        ZStack {
+            Circle()
+                .fill(Color.paperSoft)
+            Image(systemName: typeIconName)
+                .font(.system(size: 10))
+                .foregroundStyle(Color.inkMuted)
         }
-        return Color.clear
+        .frame(width: 22, height: 22)
+        .padding(.top, 2)
+    }
+
+    @ViewBuilder
+    private var statusBadge: some View {
+        if !entry.isFinalized {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 10))
+                .foregroundStyle(Color.yellow.opacity(0.85))
+                .help("Session was interrupted -- transcript may be incomplete")
+                .padding(.top, 4)
+        } else if !fileExists && !entry.filePath.isEmpty {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 10))
+                .foregroundStyle(Color.recRed)
+                .help("File has been moved or deleted")
+                .padding(.top, 4)
+        }
+    }
+
+    private var previewText: String {
+        let p = entry.firstLinePreview?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return p.isEmpty ? "No transcript" : p
     }
 
     private var typeIconName: String {
@@ -177,12 +160,13 @@ struct LibraryEntryRow: View {
         }
     }
 
+    /// "HH:MM · Nm" style per spec (e.g. "10:24 · 48m").
     private var metadataLine: String {
-        let dateFmt = DateFormatter()
-        dateFmt.dateFormat = "MMM d, yyyy"
-        let dateStr = dateFmt.string(from: entry.startDate)
+        let timeFmt = DateFormatter()
+        timeFmt.dateFormat = "HH:mm"
+        let timeStr = timeFmt.string(from: entry.startDate)
         let durationStr = formatDuration(entry.duration)
-        return "\(dateStr) . \(durationStr) . \(entry.sourceApp)"
+        return "\(timeStr) · \(durationStr)"
     }
 
     private func formatDuration(_ seconds: TimeInterval) -> String {

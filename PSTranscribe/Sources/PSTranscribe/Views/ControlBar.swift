@@ -45,6 +45,7 @@ struct ControlBar: View {
     let detectedApp: String?
     var detectedAppBundleID: String? = nil
     let silenceSeconds: Int
+    var autoStopThreshold: Int = 120
     let statusMessage: String?
     let errorMessage: String?
     let modelsReady: Bool
@@ -119,8 +120,8 @@ struct ControlBar: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
 
-            if isRecording && silenceSeconds >= 90 {
-                Text("Silence -- auto-stop in \(120 - silenceSeconds)s")
+            if isRecording && silenceSeconds >= max(2, autoStopThreshold - max(5, autoStopThreshold / 4)) {
+                Text("Silence -- auto-stop in \(max(0, autoStopThreshold - silenceSeconds))s")
                     .font(.system(size: 10))
                     .foregroundStyle(.orange)
                     .frame(maxWidth: .infinity, alignment: .leading)

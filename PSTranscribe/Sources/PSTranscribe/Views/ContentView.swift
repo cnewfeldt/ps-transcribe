@@ -39,6 +39,9 @@ struct ContentView: View {
     @State private var selectedEntryID: UUID?
     @State private var activeLibraryEntryID: UUID?
     @State private var sessionName: String = ""
+    @State private var isEditingTranscriptName: Bool = false
+    @State private var transcriptNameDraft: String = ""
+    @FocusState private var transcriptNameFieldFocused: Bool
     @State private var loadedUtterances: [Utterance] = []
     @State private var savedConfirmation: Bool = false
     @State private var nameDebounceTask: Task<Void, Never>?
@@ -52,6 +55,33 @@ struct ContentView: View {
 
     private var isNotionConfigured: Bool {
         !settings.notionDatabaseID.isEmpty
+    }
+
+    /// Returns the last path component of a configured vault folder as a
+    /// friendly label. Falls back to the provided default when unset.
+    private func folderDisplayName(path: String, fallback: String) -> String {
+        guard !path.isEmpty else { return fallback }
+        let last = URL(fileURLWithPath: path).lastPathComponent
+        return last.isEmpty ? fallback : last
+    }
+
+    /// Human-readable name of the currently selected input device, shown in
+    /// the Capture Dock status line when idle. Falls back to "System default".
+    private var currentInputDeviceName: String {
+        if settings.inputDeviceID == 0 { return "System default" }
+        let devices = MicCapture.availableInputDevices()
+        return devices.first(where: { $0.id == settings.inputDeviceID })?.name ?? "System default"
+    }
+
+    /// Seconds of VAD-confirmed silence before auto-stop fires, per session mode.
+    /// Voice memos: short trailing silence means "done dictating."
+    /// Call capture: long tolerances — natural meeting pauses shouldn't kill the recording.
+    private var autoStopThreshold: Int {
+        switch activeSessionType {
+        case .voiceMemo: return 6
+        case .callCapture: return 120
+        case .none: return 120
+        }
     }
 
     private var isObsidianAvailable: Bool {
@@ -68,24 +98,20 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            RecordingNameField(
-                sessionName: $sessionName,
-                isSessionActive: activeSessionType != nil,
-                sessionElapsed: sessionElapsed,
-                isRecording: isRunning,
-                savedConfirmation: savedConfirmation,
-                onToggleSidebar: {
-                    withAnimation(.spring(duration: 0.3, bounce: 0.1)) {
-                        isSidebarVisible.toggle()
-                    }
-                },
-                onOpenSettings: {
-                    openSettings()
+            // Hidden keyboard shortcut for sidebar toggle (⌘⇧S) — was on the
+            // removed RecordingNameField toolbar; now invisible but available.
+            Button {
+                withAnimation(.spring(duration: 0.3, bounce: 0.1)) {
+                    isSidebarVisible.toggle()
                 }
-            )
+            } label: { EmptyView() }
+            .keyboardShortcut("s", modifiers: [.command, .shift])
+            .frame(width: 0, height: 0)
+            .opacity(0)
 
             HStack(spacing: 0) {
                 if isSidebarVisible {
+                    VStack(spacing: 0) {
                     LibrarySidebar(
                         entries: libraryEntries,
                         selectedID: $selectedEntryID,
@@ -157,36 +183,68 @@ struct ContentView: View {
                             obsidianURLForEntry(entry)
                         }
                     )
-                    .frame(width: 220)
+                    .frame(maxHeight: .infinity)
+
+                        CaptureDock(
+                            isRecording: isRunning,
+                            activeSessionType: activeSessionType,
+                            sessionElapsed: sessionElapsed,
+                            audioLevel: audioLevel,
+                            silenceSeconds: silenceSeconds,
+                            autoStopThreshold: autoStopThreshold,
+                            currentInputName: currentInputDeviceName,
+                            statusMessage: transcriptionEngine?.assetStatus,
+                            errorMessage: transcriptionEngine?.lastError,
+                            modelsReady: transcriptionEngine?.modelsReady ?? false,
+                            hasError: transcriptionEngine?.hasError ?? false,
+                            onStartCallCapture: { startSession(type: .callCapture) },
+                            onStartVoiceMemo: { startSession(type: .voiceMemo) },
+                            onStop: stopSession
+                        )
+                    }
+                    .frame(width: 270)
                     .transition(.move(edge: .leading).combined(with: .opacity))
+
+                    Rectangle()
+                        .fill(Color.rule)
+                        .frame(width: 0.5)
                 }
 
-                detailView
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("Transcript")
+                        .chronicleMetaLabel()
+                        .padding(.horizontal, 28)
+                        .padding(.top, 18)
+                        .padding(.bottom, 8)
+
+                    transcriptHeader
+                        .padding(.horizontal, 28)
+                        .padding(.bottom, 14)
+
+                    detailView
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                Rectangle()
+                    .fill(Color.rule)
+                    .frame(width: 0.5)
+
+                DetailsPane(
+                    selectedEntry: libraryEntries.first(where: { $0.id == selectedEntryID }),
+                    meetingsFolderName: folderDisplayName(path: settings.vaultMeetingsPath, fallback: "Meetings"),
+                    voiceFolderName: folderDisplayName(path: settings.vaultVoicePath, fallback: "Voice"),
+                    isObsidianAvailable: isObsidianAvailable,
+                    obsidianURL: libraryEntries.first(where: { $0.id == selectedEntryID }).flatMap { obsidianURLForEntry($0) }
+                )
+                .frame(width: 240)
             }
             .frame(maxHeight: .infinity)
 
-            ControlBar(
-                isRecording: isRunning,
-                activeSessionType: activeSessionType,
-                audioLevel: audioLevel,
-                detectedApp: detectedAppName,
-                detectedAppBundleID: detectedAppBundleID,
-                silenceSeconds: silenceSeconds,
-                statusMessage: transcriptionEngine?.assetStatus,
-                errorMessage: transcriptionEngine?.lastError,
-                modelsReady: transcriptionEngine?.modelsReady ?? false,
-                hasError: transcriptionEngine?.hasError ?? false,
-                activeErrors: transcriptionEngine?.activeErrors ?? [],
-                onStartCallCapture: { startSession(type: .callCapture) },
-                onStartVoiceMemo: { startSession(type: .voiceMemo) },
-                onStop: stopSession,
-                onOpenSettings: { openSettings() }
-            )
         }
-        .frame(minWidth: 640, minHeight: 400)
-        .background(Color.bg0)
-        .preferredColorScheme(.dark)
+        .frame(minWidth: 960, minHeight: 640)
+        .background(Color.paper)
+        .preferredColorScheme(.light)
         .sheet(item: $notionSendEntry) { entry in
             NotionTagSheet(
                 entryTitle: entry.displayName,
@@ -267,7 +325,7 @@ struct ContentView: View {
             }
             refreshLibrary()
         }
-        // Audio level polling
+        // Audio level polling (meter only — silence tracking uses VAD below)
         .task {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(100))
@@ -278,26 +336,32 @@ struct ContentView: View {
                 if engine.isRunning {
                     let newLevel = engine.audioLevel
                     if abs(newLevel - audioLevel) > 0.005 { audioLevel = newLevel }
-                    if audioLevel > 0.01 {
-                        silenceSeconds = 0
-                    }
                 } else if audioLevel != 0 {
                     audioLevel = 0
                 }
             }
         }
-        // Silence auto-stop + elapsed timer
+        // VAD-based silence auto-stop + elapsed timer
         .task {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))
-                guard isRunning else {
+                guard isRunning, let engine = transcriptionEngine else {
                     silenceSeconds = 0
                     continue
                 }
                 sessionElapsed += 1
-                if audioLevel < 0.01 {
+
+                // Arm only after VAD has heard speech at least once
+                guard engine.hasDetectedSpeech else {
+                    silenceSeconds = 0
+                    continue
+                }
+
+                if engine.isSpeaking {
+                    silenceSeconds = 0
+                } else {
                     silenceSeconds += 1
-                    if silenceSeconds >= 120 {
+                    if silenceSeconds >= autoStopThreshold {
                         stopSession()
                     }
                 }
@@ -341,6 +405,8 @@ struct ContentView: View {
             handleNewUtterance()
         }
         .onChange(of: selectedEntryID) { _, newID in
+            // Selection changed — bail out of any in-progress rename draft.
+            if isEditingTranscriptName { cancelRename() }
             guard let newID,
                   let entry = libraryEntries.first(where: { $0.id == newID }),
                   activeSessionType == nil else {
@@ -364,6 +430,161 @@ struct ContentView: View {
                 transcriptionEngine?.lastError = "Couldn't load transcript. The file may be corrupted."
             }
         }
+    }
+
+    // MARK: - Transcript Header
+
+    @ViewBuilder
+    private var transcriptHeader: some View {
+        if isRunning || activeSessionType != nil {
+            let name = sessionName.trimmingCharacters(in: .whitespacesAndNewlines)
+            let displayName = name.isEmpty ? "New recording" : name
+            VStack(alignment: .leading, spacing: 2) {
+                editableTranscriptName(displayName: displayName) { newName in
+                    sessionName = newName
+                }
+                Text(liveMetaLine)
+                    .font(.chronicleMono(11))
+                    .foregroundStyle(Color.inkFaint)
+            }
+        } else if let selectedID = selectedEntryID,
+                  let entry = libraryEntries.first(where: { $0.id == selectedID }) {
+            VStack(alignment: .leading, spacing: 2) {
+                editableTranscriptName(displayName: entry.displayName) { newName in
+                    renameEntry(id: entry.id, newName: newName)
+                }
+                Text(pastMetaLine(entry))
+                    .font(.chronicleMono(11))
+                    .foregroundStyle(Color.inkFaint)
+            }
+        } else {
+            EmptyView()
+        }
+    }
+
+    @ViewBuilder
+    private func editableTranscriptName(displayName: String, commit: @escaping (String) -> Void) -> some View {
+        if isEditingTranscriptName {
+            TextField("Recording name", text: $transcriptNameDraft)
+                .font(.chronicleSans(15, weight: .semibold))
+                .foregroundStyle(Color.ink)
+                .textFieldStyle(.plain)
+                .focused($transcriptNameFieldFocused)
+                .onAppear {
+                    transcriptNameFieldFocused = true
+                    // One-shot select-all as soon as the field gets focus.
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.02) {
+                        NSApp.sendAction(#selector(NSText.selectAll(_:)), to: nil, from: nil)
+                    }
+                }
+                .onSubmit { submitRename(commit: commit) }
+                .onExitCommand { cancelRename() }
+                .onChange(of: transcriptNameFieldFocused) { _, focused in
+                    // Clicking outside the field commits the current draft.
+                    if !focused && isEditingTranscriptName {
+                        submitRename(commit: commit)
+                    }
+                }
+        } else {
+            Text(displayName)
+                .font(.chronicleSans(15, weight: .semibold))
+                .foregroundStyle(Color.ink)
+                .lineLimit(1)
+                .contentShape(Rectangle())
+                .onTapGesture(count: 2) {
+                    beginRename(with: displayName)
+                }
+                .contextMenu {
+                    Button("Rename…") { beginRename(with: displayName) }
+                }
+        }
+    }
+
+    private func beginRename(with current: String) {
+        transcriptNameDraft = current == "New recording" ? "" : current
+        isEditingTranscriptName = true
+    }
+
+    private func cancelRename() {
+        isEditingTranscriptName = false
+        transcriptNameDraft = ""
+        transcriptNameFieldFocused = false
+    }
+
+    private func submitRename(commit: (String) -> Void) {
+        let trimmed = transcriptNameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Exit edit mode first so the focus-change handler doesn't re-enter.
+        isEditingTranscriptName = false
+        transcriptNameFieldFocused = false
+        let draft = trimmed
+        transcriptNameDraft = ""
+        guard !draft.isEmpty else { return }
+        commit(draft)
+    }
+
+    /// Renames a library entry — mirrors the sidebar rename flow (file + library).
+    private func renameEntry(id: UUID, newName: String) {
+        Task {
+            guard let entry = await libraryStore.entries.first(where: { $0.id == id }) else { return }
+            guard !entry.filePath.isEmpty else {
+                await libraryStore.updateEntry(id: id) { @Sendable e in e.name = newName }
+                refreshLibrary()
+                return
+            }
+            do {
+                let newPath = try await transcriptLogger.renameFinalized(
+                    at: URL(fileURLWithPath: entry.filePath),
+                    to: newName
+                )
+                await libraryStore.updateEntry(id: id) { @Sendable e in
+                    e.name = newName
+                    e.filePath = newPath.path
+                }
+            } catch {
+                await libraryStore.updateEntry(id: id) { @Sendable e in e.name = newName }
+                transcriptionEngine?.lastError = "Rename failed: \(error.localizedDescription)"
+            }
+            refreshLibrary()
+        }
+    }
+
+    private var liveMetaLine: String {
+        let elapsed = Self.formatDurationShort(TimeInterval(sessionElapsed))
+        let count = distinctSpeakerCount(in: transcriptStore.utterances)
+        let speakersStr = "\(count) \(count == 1 ? "speaker" : "speakers")"
+        return "Recording · \(elapsed) · \(speakersStr)"
+    }
+
+    private func pastMetaLine(_ entry: LibraryEntry) -> String {
+        let dateFmt = DateFormatter()
+        dateFmt.dateFormat = "MMM d, yyyy"
+        let dateStr = dateFmt.string(from: entry.startDate)
+        let durationStr = Self.formatDurationShort(entry.duration)
+        let count = distinctSpeakerCount(in: loadedUtterances)
+        let speakersStr = "\(count) \(count == 1 ? "speaker" : "speakers")"
+        return "\(dateStr) · \(durationStr) · \(speakersStr)"
+    }
+
+    private func distinctSpeakerCount(in utterances: [Utterance]) -> Int {
+        var seen = Set<String>()
+        for u in utterances {
+            switch u.speaker {
+            case .you:              seen.insert("you")
+            case .them:             seen.insert("them")
+            case .named(let label): seen.insert("named:\(label)")
+            }
+        }
+        return max(seen.count, 1) // show at least "1 speaker" during empty live state
+    }
+
+    private static func formatDurationShort(_ seconds: TimeInterval) -> String {
+        let total = Int(seconds)
+        let h = total / 3600
+        let m = (total % 3600) / 60
+        let s = total % 60
+        if h > 0 { return m > 0 ? "\(h)h \(m)m" : "\(h)h" }
+        if m > 0 { return s > 0 ? "\(m)m \(s)s" : "\(m)m" }
+        return "\(s)s"
     }
 
     // MARK: - Detail View
@@ -406,6 +627,36 @@ struct ContentView: View {
     }
 
     // MARK: - Notion
+
+    /// Fire-and-forget auto-send on session finalization. Empty tags by design;
+    /// users add tags later via the manual "Resend to Notion" flow, which updates
+    /// the existing page in place.
+    private func autoSendToNotion(entry: LibraryEntry) async {
+        let logger = Logger(subsystem: "com.pstranscribe.app", category: "NotionAutoSend")
+        do {
+            let markdown = try String(contentsOfFile: entry.filePath, encoding: .utf8)
+            let speakers = notionService.extractSpeakers(markdown)
+            logger.info("Auto-sending to Notion: \(entry.displayName)")
+            let pageURL = try await notionService.sendTranscript(
+                databaseID: settings.notionDatabaseID,
+                title: entry.displayName,
+                date: entry.startDate,
+                duration: entry.duration,
+                sourceApp: entry.sourceApp,
+                sessionType: entry.sessionType == .callCapture ? "Call Capture" : "Voice Memo",
+                speakers: speakers,
+                tags: [],
+                transcriptMarkdown: markdown
+            )
+            await libraryStore.updateEntry(id: entry.id) { @Sendable e in
+                e.notionPageURL = pageURL.absoluteString
+            }
+            refreshLibrary()
+        } catch {
+            logger.error("Auto-send to Notion failed: \(error.localizedDescription)")
+            notionSendError = "Auto-send to Notion failed: \(error.localizedDescription)"
+        }
+    }
 
     private func sendToNotion(entry: LibraryEntry, tags: [String]) {
         isNotionSending = true
@@ -588,6 +839,15 @@ struct ContentView: View {
             sourceApp = "Voice Memo"
         }
 
+        // Guard: without a configured Obsidian folder for this session type,
+        // we have nowhere to save. Surface an error and abort.
+        guard !outputPath.isEmpty else {
+            let label = type == .callCapture ? "Meetings" : "Voice memos"
+            transcriptionEngine?.lastError =
+                "Obsidian \(label) folder isn't set — configure it in Settings → Obsidian before recording."
+            return
+        }
+
         let startDate = Date()
 
         Task {
@@ -727,6 +987,16 @@ struct ContentView: View {
                     } catch {
                         loadedUtterances = []
                     }
+                }
+
+                // Auto-send to Notion with empty tags, if enabled + configured + not already sent.
+                // User can still use "Resend to Notion" to add tags afterward (updates in place).
+                if settings.notionAutoSendEnabled,
+                   isNotionConfigured,
+                   !capturedPath.isEmpty,
+                   let entry = await libraryStore.entries.first(where: { $0.id == entryID }),
+                   entry.notionPageURL == nil {
+                    await autoSendToNotion(entry: entry)
                 }
             }
 

@@ -19,7 +19,7 @@ struct RecordingNameField: View {
                 } label: {
                     Image(systemName: "sidebar.left")
                         .font(.system(size: 14))
-                        .foregroundStyle(Color.fg2)
+                        .foregroundStyle(Color.inkFaint)
                 }
                 .buttonStyle(.plain)
                 .focusable(false)
@@ -28,7 +28,7 @@ struct RecordingNameField: View {
                 if isSessionActive {
                     TextField("Name this recording", text: $sessionName)
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(Color.fg1)
+                        .foregroundStyle(Color.ink)
                         .textFieldStyle(.plain)
                         .focused($isNameFieldFocused)
                         .onAppear { isNameFieldFocused = true }
@@ -36,7 +36,7 @@ struct RecordingNameField: View {
                     Text("PS TRANSCRIBE")
                         .font(.system(size: 14, weight: .heavy))
                         .tracking(3)
-                        .foregroundStyle(Color.fg1)
+                        .foregroundStyle(Color.ink)
                 }
             }
 
@@ -48,25 +48,25 @@ struct RecordingNameField: View {
                     if isRecording {
                         Text(formatTime(sessionElapsed))
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(Color.fg1)
+                            .foregroundStyle(Color.ink)
                         PulsingDot(size: 6)
                     } else if savedConfirmation {
                         Image(systemName: "checkmark")
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(Color.accent1)
+                            .foregroundStyle(Color.accentInk)
                         Text("Saved")
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(Color.accent1)
+                            .foregroundStyle(Color.accentInk)
                     } else if isSessionActive {
                         Text("\(formatTime(sessionElapsed)) Done")
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(Color.fg2)
+                            .foregroundStyle(Color.inkFaint)
                     } else {
                         Text("Ready")
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(Color.fg2)
+                            .foregroundStyle(Color.inkFaint)
                         Circle()
-                            .fill(Color.fg2)
+                            .fill(Color.inkFaint)
                             .frame(width: 6, height: 6)
                             .opacity(0.5)
                     }
@@ -77,7 +77,7 @@ struct RecordingNameField: View {
                 } label: {
                     Image(systemName: "gearshape")
                         .font(.system(size: 13))
-                        .foregroundStyle(Color.fg2)
+                        .foregroundStyle(Color.inkFaint)
                 }
                 .buttonStyle(.plain)
                 .focusable(false)
@@ -86,8 +86,13 @@ struct RecordingNameField: View {
         }
         .padding(.horizontal, 16)
         .frame(height: 44)
-        .background(Color.bg1.opacity(0.45))
-        .overlay(Divider(), alignment: .bottom)
+        .background(Color.paper)
+        .overlay(
+            Rectangle()
+                .fill(Color.rule)
+                .frame(height: 0.5),
+            alignment: .bottom
+        )
     }
 
     // MARK: - Helpers

@@ -42,6 +42,12 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(notionDatabaseID, forKey: "notionDatabaseID") }
     }
 
+    /// When true, finalized recordings are auto-sent to Notion with empty tags.
+    /// Users can still open the entry and use "Resend to Notion" to add tags afterward.
+    var notionAutoSendEnabled: Bool {
+        didSet { UserDefaults.standard.set(notionAutoSendEnabled, forKey: "notionAutoSendEnabled") }
+    }
+
     init() {
         let defaults = UserDefaults.standard
         self.transcriptionLocale = defaults.string(forKey: "transcriptionLocale") ?? "en-US"
@@ -57,6 +63,7 @@ final class AppSettings {
         let rawType = defaults.string(forKey: "lastUsedSessionType") ?? SessionType.callCapture.rawValue
         self.lastUsedSessionType = SessionType(rawValue: rawType) ?? .callCapture
         self.notionDatabaseID = defaults.string(forKey: "notionDatabaseID") ?? ""
+        self.notionAutoSendEnabled = defaults.bool(forKey: "notionAutoSendEnabled")
     }
 
     /// Apply current screen-share visibility to all app windows.

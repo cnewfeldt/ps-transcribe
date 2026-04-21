@@ -10,6 +10,8 @@ final class StreamingTranscriber: @unchecked Sendable {
     private let audioSource: AudioSource
     private let onPartial: @Sendable (String) -> Void
     private let onFinal: @Sendable (String) -> Void
+    /// Fires on VAD speech boundary transitions: `true` at speechStart, `false` at speechEnd.
+    private let onSpeechActivity: @Sendable (Bool) -> Void
     private let log = Logger(subsystem: "com.pstranscribe.app", category: "StreamingTranscriber")
 
     /// Resampler from source format to 16kHz mono Float32.
@@ -27,7 +29,8 @@ final class StreamingTranscriber: @unchecked Sendable {
         speaker: Speaker,
         audioSource: AudioSource = .microphone,
         onPartial: @escaping @Sendable (String) -> Void,
-        onFinal: @escaping @Sendable (String) -> Void
+        onFinal: @escaping @Sendable (String) -> Void,
+        onSpeechActivity: @escaping @Sendable (Bool) -> Void = { _ in }
     ) {
         self.asrManager = asrManager
         self.vadManager = vadManager
@@ -35,6 +38,7 @@ final class StreamingTranscriber: @unchecked Sendable {
         self.audioSource = audioSource
         self.onPartial = onPartial
         self.onFinal = onFinal
+        self.onSpeechActivity = onSpeechActivity
     }
 
     /// Silero VAD expects chunks of 4096 samples (256ms at 16kHz).
@@ -90,10 +94,12 @@ final class StreamingTranscriber: @unchecked Sendable {
                         case .speechStart:
                             isSpeaking = true
                             speechSamples.removeAll(keepingCapacity: false)
+                            onSpeechActivity(true)
                             diagLog("[\(self.speaker.rawValue)] speech start")
 
                         case .speechEnd:
                             isSpeaking = false
+                            onSpeechActivity(false)
                             diagLog("[\(self.speaker.rawValue)] speech end, samples=\(speechSamples.count)")
                             if speechSamples.count > 8000 {
                                 let segment = speechSamples

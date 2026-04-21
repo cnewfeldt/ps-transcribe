@@ -18,6 +18,13 @@ func diagLog(_ msg: String) {
 final class TranscriptionEngine {
     private(set) var isRunning = false
     private(set) var modelsReady = false
+    /// True once VAD has detected at least one speech segment this session.
+    /// Used to arm silence-based auto-stop (prevents stopping a never-started recording).
+    private(set) var hasDetectedSpeech = false
+    /// True while VAD reports active speech on mic or system stream.
+    var isSpeaking: Bool { micIsSpeaking || sysIsSpeaking }
+    private var micIsSpeaking = false
+    private var sysIsSpeaking = false
     var assetStatus: String = "Ready"
     var lastError: String?
 
@@ -104,6 +111,9 @@ final class TranscriptionEngine {
         guard await ensureMicrophonePermission() else { return }
 
         isRunning = true
+        hasDetectedSpeech = false
+        micIsSpeaking = false
+        sysIsSpeaking = false
 
         // 1. Load FluidAudio models (skipped if already prepared)
         if asrManager == nil || vadManager == nil {
@@ -171,6 +181,13 @@ final class TranscriptionEngine {
                     store.volatileYouText = ""
                     store.append(Utterance(text: text, speaker: .you))
                 }
+            },
+            onSpeechActivity: { [weak self] speaking in
+                Task { @MainActor in
+                    guard let self else { return }
+                    self.micIsSpeaking = speaking
+                    if speaking { self.hasDetectedSpeech = true }
+                }
             }
         )
         let capture = micCapture
@@ -199,6 +216,13 @@ final class TranscriptionEngine {
                     Task { @MainActor in
                         store.volatileThemText = ""
                         store.append(Utterance(text: text, speaker: .them))
+                    }
+                },
+                onSpeechActivity: { [weak self] speaking in
+                    Task { @MainActor in
+                        guard let self else { return }
+                        self.sysIsSpeaking = speaking
+                        if speaking { self.hasDetectedSpeech = true }
                     }
                 }
             )
@@ -241,6 +265,7 @@ final class TranscriptionEngine {
         micTask?.cancel()
         micTask = nil
         micCapture.stop()
+        micIsSpeaking = false
 
         currentMicDeviceID = targetMicID
 
@@ -259,6 +284,13 @@ final class TranscriptionEngine {
                 Task { @MainActor in
                     store.volatileYouText = ""
                     store.append(Utterance(text: text, speaker: .you))
+                }
+            },
+            onSpeechActivity: { [weak self] speaking in
+                Task { @MainActor in
+                    guard let self else { return }
+                    self.micIsSpeaking = speaking
+                    if speaking { self.hasDetectedSpeech = true }
                 }
             }
         )
@@ -357,6 +389,9 @@ final class TranscriptionEngine {
         micCapture.stop()
         currentMicDeviceID = 0
         isRunning = false
+        hasDetectedSpeech = false
+        micIsSpeaking = false
+        sysIsSpeaking = false
         assetStatus = "Ready"
     }
 

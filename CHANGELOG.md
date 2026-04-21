@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.1.0] — 2026-04-20
+
+### UX / Redesign — "Quiet Chronicle"
+- Three-column shell with Library (270), flex Transcript, and Details (240) columns separated by 0.5pt rule hairlines. Window minimums bumped to 960×640; default 1280×820.
+- Native macOS titlebar with centered "PS Transcribe" title via `NSToolbar.centeredItemIdentifier`. Grey RecordingNameField top strip removed; `⌘⇧S` keeps sidebar-toggle accessible.
+- Settings window retitled `PS Transcribe - Settings`; Audio Input moved to top of Settings.
+- New `DesignTokens.swift` with paper palette, Spacing/Radius/Shadow tokens, Chronicle sans/serif/mono font helpers + reusable text-style modifiers.
+- Library sidebar rewritten: bold "Library" header with count, search field, date-grouped (`APR 20`) entries with 22pt icon chips, card-style white selected row with hairline + soft shadow, 10pt inter-item spacing.
+- Capture Dock moved into the sidebar footer: status dot (green→red pulsing), `READY` / `RECORDING · MM:SS`, input device label, rolling 16-bar waveform strip while recording. Primary button = video-icon Meeting (dark bg, red stop-circle when recording), secondary = mic-icon Memo (white, 50/50 split).
+- Transcript column: new `Transcript` meta label + name header with live meta (`In progress · 12s · 1 speaker`) or archived meta (`Apr 17, 2026 · 1h 12m · 2 speakers`). Inline rename — double-click or right-click → text field auto-selects, commits on Return or focus-loss, Escape cancels.
+- Transcript content rewritten as chat bubbles: max 50% column width; "You" right-aligned dark on paper, others left-aligned soft sage. Joining corners flatten when same speaker continues. Timestamps inline, 0.5 opacity.
+- Details pane: `DETAILS` label pinned; when entry selected, shows `Saved to` (Folder/File/Duration), `Sent to` (Notion/Obsidian sync status in liveGreen or faint), `Speakers` (word-count percentages parsed off-main).
+
+### Features
+- VAD-based auto-stop endpointer replaces the 120s RMS threshold. Uses FluidAudio Silero VAD `speechStart`/`speechEnd` events. Mode-keyed thresholds: voice memo = 6s trailing silence, call capture = 120s. Won't arm until VAD has confirmed at least one speech segment.
+- Notion auto-send on recording end, opt-in via new `notionAutoSendEnabled` setting. Posts with empty tags after finalization; users can add tags later via the existing "Resend to Notion" flow (which updates the same page).
+- New Obsidian settings section: status dot + vault detection via `obsidianVaultForPath`, Meetings/Voice folder rows with Choose/Remove, guard at session start that aborts with a surfaced error if no Obsidian folder is configured for that session type.
+
+### Fixes / Internals
+- Build cache regenerated after repo rename (Tome/PSTranscribe → ps-transcribe/PSTranscribe).
+- `TranscriptionEngine` now surfaces `isSpeaking` (mic OR system) and `hasDetectedSpeech` (armed flag) by wiring new `onSpeechActivity` callbacks from both `StreamingTranscriber` instances and the `restartMic` path.
+
 ## [2.0.0] — 2026-04-14
 
 ### Breaking

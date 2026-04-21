@@ -25,49 +25,6 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            Section("Output Folders") {
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Meetings")
-                            .font(.system(size: 12, weight: .medium))
-                        Text(settings.vaultMeetingsPath.isEmpty ? "No folder selected" : settings.vaultMeetingsPath)
-                            .font(.system(size: 11))
-                            .foregroundStyle(settings.vaultMeetingsPath.isEmpty ? .tertiary : .secondary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                    }
-
-                    Spacer()
-
-                    Button("Choose...") {
-                        chooseFolder(message: "Choose the folder for meeting transcripts") { path in
-                            settings.vaultMeetingsPath = path
-                        }
-                    }
-                }
-
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Voice Memos")
-                            .font(.system(size: 12, weight: .medium))
-                        Text(settings.vaultVoicePath.isEmpty ? "No folder selected" : settings.vaultVoicePath)
-                            .font(.system(size: 11))
-                            .foregroundStyle(settings.vaultVoicePath.isEmpty ? .tertiary : .secondary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                    }
-
-                    Spacer()
-
-                    Button("Choose...") {
-                        chooseFolder(message: "Choose the folder for voice memo transcripts") { path in
-                            settings.vaultVoicePath = path
-                        }
-                    }
-                }
-
-            }
-
             Section("Audio Input") {
                 Picker("Microphone", selection: $settings.inputDeviceID) {
                     Text("System Default").tag(AudioDeviceID(0))
@@ -76,6 +33,10 @@ struct SettingsView: View {
                     }
                 }
                 .font(.system(size: 12))
+            }
+
+            Section("Obsidian") {
+                obsidianSectionContent
             }
 
             Section("Notion") {
@@ -104,6 +65,105 @@ struct SettingsView: View {
             inputDevices = MicCapture.availableInputDevices()
             notionDatabaseInput = settings.notionDatabaseID
             autoValidateNotionIfNeeded()
+        }
+    }
+
+    // MARK: - Obsidian section content
+
+    /// Detected Obsidian vault for either configured folder path, if any.
+    private var detectedObsidianVault: (root: String, name: String)? {
+        if !settings.vaultMeetingsPath.isEmpty,
+           let v = obsidianVaultForPath(settings.vaultMeetingsPath) { return v }
+        if !settings.vaultVoicePath.isEmpty,
+           let v = obsidianVaultForPath(settings.vaultVoicePath) { return v }
+        return nil
+    }
+
+    private var hasAnyObsidianFolder: Bool {
+        !settings.vaultMeetingsPath.isEmpty || !settings.vaultVoicePath.isEmpty
+    }
+
+    @ViewBuilder
+    private var obsidianSectionContent: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            // Status line — mirrors the Notion "Connected to ..." row
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(hasAnyObsidianFolder ? (detectedObsidianVault != nil ? .green : .orange) : .gray)
+                    .frame(width: 8, height: 8)
+                Text(obsidianStatusText)
+                    .font(.system(size: 12))
+                Spacer()
+            }
+
+            if !hasAnyObsidianFolder {
+                Text("Transcripts won't be saved until a folder is configured below.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+            }
+
+            Divider().padding(.vertical, 2)
+
+            obsidianFolderRow(
+                label: "Meetings folder",
+                path: settings.vaultMeetingsPath,
+                onChoose: { path in settings.vaultMeetingsPath = path },
+                onClear:  { settings.vaultMeetingsPath = "" },
+                chooseMessage: "Choose the folder for meeting transcripts"
+            )
+
+            obsidianFolderRow(
+                label: "Voice memos folder",
+                path: settings.vaultVoicePath,
+                onChoose: { path in settings.vaultVoicePath = path },
+                onClear:  { settings.vaultVoicePath = "" },
+                chooseMessage: "Choose the folder for voice memo transcripts"
+            )
+        }
+    }
+
+    private var obsidianStatusText: String {
+        if let vault = detectedObsidianVault {
+            return "Connected to vault: \(vault.name)"
+        }
+        if hasAnyObsidianFolder {
+            return "Folder set, but not inside an Obsidian vault"
+        }
+        return "Not configured"
+    }
+
+    @ViewBuilder
+    private func obsidianFolderRow(
+        label: String,
+        path: String,
+        onChoose: @escaping (String) -> Void,
+        onClear: @escaping () -> Void,
+        chooseMessage: String
+    ) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(label)
+                    .font(.system(size: 12, weight: .medium))
+                Text(path.isEmpty ? "No folder selected" : path)
+                    .font(.system(size: 11))
+                    .foregroundStyle(path.isEmpty ? .tertiary : .secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+
+            Spacer()
+
+            if !path.isEmpty {
+                Button("Remove") {
+                    onClear()
+                }
+                .font(.system(size: 11))
+                .foregroundStyle(.red)
+            }
+
+            Button(path.isEmpty ? "Choose..." : "Change...") {
+                chooseFolder(message: chooseMessage, onSelect: onChoose)
+            }
         }
     }
 
@@ -212,6 +272,20 @@ struct SettingsView: View {
                     }
                     .font(.system(size: 11))
                 }
+
+                Divider().padding(.vertical, 2)
+
+                Toggle(isOn: $settings.notionAutoSendEnabled) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Auto-send on recording end")
+                            .font(.system(size: 12))
+                        Text("Creates a Notion page when a recording stops. Add tags later with \"Resend to Notion.\"")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .toggleStyle(.switch)
             }
         }
     }
