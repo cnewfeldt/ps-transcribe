@@ -20,7 +20,7 @@
 - v1.1 continues v1.0's numbering; first v1.1 phase is 11.
 
 - [x] **Phase 11: Website Scaffolding & Vercel Deployment** — `/website` subdir with Next.js + TypeScript, Vercel auto-deploy, preview URLs, production on `ps-transcribe.vercel.app` (completed 2026-04-22)
-- [ ] **Phase 12: Chronicle Design System Port** — palette tokens, font loading (Inter + Spectral + JetBrains Mono), reusable primitives, light-mode only
+- [x] **Phase 12: Chronicle Design System Port** — palette tokens, font loading (Inter + Spectral + JetBrains Mono), reusable primitives, light-mode only (completed 2026-04-22)
 - [ ] **Phase 13: Landing Page** — hero with download CTA, feature blocks, keyboard-shortcuts callout, nav + footer
 - [ ] **Phase 14: Docs Section** — MDX-rendered doc pages with sidebar nav, initial pages (Getting Started, Shortcuts, FAQ, Troubleshooting), right-hand TOC
 - [ ] **Phase 15: Changelog Page** — build-time parsing of `CHANGELOG.md` rendered as release cards in reverse chronological order
@@ -53,10 +53,10 @@
   3. A Button (primary + secondary), Card, MetaLabel, SectionHeading, and CodeBlock component exist in the codebase and render correctly on a dev page
   4. Visiting the site in a browser set to "prefers dark" still renders the light-mode paper palette — no dark-mode variants ship
 **Plans**: 4 plans
-- [ ] 12-01-tokens-globals-css-PLAN.md -- Rewrite globals.css with 16 Chronicle colors + 5 radii + 3 shadows + font fallback chains; strip dark-mode block; add color-scheme: light (DESIGN-01, DESIGN-02, DESIGN-04)
-- [ ] 12-02-layout-viewport-PLAN.md -- Add Next 16 Viewport export with colorScheme: 'light' to layout.tsx; clean up body inline style (DESIGN-02, DESIGN-04)
-- [ ] 12-03-ui-primitives-PLAN.md -- Create Button / Card / MetaLabel / SectionHeading / CodeBlock primitives + barrel export in src/components/ui/ (DESIGN-03)
-- [ ] 12-04-design-system-showcase-PLAN.md -- Build /design-system noindex route with palette grid + primitive gallery + typography scale (DESIGN-01, DESIGN-03, DESIGN-04)
+- [x] 12-01-tokens-globals-css-PLAN.md -- Rewrite globals.css with 16 Chronicle colors + 5 radii + 3 shadows + font fallback chains; strip dark-mode block; add color-scheme: light (DESIGN-01, DESIGN-02, DESIGN-04)
+- [x] 12-02-layout-viewport-PLAN.md -- Add Next 16 Viewport export with colorScheme: 'light' to layout.tsx; clean up body inline style (DESIGN-02, DESIGN-04)
+- [x] 12-03-ui-primitives-PLAN.md -- Create Button / Card / MetaLabel / SectionHeading / CodeBlock primitives + barrel export in src/components/ui/ (DESIGN-03)
+- [x] 12-04-design-system-showcase-PLAN.md -- Build /design-system noindex route with palette grid + primitive gallery + typography scale (DESIGN-01, DESIGN-03, DESIGN-04)
 **UI hint**: yes
 
 ### Phase 13: Landing Page
@@ -105,7 +105,7 @@ Phases execute in numeric order: 11 → 12 → 13 → 14 → 15. Phases 13, 14, 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 11. Website Scaffolding & Vercel Deployment | v1.1 | 3/3 | Complete    | 2026-04-22 |
-| 12. Chronicle Design System Port | v1.1 | 0/4   | Not started | - |
+| 12. Chronicle Design System Port | v1.1 | 4/4 | Complete    | 2026-04-22 |
 | 13. Landing Page | v1.1 | 0/TBD | Not started | - |
 | 14. Docs Section | v1.1 | 0/TBD | Not started | - |
 | 15. Changelog Page | v1.1 | 0/TBD | Not started | - |
