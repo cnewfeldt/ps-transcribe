@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: — Marketing Website
-status: planning
+status: executing
 stopped_at: Phase 11 context gathered
-last_updated: "2026-04-22T19:09:48.074Z"
-last_activity: 2026-04-21 — Roadmap for v1.1 created, 25 requirements mapped across 5 phases
+last_updated: "2026-04-22T20:24:18.966Z"
+last_activity: 2026-04-22 -- Phase 11 execution started
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
+  total_plans: 3
   completed_plans: 0
   percent: 0
 ---
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Users can record conversations and voice memos with accurate, private, on-device transcription. All processing stays on-device.
-**Current focus:** v1.1 Marketing Website — landing + docs + changelog on Next.js/Vercel at `ps-transcribe.vercel.app`, reusing Chronicle design. Subdirectory `/website` inside this repo.
+**Current focus:** Phase 11 — website-scaffolding-vercel-deployment
 
 **2026-04-04 scope reduction:** Phases 5 (Ollama Integration) and 6 (Live LLM Analysis) were abandoned in v1.0. PS Transcribe is scoped to transcription only; LLM analysis of transcripts is not part of the product. Implementation preserved at git tag `archive/llm-analysis-attempt`.
 
 ## Current Position
 
-Phase: 11 of 15 (Website Scaffolding & Vercel Deployment) — v1.1 phases are 11–15
-Plan: — (none yet)
-Status: Ready to plan
-Last activity: 2026-04-21 — Roadmap for v1.1 created, 25 requirements mapped across 5 phases
+Phase: 11 (website-scaffolding-vercel-deployment) — EXECUTING
+Plan: 1 of 3
+Status: Executing Phase 11
+Last activity: 2026-04-22 -- Phase 11 execution started
 
 Progress: [░░░░░░░░░░] 0%
 

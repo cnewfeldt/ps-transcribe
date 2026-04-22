@@ -37,7 +37,10 @@
   3. `ps-transcribe.vercel.app` serves the latest `main`-branch build (blank-but-live is acceptable at this phase)
   4. `git status` shows no `.next/` or `node_modules/` files ever staged from the `/website` subdir
   5. The Swift package at the repo root still builds; the website has its own isolated `package.json`
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 11-01-scaffold-PLAN.md — Scaffold Next.js 16 + TS + App Router at /website via create-next-app, pin Node 22, extend .gitignore
+- [ ] 11-02-content-metadata-PLAN.md — Wire three Chronicle fonts (Inter/Spectral/JetBrains Mono), ship Chronicle placeholder page, full file-based metadata suite (sitemap, robots, manifest, OG image, icons)
+- [ ] 11-03-vercel-deploy-PLAN.md — Connect Vercel project via dashboard (Root Directory = website, Ignored Build Step, production slug), verify 18-probe validation suite against production URL
 **UI hint**: yes
 
 ### Phase 12: Chronicle Design System Port
@@ -97,7 +100,7 @@ Phases execute in numeric order: 11 → 12 → 13 → 14 → 15. Phases 13, 14, 
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 11. Website Scaffolding & Vercel Deployment | v1.1 | 0/TBD | Not started | - |
+| 11. Website Scaffolding & Vercel Deployment | v1.1 | 0/3 | Not started | - |
 | 12. Chronicle Design System Port | v1.1 | 0/TBD | Not started | - |
 | 13. Landing Page | v1.1 | 0/TBD | Not started | - |
 | 14. Docs Section | v1.1 | 0/TBD | Not started | - |
