@@ -61,6 +61,71 @@ if [[ -f "$ICON_PATH" ]]; then
   echo "App icon copied"
 fi
 
+# Bundle licenses — required by MIT / Apache 2.0 terms for upstream deps.
+# Fails the build loudly if any expected file is missing so we don't ship
+# out of compliance.
+echo "=== Bundling licenses ==="
+LICENSES_OUT="$APP_DIR/Contents/Resources"
+CHECKOUTS="$SWIFT_DIR/.build/checkouts"
+
+# Project LICENSE (covers PS Transcribe, Tome, OpenGranola per MIT)
+if [[ ! -f "$ROOT_DIR/LICENSE" ]]; then
+  echo "ERROR: $ROOT_DIR/LICENSE missing — cannot ship without project LICENSE"; exit 1
+fi
+cp "$ROOT_DIR/LICENSE" "$LICENSES_OUT/LICENSE.txt"
+
+# Concatenate third-party license text
+THIRD_PARTY="$LICENSES_OUT/ThirdPartyLicenses.txt"
+{
+  echo "# Third-party licenses"
+  echo ""
+  echo "PS Transcribe bundles the following open-source components. Each section"
+  echo "reproduces the license text from the upstream project as required by its"
+  echo "terms. See LICENSE.txt for PS Transcribe's own license and copyright."
+  echo ""
+
+  echo "================================================================================"
+  echo "Sparkle — https://github.com/sparkle-project/Sparkle"
+  echo "================================================================================"
+  echo ""
+  if [[ -f "$CHECKOUTS/Sparkle/LICENSE" ]]; then
+    cat "$CHECKOUTS/Sparkle/LICENSE"
+  else
+    echo "ERROR: Sparkle LICENSE not found at $CHECKOUTS/Sparkle/LICENSE"; exit 1
+  fi
+  echo ""; echo ""
+
+  echo "================================================================================"
+  echo "FluidAudio — https://github.com/FluidInference/FluidAudio"
+  echo "================================================================================"
+  echo ""
+  if [[ -f "$CHECKOUTS/FluidAudio/LICENSE" ]]; then
+    cat "$CHECKOUTS/FluidAudio/LICENSE"
+  else
+    echo "ERROR: FluidAudio LICENSE not found at $CHECKOUTS/FluidAudio/LICENSE"; exit 1
+  fi
+  echo ""; echo ""
+
+  # FluidAudio's own upstream dependencies (pre-concatenated in their repo)
+  FA_THIRD_PARTY="$CHECKOUTS/FluidAudio/ThirdPartyLicenses"
+  if [[ -d "$FA_THIRD_PARTY" ]]; then
+    for lic in "$FA_THIRD_PARTY"/*; do
+      [[ -f "$lic" ]] || continue
+      name="$(basename "$lic")"
+      echo "================================================================================"
+      echo "FluidAudio dependency: $name"
+      echo "================================================================================"
+      echo ""
+      cat "$lic"
+      echo ""; echo ""
+    done
+  fi
+} > "$THIRD_PARTY"
+
+echo "Licenses bundled:"
+echo "  - $LICENSES_OUT/LICENSE.txt"
+echo "  - $THIRD_PARTY"
+
 # Copy Sparkle framework
 SPARKLE_ARTIFACT_DIR="$SWIFT_DIR/.build/artifacts/sparkle"
 SPARKLE_FW=$(find "$SPARKLE_ARTIFACT_DIR" -name "Sparkle.framework" -type d 2>/dev/null | head -1)

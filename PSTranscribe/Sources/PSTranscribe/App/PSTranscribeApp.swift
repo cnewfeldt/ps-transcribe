@@ -13,6 +13,24 @@ struct PSTranscribeApp: App {
         _settings = State(initialValue: AppSettings())
     }
 
+    /// Opens a bundled license resource (e.g. "LICENSE" or "ThirdPartyLicenses")
+    /// in the user's default .txt viewer. Extensions are tried in preference order.
+    static func openBundledResource(named base: String) {
+        let bundle = Bundle.main
+        let candidates = ["txt", "md", ""]
+        for ext in candidates {
+            if let url = bundle.url(forResource: base, withExtension: ext.isEmpty ? nil : ext) {
+                NSWorkspace.shared.open(url)
+                return
+            }
+        }
+        // Fall back to a quick alert if the file is missing from the bundle.
+        let alert = NSAlert()
+        alert.messageText = "File not found"
+        alert.informativeText = "\(base) isn't bundled with this build."
+        alert.runModal()
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView(settings: settings, notionService: notionService)
@@ -24,6 +42,13 @@ struct PSTranscribeApp: App {
         .commands {
             CommandGroup(after: .appInfo) {
                 CheckForUpdatesView(updater: updaterController.updater)
+            }
+            // Help → License and Third-party notices. Required to satisfy
+            // upstream MIT / Apache 2.0 attribution for shipped binaries.
+            CommandGroup(after: .help) {
+                Divider()
+                Button("License…") { Self.openBundledResource(named: "LICENSE") }
+                Button("Third-party Licenses…") { Self.openBundledResource(named: "ThirdPartyLicenses") }
             }
         }
         Settings {
