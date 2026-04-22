@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Changelog — PS Transcribe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Spectral:ital,wght@0,300;0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/tokens.css">
+<style>
+  .cl-hero { padding: 64px 0 40px; border-bottom: 0.5px solid var(--rule); }
+  .cl-hero .meta { display: inline-block; margin-bottom: 18px; }
+  .cl-hero h1 { font-family: var(--font-serif); font-weight: 400; font-size: clamp(40px, 5vw, 56px); letter-spacing: -0.015em; line-height: 1.08; margin: 0; }
+  .cl-hero p { color: var(--ink-muted); max-width: 52ch; margin: 18px 0 0; font-size: 17px; line-height: 1.55; }
+
+  .cl-stream { padding: 48px 0 96px; display: grid; grid-template-columns: 180px 1fr; gap: 48px; }
+  @media (max-width: 820px) { .cl-stream { grid-template-columns: 1fr; gap: 22px; } }
+
+  .cl-filters {
+    position: sticky; top: 84px; align-self: start;
+  }
+  .cl-filters h5 {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink-faint); font-weight: 500; margin: 0 0 12px;
+  }
+  .cl-filters ul { list-style: none; margin: 0 0 28px; padding: 0; display: grid; gap: 4px; }
+  .cl-filters a {
+    display: flex; justify-content: space-between;
+    padding: 5px 10px; border-radius: 6px;
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em;
+    color: var(--ink-muted); text-decoration: none;
+  }
+  .cl-filters a:hover { background: var(--paper-warm); color: var(--ink); }
+  .cl-filters a.is-active { background: var(--paper-warm); color: var(--ink); }
+  .cl-filters a small { color: var(--ink-ghost); }
+
+  .releases { display: flex; flex-direction: column; gap: 28px; }
+  .release { border: 0.5px solid var(--rule); border-radius: 10px; padding: 32px 36px; background: var(--paper); position: relative; }
+  .release--current { background: var(--paper); border-color: rgba(43,74,122,0.2); box-shadow: var(--shadow-lift); }
+  .release--older { opacity: 0.92; }
+
+  .release__head { display: flex; align-items: baseline; justify-content: space-between; gap: 18px; padding-bottom: 18px; margin-bottom: 20px; border-bottom: 0.5px solid var(--rule); flex-wrap: wrap; }
+  .release__head .left { display: flex; align-items: baseline; gap: 20px; flex-wrap: wrap; }
+  .release__date { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
+  .release__ver { font-family: var(--font-serif); font-size: 32px; font-weight: 400; letter-spacing: -0.01em; color: var(--ink); line-height: 1; }
+  .release__codename { font-family: var(--font-serif); font-size: 17px; font-style: italic; color: var(--ink-muted); }
+  .release__meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  .release__summary { font-family: var(--font-serif); font-size: 18px; line-height: 1.45; color: var(--ink); margin: 0 0 22px; max-width: 56ch; font-style: italic; font-weight: 300; }
+
+  .release__sections { display: grid; gap: 20px; }
+  .sec { display: grid; grid-template-columns: 110px 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 680px) { .sec { grid-template-columns: 1fr; gap: 4px; } }
+  .sec h4 {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ink-faint); font-weight: 500;
+    margin: 6px 0 0;
+  }
+  .sec--features h4 { color: var(--accent-ink); }
+  .sec--ux h4 { color: var(--spk2-rail); }
+  .sec--fixes h4 { color: var(--ink-muted); }
+  .sec--breaking h4 { color: var(--rec-red); }
+
+  .sec ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .sec li { display: flex; gap: 10px; font-size: 14.5px; color: var(--ink); line-height: 1.55; }
+  .sec li::before {
+    content: ""; flex: 0 0 auto; width: 4px; height: 4px; border-radius: 999px;
+    background: var(--ink-ghost); margin-top: 10px;
+  }
+  .sec--features li::before { background: var(--accent-ink); }
+  .sec--ux li::before { background: var(--spk2-rail); }
+  .sec--breaking li::before { background: var(--rec-red); }
+  .sec li code { font-size: 12.5px; }
+
+  .release__foot { margin-top: 26px; padding-top: 18px; border-top: 0.5px solid var(--rule); display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); flex-wrap: wrap; gap: 10px; }
+  .release__foot a { color: var(--ink-muted); text-decoration: none; }
+  .release__foot a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+
+  .timeline-dot {
+    position: absolute; left: -24px; top: 36px;
+    width: 10px; height: 10px; border-radius: 999px;
+    background: var(--paper); border: 1px solid var(--rule-strong);
+  }
+  .release--current .timeline-dot { background: var(--accent-ink); border-color: var(--accent-ink); box-shadow: 0 0 0 3px var(--accent-tint); }
+
+  @media (min-width: 820px) {
+    .releases { position: relative; padding-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<header class="nav" id="nav">
+  <div class="container nav__row">
+    <a href="index.html" class="wordmark"><span class="dot-mark"></span>PS&nbsp;Transcribe</a>
+    <nav class="nav__links">
+      <a href="docs.html">Docs</a>
+      <a href="changelog.html" class="is-active">Changelog</a>
+      <a href="#">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<section class="cl-hero">
+  <div class="container">
+    <span class="meta">Changelog</span>
+    <h1>Every release.</h1>
+    <p>Notes from each version of PS Transcribe, newest first. Auto-update through Sparkle will always bring you here if you want the full picture.</p>
+  </div>
+</section>
+
+<div class="container cl-stream">
+  <aside class="cl-filters">
+    <h5>Versions</h5>
+    <ul>
+      <li><a href="#v2-1-0" class="is-active">v2.1.0 <small>Apr 20</small></a></li>
+      <li><a href="#v2-0-0">v2.0.0 <small>Mar 02</small></a></li>
+      <li><a href="#v1-4-2">v1.4.2 <small>Feb 08</small></a></li>
+      <li><a href="#v1-4-0">v1.4.0 <small>Jan 14</small></a></li>
+    </ul>
+    <h5>Subscribe</h5>
+    <ul>
+      <li><a href="#">RSS feed</a></li>
+      <li><a href="#">Sparkle appcast</a></li>
+      <li><a href="#">GitHub releases</a></li>
+    </ul>
+  </aside>
+
+  <main class="releases">
+
+    <!-- v2.1.0 current -->
+    <article class="release release--current" id="v2-1-0">
+      <div class="release__head">
+        <div class="left">
+          <span class="release__date">Apr 20, 2026</span>
+          <h2 class="release__ver">v2.1.0</h2>
+          <span class="release__codename">"Silent Quarter"</span>
+        </div>
+        <div class="release__meta">
+          <span class="pill pill--live"><span class="led"></span>Current</span>
+          <span class="pill pill--sage">Recommended</span>
+        </div>
+      </div>
+
+      <p class="release__summary">Diarization got meaningfully better, the sidebar got quieter, and three long-standing ScreenCaptureKit flakes are gone.</p>
+
+      <div class="release__sections">
+        <div class="sec sec--features">
+          <h4>Features</h4>
+          <ul>
+            <li>Post-session diarization now uses FluidAudio's updated clusterer; fewer false speakers on calls with overlapping talk.</li>
+            <li>Notion integration now supports rollup properties on the destination database.</li>
+            <li>Preferences gained a <code>Vault → Per-recording path template</code> field, with <code>{{year}}</code> / <code>{{month}}</code> / <code>{{title}}</code> tokens.</li>
+          </ul>
+        </div>
+        <div class="sec sec--ux">
+          <h4>Interface</h4>
+          <ul>
+            <li>Library rows stay paper-colored when unfocused instead of shifting to warm gray — matches the rest of the app's quietness.</li>
+            <li>Speaker rename (<span class="kbd">⌘</span>&nbsp;<span class="kbd">E</span>) now shows a 200ms confirmation flash on all affected bubbles.</li>
+            <li>Inspector column collapses below 900px window width.</li>
+          </ul>
+        </div>
+        <div class="sec sec--fixes">
+          <h4>Fixes</h4>
+          <ul>
+            <li>Fixed a ScreenCaptureKit hang when switching audio outputs mid-recording.</li>
+            <li>Fixed frontmatter writing double-escaped quotes in <code>participants:</code> for names with apostrophes.</li>
+            <li>Fixed Sparkle update prompt reappearing after dismissal on the same session.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="release__foot">
+        <span>Signed DMG · 34.2 MB · macOS 14+</span>
+        <span><a href="#">Download →</a>&nbsp;&nbsp;<a href="#">Diff from v2.0.0 →</a></span>
+      </div>
+      <div class="timeline-dot" aria-hidden="true"></div>
+    </article>
+
+    <!-- v2.0.0 -->
+    <article class="release" id="v2-0-0">
+      <div class="release__head">
+        <div class="left">
+          <span class="release__date">Mar 02, 2026</span>
+          <h2 class="release__ver">v2.0.0</h2>
+          <span class="release__codename">"Quiet Chronicle"</span>
+        </div>
+        <div class="release__meta">
+          <span class="pill" style="background: rgba(194,74,62,0.08); color: var(--rec-red); border-color: rgba(194,74,62,0.2);">Breaking</span>
+        </div>
+      </div>
+
+      <p class="release__summary">Full visual rewrite around the Chronicle paper palette. New dual-stream capture pipeline. The app is quieter now — in every sense.</p>
+
+      <div class="release__sections">
+        <div class="sec sec--features">
+          <h4>Features</h4>
+          <ul>
+            <li>Dual-stream capture: microphone + system audio via ScreenCaptureKit, recorded in parallel.</li>
+            <li>Post-session speaker diarization with FluidAudio clusterer.</li>
+            <li>Inline speaker rename (<span class="kbd">⌘</span>&nbsp;<span class="kbd">E</span>).</li>
+            <li>Notion integration: send finished sessions to a database as new pages.</li>
+          </ul>
+        </div>
+        <div class="sec sec--ux">
+          <h4>Interface</h4>
+          <ul>
+            <li>Chronicle design system: paper backgrounds, hairline rules, three-column window.</li>
+            <li>Chat-bubble transcript view with sage rail for the other speaker.</li>
+            <li>Spectral for titles, Inter for body, JetBrains Mono for meta.</li>
+          </ul>
+        </div>
+        <div class="sec sec--breaking">
+          <h4>Breaking</h4>
+          <ul>
+            <li>Transcript JSON schema updated; v1 sessions are auto-migrated once on first launch. Back up your vault if you've customized the format.</li>
+            <li>Removed the experimental Whisper backend; Parakeet-TDT is now the only option.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="release__foot">
+        <span>Signed DMG · 33.8 MB · macOS 14+</span>
+        <span><a href="#">Download →</a>&nbsp;&nbsp;<a href="#">Diff from v1.4.2 →</a></span>
+      </div>
+      <div class="timeline-dot" aria-hidden="true"></div>
+    </article>
+
+    <!-- v1.4.2 -->
+    <article class="release release--older" id="v1-4-2">
+      <div class="release__head">
+        <div class="left">
+          <span class="release__date">Feb 08, 2026</span>
+          <h2 class="release__ver">v1.4.2</h2>
+        </div>
+        <div class="release__meta">
+          <span class="pill">Patch</span>
+        </div>
+      </div>
+
+      <p class="release__summary">Small but annoying things. No new features.</p>
+
+      <div class="release__sections">
+        <div class="sec sec--fixes">
+          <h4>Fixes</h4>
+          <ul>
+            <li>Fixed a memory leak in the VAD loop during sessions longer than 45 minutes.</li>
+            <li>Fixed crash on launch when the configured vault folder had been deleted.</li>
+            <li>Fixed Obsidian frontmatter writing <code>duration</code> in milliseconds instead of a human-readable string.</li>
+            <li>Fixed keyboard focus getting lost after dismissing the Preferences window.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="release__foot">
+        <span>Signed DMG · 28.1 MB · macOS 13+</span>
+        <span><a href="#">Archive →</a></span>
+      </div>
+      <div class="timeline-dot" aria-hidden="true"></div>
+    </article>
+
+    <!-- v1.4.0 -->
+    <article class="release release--older" id="v1-4-0">
+      <div class="release__head">
+        <div class="left">
+          <span class="release__date">Jan 14, 2026</span>
+          <h2 class="release__ver">v1.4.0</h2>
+        </div>
+        <div class="release__meta">
+          <span class="pill">Minor</span>
+        </div>
+      </div>
+
+      <p class="release__summary">First release with an Obsidian vault integration. Previously transcripts went to a single flat folder; now they land anywhere in your vault.</p>
+
+      <div class="release__sections">
+        <div class="sec sec--features">
+          <h4>Features</h4>
+          <ul>
+            <li>Obsidian vault integration: configurable folder, path templates, YAML frontmatter.</li>
+            <li>Library view gained date-grouped sections.</li>
+            <li>Added <span class="kbd">⌘</span>&nbsp;<span class="kbd">K</span> quick switcher.</li>
+          </ul>
+        </div>
+        <div class="sec sec--ux">
+          <h4>Interface</h4>
+          <ul>
+            <li>Recording indicator moved from menu bar into the sidebar for visibility.</li>
+            <li>New Preferences window, split into Vault / Audio / Keyboard / About tabs.</li>
+          </ul>
+        </div>
+        <div class="sec sec--fixes">
+          <h4>Fixes</h4>
+          <ul>
+            <li>Fixed a permission prompt loop on fresh installs of macOS 14.3.</li>
+            <li>Fixed timestamp drift over hour-long recordings.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="release__foot">
+        <span>Signed DMG · 27.4 MB · macOS 13+</span>
+        <span><a href="#">Archive →</a></span>
+      </div>
+      <div class="timeline-dot" aria-hidden="true"></div>
+    </article>
+
+  </main>
+</div>
+
+<footer class="footer">
+  <div class="container footer__grid">
+    <div>
+      <div class="wordmark" style="font-size: 17px;"><span class="dot-mark"></span>PS Transcribe</div>
+      <p style="margin-top: 12px;">Native macOS transcription. MIT.</p>
+      <p>© 2026</p>
+    </div>
+    <div>
+      <h4>Product</h4>
+      <ul>
+        <li><a href="docs.html">Documentation</a></li>
+        <li><a href="changelog.html">Changelog</a></li>
+        <li><a href="index.html#download">Download DMG</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Source</h4>
+      <ul>
+        <li><a href="#">GitHub</a></li>
+        <li><a href="#">Report an issue</a></li>
+        <li><a href="#">License · MIT</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Nav scroll
+  (function(){
+    const nav = document.getElementById('nav');
+    const onScroll = () => nav.classList.toggle('is-scrolled', window.scrollY > 6);
+    document.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  })();
+
+  // Filter active-state on scroll
+  (function(){
+    const links = document.querySelectorAll('.cl-filters a[href^="#v"]');
+    const map = new Map();
+    links.forEach(a => {
+      const id = a.getAttribute('href').slice(1);
+      const el = document.getElementById(id);
+      if (el) map.set(el, a);
+    });
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) {
+          links.forEach(l => l.classList.remove('is-active'));
+          map.get(e.target)?.classList.add('is-active');
+        }
+      }
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    map.forEach((_, el) => io.observe(el));
+  })();
+</script>
+</body>
+</html>
