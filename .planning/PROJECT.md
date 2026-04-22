@@ -48,12 +48,32 @@ Users can record meetings and voice memos with accurate, private, on-device tran
 
 **Shipped:** v1.0 PS Transcribe (2026-04-14). Full rebrand from Tome, all 12 security findings resolved, crash recovery + diarization fixes, session library with right-click "Show in Finder" and Obsidian deep-link, recording naming + lifecycle, three-state mic button, model onboarding, Notion integration. 8 active phases, 45 requirements satisfied, 28 plans shipped. See [`milestones/v1.0-ROADMAP.md`](milestones/v1.0-ROADMAP.md).
 
+## Current Milestone: v1.1 Marketing Website
+
+**Goal:** Build and ship a marketing website at `ps-transcribe.vercel.app` — landing, docs, and changelog — using Next.js on Vercel, reusing the Chronicle design system for visual cohesion with the app.
+
+**Target features:**
+- Landing page — hero, feature highlights, product screenshots, download CTA pointing at GitHub Releases
+- Docs / help section — getting started, keyboard shortcuts, FAQ, troubleshooting (MDX content)
+- Changelog page — styled release-notes sourced from `CHANGELOG.md`
+- Chronicle design-system port — paper palette, Spectral/Inter/JetBrains Mono typography, navy accent, sage speaker-green
+- Vercel deployment — preview URLs per commit, production on `ps-transcribe.vercel.app`
+- Repo layout — `/website` subdirectory in this repo (separate `package.json` from the Swift package)
+- Claude Design brief — source document used to generate the site's design mocks
+
+**Scope boundaries:**
+- No custom domain (Vercel subdomain only; custom domain deferred)
+- No pricing page, no commerce — download CTA points at GitHub Releases
+- No blog, no newsletter
+- No analytics stack decision in this milestone (default Vercel Analytics if enabled)
+
 ## Next Milestone Goals
 
-None scoped yet. Run `/gsd-new-milestone` to define v1.1. Candidate areas informed by v1.0 deferrals and tech debt:
+Candidate areas for v1.2+ informed by v1.0 deferrals and tech debt:
 - OWNER placeholder in SUFeedURL and release-dmg.yml — replace with the real GitHub repo URL once finalized.
 - Nyquist validation gaps across phases 1/2/3/8/10 (full `/gsd-validate-phase` sweep).
 - Process improvement: `requirements_completed` frontmatter on future SUMMARY.md files.
+- Custom domain for marketing site.
 
 <details>
 <summary>Archived: v1.0 milestone goal</summary>
@@ -119,4 +139,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-07 after Phase 9 complete -- all v1.0 phases executed, verification sweep done*
+*Last updated: 2026-04-21 — v1.1 marketing website milestone started.*

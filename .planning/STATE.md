@@ -1,11 +1,11 @@
 ---
 gsd_state_version: 1.0
-milestone: none
-milestone_name: milestone
-status: Between milestones
-stopped_at: v1.0 shipped and archived
-last_updated: "2026-04-14T00:00:00Z"
-last_activity: 2026-04-14
+milestone: v1.1
+milestone_name: marketing-website
+status: Defining requirements
+stopped_at: null
+last_updated: "2026-04-21T00:00:00Z"
+last_activity: 2026-04-21
 progress:
   total_phases: 0
   completed_phases: 0
@@ -18,20 +18,19 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-04)
+See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Users can record conversations and voice memos with accurate, private, on-device transcription. All processing stays on-device.
-**Current focus:** v1.0 milestone shipped 2026-04-14. Between milestones — run `/gsd-new-milestone` to scope v1.1.
+**Current focus:** v1.1 Marketing Website — landing + docs + changelog on Next.js/Vercel, reusing Chronicle design. Subdirectory `/website` in this repo.
 
 **2026-04-04 scope reduction:** Phases 5 (Ollama Integration) and 6 (Live LLM Analysis) were abandoned. PS Transcribe is scoped to transcription only; LLM analysis of transcripts is not part of the product. Implementation preserved at git tag `archive/llm-analysis-attempt`.
 
 ## Current Position
 
-Phase: 10
-Plan: Not started
-Last activity: 2026-04-08
-
-Progress: [████████--] 80% (4 non-abandoned phases, 2 complete)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-21 — Milestone v1.1 started
 
 ## Performance Metrics
 
