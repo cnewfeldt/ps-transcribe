@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter, Spectral, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 
@@ -24,7 +24,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL('https://ps-transcribe-web.vercel.app'),
   title: {
-    default: 'PS Transcribe — Private, on-device transcription for macOS',
+    default: 'PS Transcribe -- Private, on-device transcription for macOS',
     template: '%s · PS Transcribe',
   },
   description: 'Private, on-device transcription for macOS.',
@@ -44,6 +44,10 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 }
 
+export const viewport: Viewport = {
+  colorScheme: 'light',
+}
+
 export default function RootLayout({
   children,
 }: {
@@ -54,7 +58,7 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${spectral.variable} ${jetbrainsMono.variable}`}
     >
-      <body style={{ fontFamily: 'var(--font-inter), system-ui, sans-serif' }}>
+      <body className="font-sans antialiased">
         {children}
       </body>
     </html>
