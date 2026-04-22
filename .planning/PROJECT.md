@@ -50,14 +50,16 @@ Users can record meetings and voice memos with accurate, private, on-device tran
 
 ## Current Milestone: v1.1 Marketing Website
 
-**Goal:** Build and ship a marketing website at `ps-transcribe.vercel.app` — landing, docs, and changelog — using Next.js on Vercel, reusing the Chronicle design system for visual cohesion with the app.
+**Goal:** Build and ship a marketing website at `ps-transcribe-web.vercel.app` — landing, docs, and changelog — using Next.js on Vercel, reusing the Chronicle design system for visual cohesion with the app.
+
+> Note: the canonical `ps-transcribe.vercel.app` slug was already claimed by another Vercel account at phase 11 setup time (2026-04-22), so the fallback slug `ps-transcribe-web.vercel.app` is the production host. A custom domain (v1.2 candidate) will supersede this.
 
 **Target features:**
 - Landing page — hero, feature highlights, product screenshots, download CTA pointing at GitHub Releases
 - Docs / help section — getting started, keyboard shortcuts, FAQ, troubleshooting (MDX content)
 - Changelog page — styled release-notes sourced from `CHANGELOG.md`
 - Chronicle design-system port — paper palette, Spectral/Inter/JetBrains Mono typography, navy accent, sage speaker-green
-- Vercel deployment — preview URLs per commit, production on `ps-transcribe.vercel.app`
+- Vercel deployment — preview URLs per commit, production on `ps-transcribe-web.vercel.app` (see note above on slug fallback)
 - Repo layout — `/website` subdirectory in this repo (separate `package.json` from the Swift package)
 - Claude Design brief — source document used to generate the site's design mocks
 
