@@ -1,26 +1,98 @@
 @import "tailwindcss";
 
+/* Chronicle tokens -- raw values (source of truth, per D-01 + D-11) */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Paper */
+  --color-paper:        #FAFAF7;
+  --color-paper-warm:   #F4F1EA;
+  --color-paper-soft:   #EEEAE0;
+
+  /* Rules (0.5px hairlines use these) */
+  --color-rule:         rgba(30, 30, 28, 0.08);
+  --color-rule-strong:  rgba(30, 30, 28, 0.14);
+
+  /* Ink */
+  --color-ink:          #1A1A17;
+  --color-ink-muted:    #595954;
+  --color-ink-faint:    #8A8A82;
+  --color-ink-ghost:    #B8B8AF;
+
+  /* Accents */
+  --color-accent-ink:   #2B4A7A;
+  --color-accent-soft:  #DFE6F0;
+  --color-accent-tint:  #F1F4F9;
+
+  /* Sage (speaker 2) */
+  --color-spk2-bg:      #E6ECEA;
+  --color-spk2-fg:      #2D4A43;
+  --color-spk2-rail:    #7FA093;
+
+  /* Status */
+  --color-rec-red:      #C24A3E;
+  --color-live-green:   #4A8A5E;
+
+  /* Radii */
+  --radius-input:       4px;
+  --radius-btn:         6px;
+  --radius-card:        10px;
+  --radius-bubble:      12px;
+  --radius-pill:        999px;
+
+  /* Shadows -- primary button intentionally two-layer (outer drop + inset highlight) */
+  --shadow-lift:        0 1px 3px rgba(30, 30, 28, 0.08);
+  --shadow-btn:         0 1px 2px rgba(30, 30, 28, 0.20), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --shadow-float:       0 8px 24px rgba(30, 30, 28, 0.12), 0 1px 3px rgba(30, 30, 28, 0.06);
 }
 
+/* Tailwind v4 theme re-export -- utilities reference var() not value (per D-01) */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Colors -- produces bg-paper, text-ink-muted, border-rule, ring-accent-ink, etc. */
+  --color-paper:        var(--color-paper);
+  --color-paper-warm:   var(--color-paper-warm);
+  --color-paper-soft:   var(--color-paper-soft);
+  --color-rule:         var(--color-rule);
+  --color-rule-strong:  var(--color-rule-strong);
+  --color-ink:          var(--color-ink);
+  --color-ink-muted:    var(--color-ink-muted);
+  --color-ink-faint:    var(--color-ink-faint);
+  --color-ink-ghost:    var(--color-ink-ghost);
+  --color-accent-ink:   var(--color-accent-ink);
+  --color-accent-soft:  var(--color-accent-soft);
+  --color-accent-tint:  var(--color-accent-tint);
+  --color-spk2-bg:      var(--color-spk2-bg);
+  --color-spk2-fg:      var(--color-spk2-fg);
+  --color-spk2-rail:    var(--color-spk2-rail);
+  --color-rec-red:      var(--color-rec-red);
+  --color-live-green:   var(--color-live-green);
+
+  /* Radii -- produces rounded-input, rounded-btn, rounded-card, rounded-bubble, rounded-pill */
+  --radius-input:       var(--radius-input);
+  --radius-btn:         var(--radius-btn);
+  --radius-card:        var(--radius-card);
+  --radius-bubble:      var(--radius-bubble);
+  --radius-pill:        var(--radius-pill);
+
+  /* Shadows -- produces shadow-lift, shadow-btn, shadow-float */
+  --shadow-lift:        var(--shadow-lift);
+  --shadow-btn:         var(--shadow-btn);
+  --shadow-float:       var(--shadow-float);
+
+  /* Font families -- compose cross-platform fallback chains around next/font variables from layout.tsx (per DESIGN-02) */
+  --font-sans:  var(--font-inter),          "SF Pro Text", -apple-system, system-ui, sans-serif;
+  --font-serif: var(--font-spectral),       "New York",    Georgia,       serif;
+  --font-mono:  var(--font-jetbrains-mono), "SF Mono",     Menlo,         monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Light-mode lock (DESIGN-04 layer 2 per D-14) */
+html {
+  color-scheme: light;
 }
 
+/* Minimal body reset -- Tailwind preflight handles most; this sets page defaults to Chronicle */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: var(--color-paper);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
 }
