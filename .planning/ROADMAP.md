@@ -52,7 +52,11 @@
   2. Inter, Spectral, and JetBrains Mono load via `next/font` on every page; system fallbacks (SF Pro, New York, SF Mono) appear if webfonts fail
   3. A Button (primary + secondary), Card, MetaLabel, SectionHeading, and CodeBlock component exist in the codebase and render correctly on a dev page
   4. Visiting the site in a browser set to "prefers dark" still renders the light-mode paper palette — no dark-mode variants ship
-**Plans**: TBD
+**Plans**: 4 plans
+- [ ] 12-01-tokens-globals-css-PLAN.md -- Rewrite globals.css with 16 Chronicle colors + 5 radii + 3 shadows + font fallback chains; strip dark-mode block; add color-scheme: light (DESIGN-01, DESIGN-02, DESIGN-04)
+- [ ] 12-02-layout-viewport-PLAN.md -- Add Next 16 Viewport export with colorScheme: 'light' to layout.tsx; clean up body inline style (DESIGN-02, DESIGN-04)
+- [ ] 12-03-ui-primitives-PLAN.md -- Create Button / Card / MetaLabel / SectionHeading / CodeBlock primitives + barrel export in src/components/ui/ (DESIGN-03)
+- [ ] 12-04-design-system-showcase-PLAN.md -- Build /design-system noindex route with palette grid + primitive gallery + typography scale (DESIGN-01, DESIGN-03, DESIGN-04)
 **UI hint**: yes
 
 ### Phase 13: Landing Page
@@ -101,7 +105,7 @@ Phases execute in numeric order: 11 → 12 → 13 → 14 → 15. Phases 13, 14, 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 11. Website Scaffolding & Vercel Deployment | v1.1 | 3/3 | Complete    | 2026-04-22 |
-| 12. Chronicle Design System Port | v1.1 | 0/TBD | Not started | - |
+| 12. Chronicle Design System Port | v1.1 | 0/4   | Not started | - |
 | 13. Landing Page | v1.1 | 0/TBD | Not started | - |
 | 14. Docs Section | v1.1 | 0/TBD | Not started | - |
 | 15. Changelog Page | v1.1 | 0/TBD | Not started | - |
