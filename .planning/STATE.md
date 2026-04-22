@@ -1,11 +1,11 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.1
-milestone_name: marketing-website
-status: Ready to plan
-stopped_at: null
-last_updated: "2026-04-21T00:00:00Z"
-last_activity: 2026-04-21
+milestone_name: — Marketing Website
+status: planning
+stopped_at: Phase 11 context gathered
+last_updated: "2026-04-22T19:09:48.074Z"
+last_activity: 2026-04-21 — Roadmap for v1.1 created, 25 requirements mapped across 5 phases
 progress:
   total_phases: 5
   completed_phases: 0
@@ -76,6 +76,6 @@ None blocking v1.1 scaffolding. Phase 11 is independent of the macOS app codebas
 
 ## Session Continuity
 
-Last session: 2026-04-21
-Stopped at: v1.1 roadmap created; phases 11–15 defined with 25 requirements mapped
-Resume file: None — ready for `/gsd-plan-phase 11`
+Last session: 2026-04-22T19:09:48.072Z
+Stopped at: Phase 11 context gathered
+Resume file: .planning/phases/11-website-scaffolding-vercel-deployment/11-CONTEXT.md
