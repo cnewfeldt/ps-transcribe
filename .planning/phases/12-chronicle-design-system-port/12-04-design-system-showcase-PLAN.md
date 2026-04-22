@@ -231,7 +231,7 @@ export default function DesignSystemPage() {
                   {group.swatches.map((s) => (
                     <div
                       key={s.name}
-                      className={`bg-${s.name} ${s.textClass} border-[0.5px] border-rule rounded-card p-4`}
+                      className={`${s.textClass} border-[0.5px] border-rule rounded-card p-4`}
                       style={{ backgroundColor: `var(--color-${s.name})` }}
                     >
                       <div className="font-mono text-[11px] tracking-[0.04em]">{s.name}</div>
@@ -327,11 +327,11 @@ export function CTA() {
 
 Implementation notes / rationale:
 - Path alias: imports use `@/components/ui` which resolves to `./src/components/ui/index.ts` per tsconfig.json paths.
-- Swatch rendering: uses inline `style={{ backgroundColor: 'var(--color-${s.name})' }}` so the 16 swatches render even if Tailwind's JIT misses any dynamic `bg-${s.name}` utility. This is defensive -- the styling purpose is verification, so we use CSS custom properties directly (D-01 allows both and verifies they resolve to the same value).
+- Swatch rendering: background color is set exclusively via inline `style={{ backgroundColor: 'var(--color-${s.name})' }}`. Do NOT include a dynamic `bg-${s.name}` className -- Tailwind's JIT cannot resolve interpolated utility names, so the class string would be dead DOM bytes. The inline CSS variable reference is the single source of truth for the swatch background and resolves against Plan 01's `:root` values directly.
 - Typography card uses inline Tailwind arbitrary values (`text-[clamp(...)]`, `leading-[...]`, `tracking-[...]`) to match chronicle-mock.css `.h-hero`, `.h-section`, `.h-feature`, `.lede` declarations literally.
 - Copy draws exclusively from the brief's voice examples ("Records both sides of your Zoom call, locally.", "No cloud, no telemetry.", "Private by default"). No Lorem ipsum. No em dashes -- uses `--` or rephrases.
 - The Unicode escapes `\u2318` (cmd) and `\u21e7` (shift) appear inside the CodeBlock inline demo so the literal keyboard glyphs render without needing the literal chars in the source (belt-and-suspenders against any editor mangling; the literal chars are also fine).
-- No `Metadata` import for `title`: we pass a simple string which Next will plug into the root layout's title template `%s · PS Transcribe` → "Design System · PS Transcribe".
+- No `Metadata` import for `title`: we pass a simple string which Next will plug into the root layout's title template `%s · PS Transcribe` -> "Design System · PS Transcribe".
 
 Forbidden in this task:
 - Do NOT modify `website/src/app/sitemap.ts` (D-09: must not list /design-system).
@@ -341,24 +341,27 @@ Forbidden in this task:
 - Do NOT use `dangerouslySetInnerHTML` for the CodeBlock content.
 - Do NOT use em dashes (`—`). Use `--` or rephrase.
 - Do NOT add /design-system to any sitemap or robots.ts file.
+- Do NOT use dynamic `bg-${s.name}` className interpolation on the swatch tiles (Tailwind JIT cannot see it; use inline CSS custom property reference only).
   </action>
   <verify>
-    <automated>cd website && test -f src/app/design-system/page.tsx && grep -q "from '@/components/ui'" src/app/design-system/page.tsx && grep -q "Button" src/app/design-system/page.tsx && grep -q "Card" src/app/design-system/page.tsx && grep -q "MetaLabel" src/app/design-system/page.tsx && grep -q "SectionHeading" src/app/design-system/page.tsx && grep -q "CodeBlock" src/app/design-system/page.tsx && grep -Eq "bg-(paper|ink|accent-ink|spk2-bg)" src/app/design-system/page.tsx && grep -q "index: *false" src/app/design-system/page.tsx && grep -q "follow: *false" src/app/design-system/page.tsx && ! grep -q "design-system" src/app/sitemap.ts && ! grep -P '\x{2014}' src/app/design-system/page.tsx && ! grep -n "^['\"]use client['\"]" src/app/design-system/page.tsx && ! grep -q "dangerouslySetInnerHTML" src/app/design-system/page.tsx && pnpm run build</automated>
+    <automated>cd website && test -f src/app/design-system/page.tsx && grep -q "from '@/components/ui'" src/app/design-system/page.tsx && grep -q "Button" src/app/design-system/page.tsx && grep -q "Card" src/app/design-system/page.tsx && grep -q "MetaLabel" src/app/design-system/page.tsx && grep -q "SectionHeading" src/app/design-system/page.tsx && grep -q "CodeBlock" src/app/design-system/page.tsx && grep -Eq "bg-(paper|ink|accent-ink|spk2-bg)" src/app/design-system/page.tsx && grep -q "index: *false" src/app/design-system/page.tsx && grep -q "follow: *false" src/app/design-system/page.tsx && ! grep -q "design-system" src/app/sitemap.ts && ! LC_ALL=C grep -l $'\xe2\x80\x94' src/app/design-system/page.tsx && ! grep -n "^['\"]use client['\"]" src/app/design-system/page.tsx && ! grep -q "dangerouslySetInnerHTML" src/app/design-system/page.tsx && ! grep -q 'bg-\${s\.name}' src/app/design-system/page.tsx && grep -q "backgroundColor: \`var(--color-\${s.name})\`" src/app/design-system/page.tsx && pnpm run build</automated>
   </verify>
   <acceptance_criteria>
     - Page file exists: `test -f website/src/app/design-system/page.tsx`
     - Imports from barrel: `grep -q "from '@/components/ui'" website/src/app/design-system/page.tsx`
     - All 5 primitives referenced: grep finds Button AND Card AND MetaLabel AND SectionHeading AND CodeBlock in the page
-    - Palette utility used: `grep -Eq "bg-(paper|ink|accent-ink|spk2-bg)" website/src/app/design-system/page.tsx`
+    - Palette utility used (in main/footer or similar static regions): `grep -Eq "bg-(paper|ink|accent-ink|spk2-bg)" website/src/app/design-system/page.tsx`
+    - Swatch tile uses inline var() for bg (no dynamic className): `grep -q "backgroundColor: \`var(--color-\${s.name})\`" website/src/app/design-system/page.tsx`
+    - Swatch tile does NOT use dynamic `bg-${s.name}` className: `! grep -q 'bg-\${s\.name}' website/src/app/design-system/page.tsx`
     - Noindex metadata present: `grep -q "index: *false" website/src/app/design-system/page.tsx && grep -q "follow: *false" website/src/app/design-system/page.tsx`
     - Sitemap unchanged: `! grep -q "design-system" website/src/app/sitemap.ts`
-    - No em dashes: `! grep -P '\x{2014}' website/src/app/design-system/page.tsx`
+    - No em dashes (portable, BSD+GNU grep compatible): `! LC_ALL=C grep -l $'\xe2\x80\x94' website/src/app/design-system/page.tsx`
     - Server component: `! grep -n "^['\"]use client['\"]" website/src/app/design-system/page.tsx`
     - No dangerouslySetInnerHTML: `! grep -q "dangerouslySetInnerHTML" website/src/app/design-system/page.tsx`
     - `cd website && pnpm run build` exits 0
   </acceptance_criteria>
   <done>
-`/design-system` route file compiles and renders palette + primitives + typography. Build is green. Page metadata emits noindex/nofollow. Sitemap is unchanged. Ready for the production HTML probes in Task 2.
+`/design-system` route file compiles and renders palette + primitives + typography. Build is green. Page metadata emits noindex/nofollow. Sitemap is unchanged. Swatch tiles use inline `var(--color-*)` for backgrounds (no dead `bg-${s.name}` class strings). Ready for the production HTML probes in Task 2.
   </done>
 </task>
 
@@ -393,9 +396,10 @@ done
 curl -s http://localhost:3000/ | grep -q 'name="color-scheme" content="light"' \
   || { echo "FAIL: no color-scheme meta on /"; kill $SERVER_PID; exit 1; }
 
-# Probe 2: /design-system emits noindex (D-09 / Plan 04 verify)
-curl -s http://localhost:3000/design-system | grep -q 'name="robots" content="noindex' \
-  || { echo "FAIL: /design-system missing noindex meta"; kill $SERVER_PID; exit 1; }
+# Probe 2: /design-system emits BOTH noindex AND nofollow (D-09 / Plan 04 verify)
+# Regex allows any whitespace/comma between the two tokens to tolerate Next's serialization.
+curl -s http://localhost:3000/design-system | grep -qE 'name="robots" content="noindex,[[:space:]]*nofollow"' \
+  || { echo "FAIL: /design-system missing noindex,nofollow meta"; kill $SERVER_PID; exit 1; }
 
 # Probe 3: /design-system renders primitive DOM signatures (bg-ink / border-rule / rounded-card etc.)
 DOM_HITS=$(curl -s http://localhost:3000/design-system | grep -Ec 'class="[^"]*(bg-ink|text-ink-faint|border-rule|rounded-card)')
@@ -414,7 +418,7 @@ echo "All probes green."
 
 If Probe 1 fails: check `website/src/app/layout.tsx` for `export const viewport: Viewport = { colorScheme: 'light' }`. Plan 02 owns this; if it is missing, return to Plan 02 verification.
 
-If Probe 2 fails: check `website/src/app/design-system/page.tsx` metadata export for `robots: { index: false, follow: false }`.
+If Probe 2 fails: check `website/src/app/design-system/page.tsx` metadata export for `robots: { index: false, follow: false }`. Next serializes this as `<meta name="robots" content="noindex, nofollow">` (with or without a space after the comma; the regex `[[:space:]]*` tolerates both).
 
 If Probe 3 fails: the primitives are not being rendered, or Tailwind's JIT did not generate the utilities. Check that Plan 03's primitive files have the literal class strings listed in their acceptance criteria.
 
@@ -423,17 +427,17 @@ Do NOT leave the `pnpm run start` process running. The `kill $SERVER_PID` at the
 Do NOT modify any source file in this task. All three failure modes above point back to earlier plans (02 or 03) for remediation; this task is read-only verification.
   </action>
   <verify>
-    <automated>cd website && pnpm run build && (pnpm run start & SERVER_PID=$!; for i in 1 2 3 4 5 6 7 8 9 10; do curl -fsS http://localhost:3000/ > /dev/null 2>&1 && break; sleep 1; done; R1=$(curl -s http://localhost:3000/ | grep -c 'name="color-scheme" content="light"'); R2=$(curl -s http://localhost:3000/design-system | grep -c 'name="robots" content="noindex'); R3=$(curl -s http://localhost:3000/design-system | grep -Ec 'class="[^"]*(bg-ink|text-ink-faint|border-rule|rounded-card)'); kill $SERVER_PID; wait $SERVER_PID 2>/dev/null; test "$R1" -ge 1 && test "$R2" -ge 1 && test "$R3" -ge 5)</automated>
+    <automated>cd website && pnpm run build && (pnpm run start & SERVER_PID=$!; for i in 1 2 3 4 5 6 7 8 9 10; do curl -fsS http://localhost:3000/ > /dev/null 2>&1 && break; sleep 1; done; R1=$(curl -s http://localhost:3000/ | grep -c 'name="color-scheme" content="light"'); R2=$(curl -s http://localhost:3000/design-system | grep -cE 'name="robots" content="noindex,[[:space:]]*nofollow"'); R3=$(curl -s http://localhost:3000/design-system | grep -Ec 'class="[^"]*(bg-ink|text-ink-faint|border-rule|rounded-card)'); kill $SERVER_PID; wait $SERVER_PID 2>/dev/null; test "$R1" -ge 1 && test "$R2" -ge 1 && test "$R3" -ge 5)</automated>
   </verify>
   <acceptance_criteria>
     - `curl -s http://localhost:3000/` returns HTML containing `name="color-scheme" content="light"` at least once (DESIGN-04 layer 3)
-    - `curl -s http://localhost:3000/design-system` returns HTML containing `name="robots" content="noindex` at least once (D-09)
+    - `curl -s http://localhost:3000/design-system` returns HTML matching `name="robots" content="noindex,[[:space:]]*nofollow"` at least once (D-09 -- verifies BOTH noindex AND nofollow, not just noindex)
     - `curl -s http://localhost:3000/design-system | grep -Ec 'class="[^"]*(bg-ink|text-ink-faint|border-rule|rounded-card)'` returns >= 5 (primitives rendered)
     - Server process killed at end of task (no dangling `pnpm run start` on port 3000)
     - Build completed successfully as part of this task's run
   </acceptance_criteria>
   <done>
-Production HTML verified end-to-end: color-scheme meta is emitted, /design-system is noindexed, primitive DOM signatures render. Phase 12 success criteria 1-4 are all covered.
+Production HTML verified end-to-end: color-scheme meta is emitted, /design-system is noindexed AND nofollowed, primitive DOM signatures render. Phase 12 success criteria 1-4 are all covered.
   </done>
 </task>
 
@@ -444,7 +448,7 @@ Production HTML verified end-to-end: color-scheme meta is emitted, /design-syste
 
 | Boundary | Description |
 |----------|-------------|
-| Public web → `/design-system` route | The route is publicly reachable (just not indexed or advertised). Any content leaked here is effectively public. |
+| Public web -> `/design-system` route | The route is publicly reachable (just not indexed or advertised). Any content leaked here is effectively public. |
 | `CodeBlock` children boundary | The showcase renders static strings only; no user input flows in. In Phases 14/15 this boundary becomes active when MDX authors and CHANGELOG.md feed content. |
 
 ## STRIDE Threat Register
@@ -463,7 +467,7 @@ Production HTML verified end-to-end: color-scheme meta is emitted, /design-syste
 
 <success_criteria>
 - `/design-system` renders with palette grid (16 swatches), primitive gallery (Button primary+secondary, Card, MetaLabel, SectionHeading, CodeBlock inline+block), and typography scale
-- `<meta name="robots" content="noindex, nofollow">` appears in `/design-system` HTML
+- `<meta name="robots" content="noindex, nofollow">` appears in `/design-system` HTML (BOTH tokens verified)
 - `<meta name="color-scheme" content="light">` appears in `/` HTML
 - `sitemap.ts` remains unchanged (does not list /design-system)
 - Build green; production server cycle green
@@ -472,11 +476,10 @@ Production HTML verified end-to-end: color-scheme meta is emitted, /design-syste
 <output>
 After completion, create `.planning/phases/12-chronicle-design-system-port/12-04-SUMMARY.md` with:
 - Confirmation of all 16 swatches rendered with correct var(--color-*) backing
-- Confirmation of noindex meta emission (quote the HTML line from Probe 2)
+- Confirmation of noindex,nofollow meta emission (quote the HTML line from Probe 2)
 - Confirmation of color-scheme meta emission (quote the HTML line from Probe 1)
 - Primitive DOM signature count (quote the integer from Probe 3)
 - Phase 12 success criteria 1-4 checklist (all must be checked)
 - Next step: Phase 12 complete; ready for /gsd-verify-work
 </output>
 </content>
-</invoke>

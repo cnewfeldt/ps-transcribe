@@ -51,11 +51,11 @@ Output: Rewritten `globals.css` with four sections -- `@import "tailwindcss"`, `
 <interfaces>
 <!-- Token naming: tokens.css uses bare names (--paper, --ink-muted, --r-card); -->
 <!-- globals.css MUST prefix everything with Tailwind v4 namespaces (--color-paper, --color-ink-muted, --radius-card). -->
-<!-- Tailwind v4 namespace → utility mapping (from node_modules/tailwindcss/theme.css): -->
-<!--   --color-*  → bg-*, text-*, border-*, ring-*, fill-*, stroke-*, divide-*, outline-*, accent-*, caret-*, placeholder-* -->
-<!--   --radius-* → rounded-*, rounded-t-*, rounded-tl-*, etc. -->
-<!--   --shadow-* → shadow-* -->
-<!--   --font-*   → font-* (font-family only) -->
+<!-- Tailwind v4 namespace -> utility mapping (from node_modules/tailwindcss/theme.css): -->
+<!--   --color-*  -> bg-*, text-*, border-*, ring-*, fill-*, stroke-*, divide-*, outline-*, accent-*, caret-*, placeholder-* -->
+<!--   --radius-* -> rounded-*, rounded-t-*, rounded-tl-*, etc. -->
+<!--   --shadow-* -> shadow-* -->
+<!--   --font-*   -> font-* (font-family only) -->
 
 <!-- next/font variables already wired in layout.tsx (Phase 11 lock): -->
 <!--   --font-inter, --font-spectral, --font-jetbrains-mono -->
@@ -191,7 +191,7 @@ Forbidden in this task:
 - Do NOT modify `website/src/app/layout.tsx` in this task -- font loading and viewport are Plan 02's scope.
   </action>
   <verify>
-    <automated>cd website && grep -c '^@theme inline' src/app/globals.css | grep -q '^1$' && for c in paper paper-warm paper-soft rule rule-strong ink ink-muted ink-faint ink-ghost accent-ink accent-soft accent-tint spk2-bg spk2-fg spk2-rail rec-red live-green; do grep -q "^  --color-$c:" src/app/globals.css || { echo "MISSING: --color-$c"; exit 1; }; done && for r in input btn card bubble pill; do grep -q "^  --radius-$r:" src/app/globals.css || { echo "MISSING: --radius-$r"; exit 1; }; done && for s in lift btn float; do grep -q "^  --shadow-$s:" src/app/globals.css || { echo "MISSING: --shadow-$s"; exit 1; }; done && grep -q '"SF Pro Text"' src/app/globals.css && grep -q '"New York"' src/app/globals.css && grep -q '"SF Mono"' src/app/globals.css && ! grep -q 'prefers-color-scheme' src/app/globals.css && grep -q 'color-scheme: *light' src/app/globals.css && ! grep -q 'Geist\|geist' src/app/globals.css</automated>
+    <automated>cd website && grep -c '^@theme inline' src/app/globals.css | grep -q '^1$' && for c in paper paper-warm paper-soft rule rule-strong ink ink-muted ink-faint ink-ghost accent-ink accent-soft accent-tint spk2-bg spk2-fg spk2-rail rec-red live-green; do grep -q "^  --color-$c:" src/app/globals.css || { echo "MISSING: --color-$c"; exit 1; }; done && for r in input btn card bubble pill; do grep -q "^  --radius-$r:" src/app/globals.css || { echo "MISSING: --radius-$r"; exit 1; }; done && for s in lift btn float; do grep -q "^  --shadow-$s:" src/app/globals.css || { echo "MISSING: --shadow-$s"; exit 1; }; done && grep -q '"SF Pro Text"' src/app/globals.css && grep -q '"New York"' src/app/globals.css && grep -q '"SF Mono"' src/app/globals.css && ! grep -q 'prefers-color-scheme' src/app/globals.css && grep -q 'color-scheme: *light' src/app/globals.css && ! grep -q 'Geist\|geist' src/app/globals.css && ! LC_ALL=C grep -l $'\xe2\x80\x94' src/app/globals.css</automated>
   </verify>
   <acceptance_criteria>
     - `grep -c '^@theme inline' website/src/app/globals.css` outputs exactly `1`
@@ -203,6 +203,7 @@ Forbidden in this task:
     - Dark-mode block absent: `! grep -q 'prefers-color-scheme' website/src/app/globals.css`
     - Light-mode lock present: `grep -q 'color-scheme: *light' website/src/app/globals.css`
     - No Geist references remain: `! grep -qi 'geist' website/src/app/globals.css`
+    - No em dashes (portable, BSD+GNU grep compatible): `! LC_ALL=C grep -l $'\xe2\x80\x94' website/src/app/globals.css`
   </acceptance_criteria>
   <done>
 globals.css is rewritten with all 16 color tokens, 5 radii, 3 shadows, 3 font-family chains, light-mode lock, and minimal body reset. No dark-mode block, no Geist references, no Arial fallback. Ready for Plan 03 primitives to consume `bg-paper`, `text-ink`, `rounded-card`, `shadow-btn` utilities.
@@ -253,6 +254,8 @@ Build green. globals.css rewrite is production-compilable. Plan 02 (layout viewp
 
 | Threat ID | Category | Component | Disposition | Mitigation Plan |
 |-----------|----------|-----------|-------------|-----------------|
+| T-12-01 | Tampering / XSS | `CodeBlock` children rendering | n/a (not in scope) | No `CodeBlock` component exists in this plan; mitigation owned by Plan 03. Cross-reference only for traceability. |
+| T-12-02 | Information disclosure | Showcase content leaking internal strings | n/a (not in scope) | Plan 01 emits only CSS tokens and standard Tailwind utilities; no product copy or showcase content present. Owned by Plan 04. Cross-reference only. |
 | T-12-03 | Tampering | next/font Google Fonts loading | accept | Already mitigated in Phase 11 via `next/font/google` which self-hosts webfonts during build (no runtime fetch from Google). This plan does not change font loading -- it only composes fallback chains in `@theme inline`. No new supply-chain surface introduced. |
 </threat_model>
 
@@ -279,4 +282,3 @@ After completion, create `.planning/phases/12-chronicle-design-system-port/12-01
 - Next step: Plan 02 adds viewport export; Plan 03 builds primitives against these tokens
 </output>
 </content>
-</invoke>

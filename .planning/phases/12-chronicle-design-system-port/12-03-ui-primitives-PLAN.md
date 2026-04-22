@@ -296,7 +296,13 @@ Keeps Plan 04's design-system page import to a single line: `import { Button, Ca
 - No em dashes in any file.
   </action>
   <verify>
-    <automated>cd website && for f in Button Card MetaLabel SectionHeading CodeBlock; do test -f src/components/ui/$f.tsx || { echo "MISSING: $f.tsx"; exit 1; }; done && test -f src/components/ui/index.ts && ! grep -rn "^['\"]use client['\"]" src/components/ui/ && ! grep -rn "@apply" src/components/ui/ && ! grep -rn "forwardRef" src/components/ui/ && ! grep -rnE "dark:(bg|text|border|ring)" src/components/ui/ && ! grep -rn "dangerouslySetInnerHTML" src/components/ui/ && grep -q "variant?: 'primary' | 'secondary'" src/components/ui/Button.tsx && grep -q "shadow-btn" src/components/ui/Button.tsx && grep -q "border-\[0.5px\] border-rule" src/components/ui/Card.tsx && grep -q "rounded-card" src/components/ui/Card.tsx && grep -q "tracking-\[0.08em\]" src/components/ui/MetaLabel.tsx && grep -q "font-serif" src/components/ui/SectionHeading.tsx && grep -q "inline?: boolean" src/components/ui/CodeBlock.tsx && grep -q "export { Button }" src/components/ui/index.ts && ! grep -rP '\x{2014}' src/components/ui/ && pnpm run build</automated>
+    <!-- Note on dark: regex tightening: this plan uses `dark:(bg|text|border|ring)` which is stricter -->
+    <!-- than VALIDATION.md probe 12-03-04's loose `dark:` pattern. Rationale: the loose pattern would -->
+    <!-- false-positive on legitimate Tailwind utilities that happen to contain "dark:" as a literal substring -->
+    <!-- (e.g., a className string referencing darker/darkest color names). The tightened form matches only -->
+    <!-- the four utility categories that would actually introduce dark-mode styling (bg, text, border, ring). -->
+    <!-- A loose second pass (`grep -rn 'dark:'`) is also run below as belt-and-suspenders for any missed variant. -->
+    <automated>cd website && for f in Button Card MetaLabel SectionHeading CodeBlock; do test -f src/components/ui/$f.tsx || { echo "MISSING: $f.tsx"; exit 1; }; done && test -f src/components/ui/index.ts && ! grep -rn "^['\"]use client['\"]" src/components/ui/ && ! grep -rn "@apply" src/components/ui/ && ! grep -rn "forwardRef" src/components/ui/ && ! grep -rnE "dark:(bg|text|border|ring)" src/components/ui/ && ! grep -rn "dark:" src/components/ui/ && ! grep -rn "dangerouslySetInnerHTML" src/components/ui/ && grep -q "variant?: 'primary' | 'secondary'" src/components/ui/Button.tsx && grep -q "shadow-btn" src/components/ui/Button.tsx && grep -q "border-\[0.5px\] border-rule" src/components/ui/Card.tsx && grep -q "rounded-card" src/components/ui/Card.tsx && grep -q "tracking-\[0.08em\]" src/components/ui/MetaLabel.tsx && grep -q "font-serif" src/components/ui/SectionHeading.tsx && grep -q "inline?: boolean" src/components/ui/CodeBlock.tsx && grep -q "export { Button }" src/components/ui/index.ts && ! LC_ALL=C grep -rl $'\xe2\x80\x94' src/components/ui/ && pnpm run build</automated>
   </verify>
   <acceptance_criteria>
     - All 5 primitive files exist: `for f in Button Card MetaLabel SectionHeading CodeBlock; do test -f website/src/components/ui/$f.tsx; done` (all pass)
@@ -304,7 +310,8 @@ Keeps Plan 04's design-system page import to a single line: `import { Button, Ca
     - No "use client" anywhere: `! grep -rn "^['\"]use client['\"]" website/src/components/ui/`
     - No @apply: `! grep -rn "@apply" website/src/components/ui/`
     - No forwardRef: `! grep -rn "forwardRef" website/src/components/ui/`
-    - No dark: variants: `! grep -rnE "dark:(bg|text|border|ring)" website/src/components/ui/`
+    - No dark: variants (strict category-scoped): `! grep -rnE "dark:(bg|text|border|ring)" website/src/components/ui/`
+    - No dark: variants (loose belt-and-suspenders matching VALIDATION.md probe 12-03-04): `! grep -rn "dark:" website/src/components/ui/`
     - No dangerouslySetInnerHTML: `! grep -rn "dangerouslySetInnerHTML" website/src/components/ui/` (T-12-01 mitigation verified)
     - Button has primary/secondary union: `grep -q "variant?: 'primary' | 'secondary'" website/src/components/ui/Button.tsx`
     - Button uses shadow-btn utility: `grep -q "shadow-btn" website/src/components/ui/Button.tsx`
@@ -314,7 +321,7 @@ Keeps Plan 04's design-system page import to a single line: `import { Button, Ca
     - SectionHeading uses font-serif: `grep -q "font-serif" website/src/components/ui/SectionHeading.tsx`
     - CodeBlock has inline prop: `grep -q "inline?: boolean" website/src/components/ui/CodeBlock.tsx`
     - Barrel exports all 5: grep finds `export { Button }`, `export { Card }`, `export { MetaLabel }`, `export { SectionHeading }`, `export { CodeBlock }` in index.ts
-    - No em dashes: `! grep -rP '\x{2014}' website/src/components/ui/`
+    - No em dashes (portable, BSD+GNU grep compatible): `! LC_ALL=C grep -rl $'\xe2\x80\x94' website/src/components/ui/`
     - `cd website && pnpm run build` exits 0
   </acceptance_criteria>
   <done>
@@ -337,6 +344,7 @@ All 5 primitive components + barrel export exist under `website/src/components/u
 |-----------|----------|-----------|-------------|-----------------|
 | T-12-01 | Tampering / XSS | `CodeBlock` primitive rendering author content from MDX (Phase 14) or CHANGELOG.md (Phase 15) | mitigate | `CodeBlock` renders `children` via React text interpolation (`{children}` inside `<code>` or `<pre><code>`). Explicitly forbids `dangerouslySetInnerHTML`. Verified by grep probe in acceptance_criteria: `! grep -rn "dangerouslySetInnerHTML" website/src/components/ui/`. React auto-escapes HTML/JS in string children, so untrusted code strings render as literal text, not as DOM. |
 | T-12-02 | Information disclosure | Future dev-only showcase content leaking internal strings | accept | Primitives are presentational only and accept any caller content. No secrets are hard-coded in these files. The showcase content (Plan 04) will use only the brief's public voice copy. |
+| T-12-03 | Tampering | next/font supply chain | n/a (not in scope) | Owned by Plan 02 (layout/font loading). Cross-reference only for traceability. |
 </threat_model>
 
 <verification>
@@ -361,4 +369,3 @@ After completion, create `.planning/phases/12-chronicle-design-system-port/12-03
 - Next step: Plan 04 renders the showcase gallery consuming these primitives
 </output>
 </content>
-</invoke>
