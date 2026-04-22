@@ -35,3 +35,9 @@ build/
 
 # Security scan reports (kept local, not shipped)
 SECURITY-SCAN.md
+
+# Next.js / website build artifacts
+website/.next/
+website/node_modules/
+website/.vercel/
+website/out/
