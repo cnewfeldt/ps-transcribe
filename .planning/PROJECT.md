@@ -48,6 +48,8 @@ Users can record meetings and voice memos with accurate, private, on-device tran
 
 **Shipped:** v1.0 PS Transcribe (2026-04-14). Full rebrand from Tome, all 12 security findings resolved, crash recovery + diarization fixes, session library with right-click "Show in Finder" and Obsidian deep-link, recording naming + lifecycle, three-state mic button, model onboarding, Notion integration. 8 active phases, 45 requirements satisfied, 28 plans shipped. See [`milestones/v1.0-ROADMAP.md`](milestones/v1.0-ROADMAP.md).
 
+**In progress — v1.1 Marketing Website:** Phase 11 complete (2026-04-22) — Next.js 16 scaffold at `/website`, Chronicle placeholder content, full file-based metadata, live on https://ps-transcribe-web.vercel.app with Vercel auto-deploy on push + Ignored Build Step for Swift-only commits. SITE-01, SITE-02, SITE-04, SITE-05 satisfied; SITE-03 deferred to first PR (natural trigger). Phase 12 (Chronicle design-system port) is next.
+
 ## Current Milestone: v1.1 Marketing Website
 
 **Goal:** Build and ship a marketing website at `ps-transcribe-web.vercel.app` — landing, docs, and changelog — using Next.js on Vercel, reusing the Chronicle design system for visual cohesion with the app.

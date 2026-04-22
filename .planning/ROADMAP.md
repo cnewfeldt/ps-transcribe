@@ -100,7 +100,7 @@ Phases execute in numeric order: 11 → 12 → 13 → 14 → 15. Phases 13, 14, 
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 11. Website Scaffolding & Vercel Deployment | v1.1 | 3/3 | Complete   | 2026-04-22 |
+| 11. Website Scaffolding & Vercel Deployment | v1.1 | 3/3 | Complete    | 2026-04-22 |
 | 12. Chronicle Design System Port | v1.1 | 0/TBD | Not started | - |
 | 13. Landing Page | v1.1 | 0/TBD | Not started | - |
 | 14. Docs Section | v1.1 | 0/TBD | Not started | - |
