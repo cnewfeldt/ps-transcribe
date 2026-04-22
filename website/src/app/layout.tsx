@@ -22,7 +22,7 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://ps-transcribe.vercel.app'),
+  metadataBase: new URL('https://ps-transcribe-web.vercel.app'),
   title: {
     default: 'PS Transcribe — Private, on-device transcription for macOS',
     template: '%s · PS Transcribe',
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'PS Transcribe',
     description: 'Private, on-device transcription for macOS.',
-    url: 'https://ps-transcribe.vercel.app',
+    url: 'https://ps-transcribe-web.vercel.app',
     siteName: 'PS Transcribe',
     type: 'website',
     locale: 'en_US',
