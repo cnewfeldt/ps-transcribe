@@ -56,9 +56,9 @@ created: 2026-04-21
 
 ## Coverage
 
-- Total: 23 requirements
+- Total: 26 requirements
 - Completed: 1 (BRIEF-01)
-- Pending: 22
+- Pending: 25 — all mapped to phases 11–15
 
 ## Out of Scope
 
@@ -84,6 +84,33 @@ The following are deliberately not part of this milestone:
 
 ## Traceability
 
-| REQ-ID | Phase | Plan | Status |
-|--------|-------|------|--------|
-| *To be filled by roadmapper* | | | |
+| REQ-ID     | Phase    | Plan | Status    |
+|------------|----------|------|-----------|
+| BRIEF-01   | Pre-v1.1 | —    | Complete  |
+| SITE-01    | 11       | TBD  | Pending   |
+| SITE-02    | 11       | TBD  | Pending   |
+| SITE-03    | 11       | TBD  | Pending   |
+| SITE-04    | 11       | TBD  | Pending   |
+| SITE-05    | 11       | TBD  | Pending   |
+| DESIGN-01  | 12       | TBD  | Pending   |
+| DESIGN-02  | 12       | TBD  | Pending   |
+| DESIGN-03  | 12       | TBD  | Pending   |
+| DESIGN-04  | 12       | TBD  | Pending   |
+| LAND-01    | 13       | TBD  | Pending   |
+| LAND-02    | 13       | TBD  | Pending   |
+| LAND-03    | 13       | TBD  | Pending   |
+| LAND-04    | 13       | TBD  | Pending   |
+| LAND-05    | 13       | TBD  | Pending   |
+| LAND-06    | 13       | TBD  | Pending   |
+| LAND-07    | 13       | TBD  | Pending   |
+| DOCS-01    | 14       | TBD  | Pending   |
+| DOCS-02    | 14       | TBD  | Pending   |
+| DOCS-03    | 14       | TBD  | Pending   |
+| DOCS-04    | 14       | TBD  | Pending   |
+| DOCS-05    | 14       | TBD  | Pending   |
+| LOG-01     | 15       | TBD  | Pending   |
+| LOG-02     | 15       | TBD  | Pending   |
+| LOG-03     | 15       | TBD  | Pending   |
+| LOG-04     | 15       | TBD  | Pending   |
+
+**Coverage check:** 25/25 pending requirements mapped to exactly one phase. No orphans, no duplicates.
