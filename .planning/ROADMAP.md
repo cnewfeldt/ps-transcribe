@@ -69,7 +69,12 @@
   3. Feature blocks describe dual-stream capture, chat-bubble transcript, Obsidian save-to-vault, and Notion auto-send — each with a meta label, sub-headline, and short paragraph
   4. A shortcuts callout shows `⌘R`, `⌘⇧R`, `⌘.`, and `⌘⇧S` as JetBrains Mono key chips
   5. Top nav and footer both surface working links to Docs, Changelog, and GitHub; footer includes copyright and MIT license line
-**Plans**: TBD
+**Plans**: 5 plans
+- [ ] 13-01-PLAN.md — Foundation: screenshot copy, SITE constants, CHANGELOG parser, Spectral italic, verify-landing.mjs script
+- [ ] 13-02-PLAN.md — Shared chrome: useScrolled + useReveal hooks, Reveal wrapper, LinkButton, Nav, Footer mounted in layout.tsx
+- [ ] 13-03-PLAN.md — Sections (no mini-mockups): Hero variant C, ThreeThingsStrip, ShortcutGrid, FinalCTA
+- [ ] 13-04-PLAN.md — Feature blocks + 4 mini-mockups (DualStream, ChatBubble, ObsidianVault, NotionTable) + shared MockWindow chrome
+- [ ] 13-05-PLAN.md — page.tsx composition, production build, verify-landing green, human UAT checkpoint
 **UI hint**: yes
 
 ### Phase 14: Docs Section
@@ -106,6 +111,6 @@ Phases execute in numeric order: 11 → 12 → 13 → 14 → 15. Phases 13, 14, 
 |-------|-----------|----------------|--------|-----------|
 | 11. Website Scaffolding & Vercel Deployment | v1.1 | 3/3 | Complete    | 2026-04-22 |
 | 12. Chronicle Design System Port | v1.1 | 4/4 | Complete    | 2026-04-22 |
-| 13. Landing Page | v1.1 | 0/TBD | Not started | - |
+| 13. Landing Page | v1.1 | 0/5 | Not started | - |
 | 14. Docs Section | v1.1 | 0/TBD | Not started | - |
 | 15. Changelog Page | v1.1 | 0/TBD | Not started | - |
