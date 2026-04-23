@@ -18,7 +18,7 @@ export function DualStreamMock() {
       <hr className="border-0 h-[0.5px] bg-rule mt-[10px]" />
       <div className="flex justify-between font-mono text-[10px] tracking-[0.05em] text-ink-faint pt-2">
         <span>VAD · trimming silences</span>
-        <span>Parakeet-TDT · on-device</span>
+        <span>Speech recognition · on-device</span>
       </div>
     </MockWindow>
   )

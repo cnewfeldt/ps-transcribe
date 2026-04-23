@@ -19,7 +19,7 @@ const CARDS: Card[] = [
     meta: '· 01 · Private by default',
     metaTone: 'default',
     title: 'Audio never leaves the machine.',
-    body: 'Parakeet-TDT runs locally through FluidAudio. No upload step, no API keys, no cloud fallback.',
+    body: 'Speech recognition runs on-device. No upload step, no API keys, no cloud fallback.',
   },
   {
     meta: '· 02 · Works with your vault',
