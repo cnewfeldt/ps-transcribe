@@ -48,7 +48,7 @@ function ChatBubble({ bubble }: { bubble: Bubble }) {
   const container = isMe ? 'self-end' : 'self-start'
   const bubbleCls = isMe
     ? 'bg-ink text-paper rounded-[12px] rounded-br-[4px] px-[14px] py-[10px]'
-    : 'relative bg-spk2-bg text-spk2-fg rounded-[12px] rounded-bl-[4px] pl-[15px] pr-[14px] py-[10px]'
+    : 'bg-spk2-bg text-spk2-fg rounded-[12px] rounded-bl-[4px] px-[14px] py-[10px]'
   return (
     <div className={`flex flex-col ${container}`} style={{ maxWidth: bubble.maxWidth }}>
       <span
@@ -60,12 +60,6 @@ function ChatBubble({ bubble }: { bubble: Bubble }) {
         <span className="opacity-60">{bubble.time}</span>
       </span>
       <div className={bubbleCls}>
-        {!isMe && (
-          <span
-            className="absolute left-[5px] top-[8px] bottom-[8px] w-[2px] rounded-[1px] bg-spk2-rail"
-            aria-hidden
-          />
-        )}
         <span className="font-sans text-[13.5px] leading-[1.5]">{bubble.text}</span>
       </div>
     </div>
