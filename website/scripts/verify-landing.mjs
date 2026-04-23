@@ -58,7 +58,7 @@ const must = [
   ['meeting transcript with Library, Transcript, and Details columns', 'LAND-03 alt text'],
   // LAND-04 — four features
   ['Dual-stream capture', 'LAND-04 feature 1 meta'],
-  ['Microphone and system audio, recorded in parallel.', 'LAND-04 feature 1 headline'],
+  ['Your mic and the call, on separate tracks.', 'LAND-04 feature 1 headline'],
   ['Transcript view', 'LAND-04 feature 2 meta'],
   ['Chat bubbles. Not a wall of text.', 'LAND-04 feature 2 headline'],
   ['Obsidian vault', 'LAND-04 feature 3 meta'],

@@ -20,12 +20,12 @@ export default function Home() {
             index={0}
             tint="tint"
             metaLabel="Dual-stream capture"
-            headline="Microphone and system audio, recorded in parallel."
-            body="Uses ScreenCaptureKit to pull the other side of the call cleanly, while your mic is captured separately. After the session ends, Silero VAD and diarization resolve who said what."
+            headline="Your mic and the call, on separate tracks."
+            body="PS Transcribe captures your microphone and the other side of the call as two clean streams straight from macOS — no speakerphone, no bleed. Silence is skipped as you record, and when the session ends the app sorts out who said what."
             bullets={[
-              'You on mic, them via system audio — two distinct streams',
-              'Voice-activity detection runs locally; silences are trimmed',
-              'Post-session speaker diarization clusters unknown voices',
+              'Your voice on one track, everyone else on another',
+              'Silence is skipped automatically, on device',
+              'Speakers grouped and labeled after the session ends',
             ]}
             mock={<DualStreamMock />}
           />
