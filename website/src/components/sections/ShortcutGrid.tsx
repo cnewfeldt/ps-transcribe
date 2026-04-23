@@ -38,7 +38,7 @@ const SHORTCUTS: Shortcut[] = [
       { k: 'R', tone: 'sage' },
     ],
     lbl: 'Quick memo',
-    desc: 'Mic only, single-speaker.',
+    desc: 'For solo recordings. No app targeting.',
   },
   {
     combo: '⌘.',
@@ -47,7 +47,7 @@ const SHORTCUTS: Shortcut[] = [
       { k: '.', tone: 'default' },
     ],
     lbl: 'Stop & save',
-    desc: 'Runs VAD + diarization.',
+    desc: 'Finalizes the session and sorts out speakers.',
   },
   {
     combo: '⌘⇧S',
@@ -57,7 +57,7 @@ const SHORTCUTS: Shortcut[] = [
       { k: 'S', tone: 'default' },
     ],
     lbl: 'Toggle sidebar',
-    desc: 'Hide library & inspector.',
+    desc: 'Hide the library column.',
   },
 ]
 
