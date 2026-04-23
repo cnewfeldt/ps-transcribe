@@ -24,8 +24,8 @@ const CARDS: Card[] = [
   {
     meta: '· 02 · Works with your vault',
     metaTone: 'sage',
-    title: 'Saves straight to Obsidian.',
-    body: 'Markdown with YAML frontmatter dropped into the folder you configure. Optional one-click send to a Notion database.',
+    title: 'Saves to Obsidian, Notion, or both.',
+    body: 'Markdown dropped into your knowledge base of choice.',
   },
   {
     meta: '· 03 · Quiet interface',
