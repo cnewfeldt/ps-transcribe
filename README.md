@@ -104,6 +104,12 @@ are locked, landing page is live in staging.
 
 Voice memos use `type: fleeting` with a single speaker. Same structure, same frontmatter.
 
+## Download
+
+Grab the latest signed DMG from [ps-transcribe-releases](https://github.com/cnewfeldt/ps-transcribe-releases/releases/latest). Apple Silicon only, macOS 26+.
+
+First launch downloads the Parakeet ASR model (~600MB, cached after that).
+
 ## Build
 
 **Requirements:** Apple Silicon Mac, macOS 26+, Xcode 26.3+

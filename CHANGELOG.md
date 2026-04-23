@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased] — 2026-04-23
+
+### Distribution / Tooling
+- New public releases repo `cnewfeldt/ps-transcribe-releases` hosts the signed DMG. Evergreen download URL: `github.com/cnewfeldt/ps-transcribe-releases/releases/latest/download/PS.Transcribe.dmg`.
+- `scripts/publish_release.sh` reads version from `Info.plist`, scaffolds `release-notes/v<version>.md` from a project-local template when missing, refuses to publish while the TODO placeholder is present, and uploads the DMG via `gh release create`. Supports `DRAFT=1` and `PRERELEASE=1`.
+- `release-notes/` holds user-facing, non-technical release notes — `v2.1.0.md` shipped, `TEMPLATE.md` provides `{{VERSION}}`-substituted scaffold for future versions. CHANGELOG.md stays internal.
+- README gains a `Download` section pointing users at the public releases repo; install instructions separated from the `Build` section for contributors.
+
 ## [2.1.0] — 2026-04-20
 
 ### UX / Redesign — "Quiet Chronicle"
