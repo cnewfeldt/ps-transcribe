@@ -38,11 +38,11 @@ export default function Home() {
             metaTone="sage"
             metaLabel="Transcript view"
             headline="Chat bubbles. Not a wall of text."
-            body="Your side sits right; Speaker 2 sits left with a sage rail. Rename any speaker inline, and every subsequent bubble updates. Click any timestamp to scrub the session."
+            body="Your side sits right; Speaker 2 sits left. Timestamps are quietly recessed in 10pt mono. Every utterance is its own bubble so you can scan by speaker instead of reading a wall of text."
             bullets={[
+              'Individual bubbles per utterance, no wall of text',
               '10pt mono timestamps, quietly recessed',
-              'Inline speaker rename with ⌘E',
-              'Full-text search with ⌘F, scoped to the session',
+              'Your voice right, Speaker 2 left, both with distinct styling',
             ]}
             mock={<ChatBubbleMock />}
           />
