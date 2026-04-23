@@ -168,18 +168,19 @@ No blockers. One informational item (`globals.css` cleanup deferred to phase 12)
 
 ### Gaps Summary
 
-**No blocking gaps.** Every roadmap success criterion and every plan-level must-have is either:
-- Verified end-to-end against the live production deploy (13 of 14), or
-- Covered by an installed integration whose observable behavior requires a trigger that doesn't exist yet (1 of 14 — SITE-03 PR preview URL).
+**No blocking gaps.** Every roadmap success criterion and every plan-level must-have is either verified end-to-end against the live production deploy (13 of 14) or covered by an installed integration whose observable behavior requires a natural trigger that didn't exist at phase close (1 of 14 — SITE-03 PR preview URL).
 
 The SITE-03 deferral is structural, not a defect. Vercel's preview-URL emission fires on PR creation; phase 11 hasn't produced a PR because all phase commits landed directly on main per the Wave execution model. The Vercel GitHub App connection is proven live by the successful `Vercel` commit status check on the main deploy, so the plumbing is in place — only the observable event is pending.
 
 The D-09 Ignored Build Step skip is likewise a natural-trigger deferral (no Swift-only commit exists in the phase 11 window). The command is configured correctly in the Vercel dashboard and the RESEARCH.md Pitfall 2 guidance was followed precisely, so the configuration is high-confidence correct.
 
-**Deviations from the original plan** (all documented in plan summaries, none blocking):
-1. Production slug is `ps-transcribe-web.vercel.app` instead of `ps-transcribe.vercel.app` — canonical slug was claimed externally. PROJECT.md line 55 logs the substitution; plan 11-02 metadata URLs were patched in commit `4c18d5f` before the green deploy.
-2. OG image live URL is `/opengraph-image` (no `.png` suffix) — Next.js 16 serves it as a Route Handler with `content-type: image/png`, not a static file. The `<meta property="og:image">` tag correctly references the extension-less form. Plan 11-02 verification text said `/opengraph-image.png` which would 404; the summary flags this as Next.js 16 behavior, not a defect. Probe adjusted accordingly.
-3. `website/src/app/favicon.ico` was deleted in plan 11-02 so `icon.png` wins the `<link rel="icon">` slot. Plan 11-01's SUMMARY anticipated this (line "replaced by icon.png in plan 11-02"). Not a deviation — planned handoff.
+**Deviations from the original plan** (all resolved and documented in plan summaries; none blocking):
+
+> _D1 — Production slug._ `ps-transcribe-web.vercel.app` instead of `ps-transcribe.vercel.app` — canonical slug was claimed externally. PROJECT.md line 55 logs the substitution; plan 11-02 metadata URLs were patched in commit `4c18d5f` before the green deploy. **Status: RESOLVED.**
+>
+> _D2 — OG image URL._ Live URL is `/opengraph-image` (no `.png` suffix) — Next.js 16 serves it as a Route Handler with `content-type: image/png`, not a static file. The `<meta property="og:image">` tag correctly references the extension-less form. Plan 11-02 verification text said `/opengraph-image.png` which would 404; the summary flags this as Next.js 16 behavior, not a defect. Probe adjusted accordingly. **Status: RESOLVED.**
+>
+> _D3 — Favicon handoff._ `website/src/app/favicon.ico` was deleted in plan 11-02 so `icon.png` wins the `<link rel="icon">` slot. Plan 11-01's SUMMARY anticipated this (line "replaced by icon.png in plan 11-02"). Not a deviation — planned handoff. **Status: RESOLVED.**
 
 ---
 
