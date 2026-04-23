@@ -57,12 +57,12 @@ export default function Home() {
             headline="Every session lands where your notes already live."
             body={
               <>
-                Markdown file, YAML frontmatter, saved to the folder you configure. No proprietary format, no export step. The transcript <em className="italic">is</em> a note in your vault, instantly linkable.
+                A Markdown note dropped into the folder you configure, with date, duration, attendees, and tags already filled in at the top. No proprietary format, no export step. The transcript <em className="italic">is</em> a note in your vault, instantly linkable.
               </>
             }
             bullets={[
-              'Template frontmatter: date, duration, participants, tags',
-              'Configurable path templates per recording type',
+              'Date, duration, attendees, and tags set automatically',
+              'Separate folders for meetings and voice memos',
               'Works with Obsidian sync, git, iCloud, whatever you already use',
             ]}
             mock={<ObsidianVaultMock />}
