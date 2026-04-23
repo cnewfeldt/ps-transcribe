@@ -1118,19 +1118,19 @@ export default function Home() {
 
 **Confidence assessment:** All non-assumption claims are tagged `[VERIFIED: ...]` (tool-confirmed) or `[CITED: ...]` (docs-backed). Only the three items above rely on reasonable inference; none are load-bearing enough to block planning.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Should Spectral italic face be loaded?**
+1. **Should Spectral italic face be loaded?** — **RESOLVED:** Plan 13-01 Task 3 adds `style: ['normal', 'italic']` to the Spectral loader in `layout.tsx`; hero `<em>` renders the real italic cut, not a synthesized slant.
    - What we know: The mock uses `<em>` in the hero headline and in Feature 3's paragraph (`the transcript <em>is</em> a note in your vault`). The current Spectral loader doesn't load italic. Synthesized italic is visibly lower-quality than the real cut.
    - What's unclear: CONTEXT.md says "DO NOT modify font loading (Phase 12 D-02)", but that decision was about not re-registering or swapping fonts — adding `style: ['normal', 'italic']` to the same loader isn't a swap.
    - Recommendation: Add `style: ['normal', 'italic']` to the Spectral loader in `layout.tsx`. Flag this to the planner as a fidelity fix rather than a font-loading change. If the planner wants to keep the strict reading, ship synthesized italic — the hero still works; the fidelity is just lower.
 
-2. **Should `Button` gain `asChild` or should we add a separate `LinkButton`?**
+2. **Should `Button` gain `asChild` or should we add a separate `LinkButton`?** — **RESOLVED:** Plan 13-02 Task 1 ships `src/components/ui/LinkButton.tsx` reusing `Button` class strings; Phase-12 `Button` primitive is untouched.
    - What we know: Phase 12's `Button` renders a `<button>`. Both primary CTAs on the landing page are links (DMG download, GitHub repo, Final CTA download) — so they need `<a>` semantics.
    - What's unclear: Adding `asChild` is a minor API change to an existing primitive; extracting `LinkButton` keeps `Button` unchanged but adds a new primitive.
    - Recommendation: Add `LinkButton` to `src/components/ui/LinkButton.tsx` that re-uses the `Button` class strings. Ship it as a new primitive — cleaner than modifying `Button`, no Phase-12 primitive is touched.
 
-3. **Metadata file location: `layout.tsx` inline or new `src/app/metadata.ts`?**
+3. **Metadata file location: `layout.tsx` inline or new `src/app/metadata.ts`?** — **RESOLVED:** Plan 13-01 Task 3 updates metadata inline in `layout.tsx` (tuned title/description/OG for the landing page); no new `src/app/metadata.ts` file created.
    - What we know: CONTEXT.md canonical_refs lists `website/src/app/metadata.ts` but that file doesn't exist. Metadata currently lives inline in `layout.tsx`.
    - What's unclear: The discrepancy may be a typo or may indicate the original plan for a metadata file that was dropped in Phase 11.
    - Recommendation: Keep metadata inline in `layout.tsx`. Updating the root-level `metadata` and `viewport` exports to be tuned for the landing page (title, description, OG) is a 10-line edit to an existing file. Adding a new file just for metadata is extra indirection.
