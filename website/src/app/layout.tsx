@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Spectral, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
+import { Nav } from '@/components/layout/Nav'
+import { Footer } from '@/components/layout/Footer'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -60,7 +62,9 @@ export default function RootLayout({
       className={`${inter.variable} ${spectral.variable} ${jetbrainsMono.variable}`}
     >
       <body className="font-sans antialiased">
+        <Nav />
         {children}
+        <Footer />
       </body>
     </html>
   )
