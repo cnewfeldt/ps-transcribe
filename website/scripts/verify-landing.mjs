@@ -63,8 +63,8 @@ const must = [
   ['Chat bubbles. Not a wall of text.', 'LAND-04 feature 2 headline'],
   ['Obsidian vault', 'LAND-04 feature 3 meta'],
   ['Every session lands where your notes already live.', 'LAND-04 feature 3 headline'],
-  ['Notion, on send', 'LAND-04 feature 4 meta'],
-  ['Push finished sessions to a database, one key away.', 'LAND-04 feature 4 headline'],
+  ['Notion integration', 'LAND-04 feature 4 meta'],
+  ['Finished sessions land in Notion, automatically.', 'LAND-04 feature 4 headline'],
   // LAND-05 — shortcut chips
   ['⌘R', 'LAND-05 chip ⌘R'],
   ['⌘⇧R', 'LAND-05 chip ⌘⇧R'],

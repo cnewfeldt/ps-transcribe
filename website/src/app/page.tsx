@@ -73,13 +73,13 @@ export default function Home() {
           <FeatureBlock
             index={3}
             tint="tint"
-            metaLabel="Notion, on send"
-            headline="Push finished sessions to a database, one key away."
-            body="Configure a Notion database once. When you stop recording, PS Transcribe can send the transcript as a new page, with the same frontmatter mapped into properties. Leave it off and nothing syncs."
+            metaLabel="Notion integration"
+            headline="Finished sessions land in Notion, automatically."
+            body="Configure a Notion database once. Turn on auto-send, and every finished recording becomes a new Notion page with the key details (date, duration, speakers, source app, tags) already filled in as properties. Leave it off and nothing syncs."
             bullets={[
-              'Property mapping for participants, tags, duration',
-              'Opt-in per recording, or default on',
-              'Integration token stays in Keychain',
+              'Auto-filled Notion properties: date, duration, speakers, source app, tags',
+              'Off by default, flip one toggle to auto-send every session',
+              'Integration token stays in macOS Keychain',
             ]}
             mock={<NotionTableMock />}
           />
