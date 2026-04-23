@@ -53,17 +53,17 @@ export default function Home() {
             index={2}
             tint="default"
             metaTone="navy"
-            metaLabel="Obsidian vault"
-            headline="Every session lands where your notes already live."
+            metaLabel="Saved locally"
+            headline="Every session saves as a Markdown file."
             body={
               <>
-                A Markdown note dropped into the folder you configure, with date, duration, attendees, and tags already filled in at the top. No proprietary format, no export step. The transcript <em className="italic">is</em> a note in your vault, instantly linkable.
+                A plain .md note with date, duration, attendees, and tags filled in at the top, dropped into the folder you choose. No proprietary format, no export step. Point that folder at an Obsidian vault and the transcript <em className="italic">is</em> a linkable note; leave it anywhere else and you still own the file.
               </>
             }
             bullets={[
-              'Date, duration, attendees, and tags set automatically',
-              'Separate folders for meetings and voice memos',
-              'Works with Obsidian sync, git, iCloud, whatever you already use',
+              'Plain Markdown, no proprietary format, no export step',
+              'Point the folder at an Obsidian vault for instant wiki-linking',
+              'Works with git, iCloud, Dropbox, or any folder watcher',
             ]}
             mock={<ObsidianVaultMock />}
           />
