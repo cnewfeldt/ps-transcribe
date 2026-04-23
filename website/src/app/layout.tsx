@@ -12,6 +12,7 @@ const spectral = Spectral({
   subsets: ['latin'],
   display: 'swap',
   weight: ['400', '600'],
+  style: ['normal', 'italic'],
   variable: '--font-spectral',
 })
 
@@ -27,10 +28,10 @@ export const metadata: Metadata = {
     default: 'PS Transcribe -- Private, on-device transcription for macOS',
     template: '%s · PS Transcribe',
   },
-  description: 'Private, on-device transcription for macOS.',
+  description: 'A native macOS transcriber. Call recordings stay on your machine — no cloud APIs, no telemetry, no uploads.',
   openGraph: {
-    title: 'PS Transcribe',
-    description: 'Private, on-device transcription for macOS.',
+    title: 'PS Transcribe — Private, on-device transcription for macOS',
+    description: 'A native macOS transcriber. Call recordings stay on your machine — no cloud APIs, no telemetry, no uploads.',
     url: 'https://ps-transcribe-web.vercel.app',
     siteName: 'PS Transcribe',
     type: 'website',
@@ -38,8 +39,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'PS Transcribe',
-    description: 'Private, on-device transcription for macOS.',
+    title: 'PS Transcribe — Private, on-device transcription for macOS',
+    description: 'A native macOS transcriber. Call recordings stay on your machine — no cloud APIs, no telemetry, no uploads.',
   },
   robots: { index: true, follow: true },
 }
