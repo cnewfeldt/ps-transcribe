@@ -1,59 +1,93 @@
+import { Hero } from '@/components/sections/Hero'
+import { ThreeThingsStrip } from '@/components/sections/ThreeThingsStrip'
+import { FeatureBlock } from '@/components/sections/FeatureBlock'
+import { ShortcutGrid } from '@/components/sections/ShortcutGrid'
+import { FinalCTA } from '@/components/sections/FinalCTA'
+import { DualStreamMock } from '@/components/mocks/DualStreamMock'
+import { ChatBubbleMock } from '@/components/mocks/ChatBubbleMock'
+import { ObsidianVaultMock } from '@/components/mocks/ObsidianVaultMock'
+import { NotionTableMock } from '@/components/mocks/NotionTableMock'
+
 export default function Home() {
   return (
-    <main
-      style={{
-        minHeight: '100dvh',
-        background: '#FAFAF7',
-        color: '#1A1A17',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'flex-start',
-        padding: '96px 64px',
-        gap: '28px',
-        fontFamily: 'var(--font-inter), system-ui, sans-serif',
-      }}
-    >
-      <div
-        style={{
-          fontFamily: 'var(--font-jetbrains-mono), Menlo, monospace',
-          fontSize: '11px',
-          letterSpacing: '0.8px',
-          textTransform: 'uppercase',
-          color: '#8A8A82',
-        }}
-      >
-        v1.1 · Website
-      </div>
+    <main className="bg-paper text-ink">
+      <Hero />
+      <ThreeThingsStrip />
 
-      <h1
-        style={{
-          fontFamily: 'var(--font-spectral), Georgia, serif',
-          fontSize: '48px',
-          fontWeight: 400,
-          lineHeight: 1.1,
-          margin: 0,
-          letterSpacing: '-0.01em',
-        }}
-      >
-        PS Transcribe
-      </h1>
+      <section className="py-10 md:py-14">
+        <div className="mx-auto max-w-[1200px] px-6 md:px-10">
+          <FeatureBlock
+            index={0}
+            tint="tint"
+            metaLabel="Dual-stream capture"
+            headline="Microphone and system audio, recorded in parallel."
+            body="Uses ScreenCaptureKit to pull the other side of the call cleanly, while your mic is captured separately. After the session ends, Silero VAD and diarization resolve who said what."
+            bullets={[
+              'You on mic, them via system audio — two distinct streams',
+              'Voice-activity detection runs locally; silences are trimmed',
+              'Post-session speaker diarization clusters unknown voices',
+            ]}
+            mock={<DualStreamMock />}
+          />
 
-      <p
-        style={{
-          fontSize: '16px',
-          lineHeight: 1.6,
-          color: '#595954',
-          maxWidth: '44ch',
-          margin: 0,
-        }}
-      >
-        Private, on-device transcription for macOS.
-      </p>
+          <hr className="border-0 h-[0.5px] bg-rule" />
 
-      <p style={{ fontSize: '14px', color: '#8A8A82', margin: 0 }}>
-        Site coming soon.
-      </p>
+          <FeatureBlock
+            index={1}
+            tint="sage"
+            metaTone="sage"
+            metaLabel="Transcript view"
+            headline="Chat bubbles. Not a wall of text."
+            body="Your side sits right; Speaker 2 sits left with a sage rail. Rename any speaker inline, and every subsequent bubble updates. Click any timestamp to scrub the session."
+            bullets={[
+              '10pt mono timestamps, quietly recessed',
+              'Inline speaker rename with ⌘E',
+              'Full-text search with ⌘F, scoped to the session',
+            ]}
+            mock={<ChatBubbleMock />}
+          />
+
+          <hr className="border-0 h-[0.5px] bg-rule" />
+
+          <FeatureBlock
+            index={2}
+            tint="default"
+            metaTone="navy"
+            metaLabel="Obsidian vault"
+            headline="Every session lands where your notes already live."
+            body={
+              <>
+                Markdown file, YAML frontmatter, saved to the folder you configure. No proprietary format, no export step — the transcript <em className="italic">is</em> a note in your vault, instantly linkable.
+              </>
+            }
+            bullets={[
+              'Template frontmatter: date, duration, participants, tags',
+              'Configurable path templates per recording type',
+              'Works with Obsidian sync, git, iCloud — whatever you already use',
+            ]}
+            mock={<ObsidianVaultMock />}
+          />
+
+          <hr className="border-0 h-[0.5px] bg-rule" />
+
+          <FeatureBlock
+            index={3}
+            tint="tint"
+            metaLabel="Notion, on send"
+            headline="Push finished sessions to a database, one key away."
+            body="Configure a Notion database once. When you stop recording, PS Transcribe can send the transcript as a new page — with the same frontmatter mapped into properties. Leave it off and nothing syncs."
+            bullets={[
+              'Property mapping for participants, tags, duration',
+              'Opt-in per recording, or default on',
+              'Integration token stays in Keychain',
+            ]}
+            mock={<NotionTableMock />}
+          />
+        </div>
+      </section>
+
+      <ShortcutGrid />
+      <FinalCTA />
     </main>
   )
 }
