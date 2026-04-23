@@ -14,7 +14,7 @@ const BUBBLES: Bubble[] = [
     side: 'them',
     name: 'Speaker 2',
     time: '14:22',
-    text: 'Last thing — did the encoder change land?',
+    text: 'Last thing, did the encoder change land?',
     maxWidth: '85%',
   },
   {

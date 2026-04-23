@@ -21,7 +21,7 @@ export default function Home() {
             tint="tint"
             metaLabel="Dual-stream capture"
             headline="Your mic and the call, on separate tracks."
-            body="PS Transcribe captures your microphone and the other side of the call as two clean streams straight from macOS — no speakerphone, no bleed. Silence is skipped as you record, and when the session ends the app sorts out who said what."
+            body="PS Transcribe captures your microphone and the other side of the call as two clean streams straight from macOS. No speakerphone, no bleed. Silence is skipped as you record, and when the session ends the app sorts out who said what."
             bullets={[
               'Your voice on one track, everyone else on another',
               'Silence is skipped automatically, on device',
@@ -57,13 +57,13 @@ export default function Home() {
             headline="Every session lands where your notes already live."
             body={
               <>
-                Markdown file, YAML frontmatter, saved to the folder you configure. No proprietary format, no export step — the transcript <em className="italic">is</em> a note in your vault, instantly linkable.
+                Markdown file, YAML frontmatter, saved to the folder you configure. No proprietary format, no export step. The transcript <em className="italic">is</em> a note in your vault, instantly linkable.
               </>
             }
             bullets={[
               'Template frontmatter: date, duration, participants, tags',
               'Configurable path templates per recording type',
-              'Works with Obsidian sync, git, iCloud — whatever you already use',
+              'Works with Obsidian sync, git, iCloud, whatever you already use',
             ]}
             mock={<ObsidianVaultMock />}
           />
@@ -75,7 +75,7 @@ export default function Home() {
             tint="tint"
             metaLabel="Notion, on send"
             headline="Push finished sessions to a database, one key away."
-            body="Configure a Notion database once. When you stop recording, PS Transcribe can send the transcript as a new page — with the same frontmatter mapped into properties. Leave it off and nothing syncs."
+            body="Configure a Notion database once. When you stop recording, PS Transcribe can send the transcript as a new page, with the same frontmatter mapped into properties. Leave it off and nothing syncs."
             bullets={[
               'Property mapping for participants, tags, duration',
               'Opt-in per recording, or default on',

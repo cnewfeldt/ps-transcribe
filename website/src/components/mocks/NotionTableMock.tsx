@@ -15,7 +15,7 @@ const ROWS: Row[] = [
   { name: 'Infra planning', date: 'Apr 18', tag: 'meeting', dur: '18m' },
   { name: 'Design review', date: 'Apr 19', tag: 'design', dur: '41m' },
   {
-    name: 'Product sync — Apr 22',
+    name: 'Product sync · Apr 22',
     date: 'Just now',
     tag: 'product',
     dur: '32m',

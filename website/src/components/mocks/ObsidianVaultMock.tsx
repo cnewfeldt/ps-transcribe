@@ -46,17 +46,17 @@ export function ObsidianVaultMock() {
           {'---'}
         </pre>
         <h6 className="mt-[10px] m-0 font-serif text-[15px] font-medium text-ink">
-          Product sync — Apr 22
+          Product sync · Apr 22
         </h6>
         <p className="mt-[6px] m-0 font-sans text-[12px] leading-[1.55] text-ink-muted">
-          <strong className="font-semibold">Speaker 2 · 14:22</strong> — Last thing, did the encoder
+          <strong className="font-semibold">Speaker 2 · 14:22</strong>: Last thing, did the encoder
           change land?
         </p>
         <p className="mt-[4px] m-0 font-sans text-[12px] leading-[1.55] text-ink-muted">
-          <strong className="font-semibold">You · 14:29</strong> — Yesterday. Running on main.
+          <strong className="font-semibold">You · 14:29</strong>: Yesterday. Running on main.
         </p>
         <p className="mt-[4px] m-0 font-sans text-[12px] leading-[1.55] text-ink-muted">
-          <strong className="font-semibold">Speaker 2 · 14:35</strong> — Good. Let&apos;s queue the
+          <strong className="font-semibold">Speaker 2 · 14:35</strong>: Good. Let&apos;s queue the
           diarizer next sprint.
         </p>
       </div>

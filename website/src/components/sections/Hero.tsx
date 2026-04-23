@@ -62,7 +62,7 @@ export function Hero() {
             <figure className="m-0 mx-auto max-w-[1080px] rounded-[12px] overflow-hidden border-[0.5px] border-rule-strong shadow-float bg-paper">
               <Image
                 src="/app-screenshot.png"
-                alt="PS Transcribe — meeting transcript with Library, Transcript, and Details columns"
+                alt="PS Transcribe: meeting transcript with Library, Transcript, and Details columns"
                 width={2260}
                 height={1408}
                 preload={true}
