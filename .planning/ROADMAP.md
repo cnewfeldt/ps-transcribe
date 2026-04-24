@@ -22,7 +22,7 @@
 - [x] **Phase 11: Website Scaffolding & Vercel Deployment** — `/website` subdir with Next.js + TypeScript, Vercel auto-deploy, preview URLs, production on `ps-transcribe.vercel.app` (completed 2026-04-22)
 - [x] **Phase 12: Chronicle Design System Port** — palette tokens, font loading (Inter + Spectral + JetBrains Mono), reusable primitives, light-mode only (completed 2026-04-22)
 - [x] **Phase 13: Landing Page** — hero with download CTA, feature blocks, keyboard-shortcuts callout, nav + footer (completed 2026-04-23)
-- [ ] **Phase 14: Docs Section** — MDX-rendered doc pages with sidebar nav, initial pages (Getting Started, Shortcuts, FAQ, Troubleshooting), right-hand TOC
+- [x] **Phase 14: Docs Section** — MDX-rendered doc pages with sidebar nav, initial pages (Getting Started, Shortcuts, FAQ, Troubleshooting), right-hand TOC (completed 2026-04-24)
 - [ ] **Phase 15: Changelog Page** — build-time parsing of `CHANGELOG.md` rendered as release cards in reverse chronological order
 
 ## Phase Details
@@ -88,10 +88,10 @@
   4. The right-hand "On this page" TOC auto-populates from H2/H3 headings and disappears below 1200px viewport width
   5. Code samples — both inline backticks and fenced blocks — render in JetBrains Mono, with inline code on a `paperSoft` pill background
 **Plans**: 4 plans
-- [ ] 14-01-PLAN.md — MDX pipeline: install @next/mdx stack, wire withMDX + pageExtensions, custom rehype-toc-export plugin, mdx-components.tsx with element overrides + 7 custom components (Note, Lede, Crumbs, PrevNext, ShortcutTable, ShortcutRow, Kbd), scoped docs.css prose layer (DOCS-01, DOCS-05)
-- [ ] 14-02-PLAN.md — Docs chrome: sidebar-data.ts descriptor (6 entries in 3 groups), Sidebar.tsx (client, usePathname active-state), TableOfContents.tsx (client, IntersectionObserver scroll-spy, hidden below 1200px), docs/layout.tsx three-column grid (240px 1fr 200px), /docs redirect, Nav Docs active-state, sitemap with 6 /docs/* URLs (DOCS-02, DOCS-04)
-- [ ] 14-03-PLAN.md — Mock-verbatim content: Getting started + Keyboard shortcuts MDX pages with D-10 fixes (macOS 26 vs mock's macOS 14; dead-link cleanup) (DOCS-03, DOCS-05)
-- [ ] 14-04-PLAN.md — Fresh editorial copy: Configuring your vault + Notion property mapping + FAQ (8–12 Q&A) + Troubleshooting (5–8 issues) in Chronicle voice, anchored to PROJECT.md facts (DOCS-03)
+- [x] 14-01-PLAN.md — MDX pipeline: install @next/mdx stack, wire withMDX + pageExtensions, custom rehype-toc-export plugin, mdx-components.tsx with element overrides + 7 custom components (Note, Lede, Crumbs, PrevNext, ShortcutTable, ShortcutRow, Kbd), scoped docs.css prose layer (DOCS-01, DOCS-05)
+- [x] 14-02-PLAN.md — Docs chrome: sidebar-data.ts descriptor (6 entries in 3 groups), Sidebar.tsx (client, usePathname active-state), TableOfContents.tsx (client, IntersectionObserver scroll-spy, hidden below 1200px), docs/layout.tsx three-column grid (240px 1fr 200px), /docs redirect, Nav Docs active-state, sitemap with 6 /docs/* URLs (DOCS-02, DOCS-04)
+- [x] 14-03-PLAN.md — Mock-verbatim content: Getting started + Keyboard shortcuts MDX pages with D-10 fixes (macOS 26 vs mock's macOS 14; dead-link cleanup) (DOCS-03, DOCS-05)
+- [x] 14-04-PLAN.md — Fresh editorial copy: Configuring your vault + Notion property mapping + FAQ (8–12 Q&A) + Troubleshooting (5–8 issues) in Chronicle voice, anchored to PROJECT.md facts (DOCS-03)
 **UI hint**: yes
 
 ### Phase 15: Changelog Page
@@ -116,7 +116,7 @@ Phases execute in numeric order: 11 → 12 → 13 → 14 → 15. Phases 13, 14, 
 | 11. Website Scaffolding & Vercel Deployment | v1.1 | 3/3 | Complete    | 2026-04-22 |
 | 12. Chronicle Design System Port | v1.1 | 4/4 | Complete    | 2026-04-22 |
 | 13. Landing Page | v1.1 | 5/5 | Complete    | 2026-04-23 |
-| 14. Docs Section | v1.1 | 0/4 | Planned     | -          |
+| 14. Docs Section | v1.1 | 4/4 | Complete   | 2026-04-24 |
 | 15. Changelog Page | v1.1 | 0/TBD | Not started | - |
 
 ## Backlog
@@ -128,7 +128,7 @@ Phases execute in numeric order: 11 → 12 → 13 → 14 → 15. Phases 13, 14, 
 Idea: a third recording mode alongside the existing meeting and voice-memo flows. The user binds a global keyboard combo that starts a quick recording session; audio is transcribed live as the user speaks; when the user ends the recording, the transcript is saved inside the app and the final text is placed directly on the system clipboard for immediate paste. Positions PS Transcribe as a dictation-to-clipboard tool, not just a session recorder.
 
 **Requirements:** TBD
-**Plans:** 0 plans
+**Plans:** 4/4 plans complete
 
 Plans:
 - [ ] TBD (promote with /gsd-review-backlog when ready)
