@@ -1,14 +1,20 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useScrolled } from '@/hooks/useScrolled'
 import { SITE } from '@/lib/site'
 
 const linkBase =
-  'font-mono text-[12px] tracking-[0.06em] uppercase text-ink-muted no-underline hover:text-ink transition-colors duration-[120ms]'
+  'font-mono text-[12px] tracking-[0.06em] uppercase no-underline transition-colors duration-[120ms]'
+const linkIdle = 'text-ink-muted hover:text-ink'
+const linkActive = 'text-ink'
 
 export function Nav() {
   const scrolled = useScrolled(6)
+  const pathname = usePathname()
+  const docsActive = pathname?.startsWith('/docs') ?? false
+
   return (
     <header
       className={`sticky top-0 z-50 backdrop-blur-[8px] backdrop-saturate-150 transition-[box-shadow,background-color] duration-[160ms] border-b-[0.5px] ${
@@ -30,9 +36,15 @@ export function Nav() {
           <span>PS&nbsp;Transcribe</span>
         </Link>
         <nav className="flex items-center gap-7">
-          <Link className={linkBase} href="/docs">Docs</Link>
-          <Link className={linkBase} href="/changelog">Changelog</Link>
-          <a className={linkBase} href={SITE.REPO_URL}>GitHub</a>
+          <Link
+            className={`${linkBase} ${docsActive ? linkActive : linkIdle}`}
+            href="/docs"
+            aria-current={docsActive ? 'page' : undefined}
+          >
+            Docs
+          </Link>
+          <Link className={`${linkBase} ${linkIdle}`} href="/changelog">Changelog</Link>
+          <a className={`${linkBase} ${linkIdle}`} href={SITE.REPO_URL}>GitHub</a>
         </nav>
       </div>
     </header>
