@@ -12,6 +12,13 @@ export const DISCOVERED_DOCS: DiscoveredDoc[] = [
     "order": 2
   },
   {
+    "slug": "faq",
+    "href": "/docs/faq",
+    "navTitle": "FAQ",
+    "group": "Help",
+    "order": 1
+  },
+  {
     "slug": "notion-property-mapping",
     "href": "/docs/notion-property-mapping",
     "navTitle": "Notion property mapping",

@@ -1,0 +1,68 @@
+import { TableOfContents } from '@/components/docs/TableOfContents'
+
+export const metadata = {
+  title: 'FAQ',
+  description: 'Frequently asked questions about PS Transcribe -- privacy, platform support, file formats, and updates.',
+}
+
+export const doc = {
+  group: 'Help',
+  order: 1,
+  navTitle: 'FAQ',
+}
+
+<article className="docs-article prose col-start-1 col-end-2 md:col-start-2 md:col-end-3 lg:col-start-2 lg:col-end-3 px-7 lg:px-14 pt-14 pb-24 max-w-[720px]">
+
+<Crumbs trail={['Docs', 'Help', 'FAQ']} />
+
+# FAQ
+
+<Lede>Answers to the questions that come up most often. If yours is not here, file an issue on the repo.</Lede>
+
+<hr />
+
+## Does PS Transcribe send audio to any cloud service?
+
+No. Speech recognition, voice-activity detection, and speaker diarization all run on your machine via FluidAudio. There are no API keys, no analytics endpoints, and no telemetry. You can verify with Little Snitch or the Network tab in Activity Monitor; the only outbound traffic is the Sparkle update check, which fetches an XML feed from GitHub and contains no session data.
+
+## Which macOS versions are supported?
+
+macOS 26 or later. Earlier versions of macOS are not supported because the app uses APIs that ship in 26.
+
+## Do I need Apple Silicon?
+
+Yes. PS Transcribe is built as an Apple Silicon binary; the FluidAudio models are tuned for the Apple Neural Engine. Running on Rosetta is not supported.
+
+## Does it work on Intel Macs?
+
+No. Apple dropped Intel from macOS 26 at the OS level, and PS Transcribe requires macOS 26.
+
+## Can I use it without an Obsidian vault?
+
+Yes. The "vault" is any folder you point at. Transcripts are plain markdown files with YAML frontmatter. Open them in any editor -- TextEdit, VS Code, iA Writer, anything that reads markdown.
+
+## Is there a mobile version?
+
+No. PS Transcribe is macOS only. The Notion integration gives you read access from mobile if you route transcripts there, but recording happens on the Mac.
+
+## What's the file format for saved transcripts?
+
+Markdown with YAML frontmatter. Speaker turns are rendered as blockquotes with a speaker label, one line per turn. The format is the same whether you use Obsidian, another editor, or just `cat` in the terminal.
+
+## Can I edit transcripts after recording?
+
+Yes -- in whatever editor you use for the vault. PS Transcribe writes the file once on save and does not overwrite your edits. Inside the app, speaker names can be corrected with <Kbd>⌘</Kbd> <Kbd>E</Kbd> before you save; after save, edit the markdown directly.
+
+## How accurate is speaker diarization?
+
+Good for 2–3 speakers in a clean recording; less good with more speakers, overlapping speech, or noisy audio. The diarizer auto-labels speakers as `Speaker 1`, `Speaker 2`, etc.; rename before saving and the frontmatter picks up the change.
+
+## How do updates work?
+
+Sparkle polls the release feed on app launch. New versions appear as a quiet banner; clicking installs in place. Nothing is auto-installed without confirmation, and you can disable the check in **Preferences -- General**.
+
+<PrevNext currentSlug="faq" />
+
+</article>
+
+<TableOfContents items={tableOfContents} />
