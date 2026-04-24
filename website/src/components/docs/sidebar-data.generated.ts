@@ -10,5 +10,12 @@ export const DISCOVERED_DOCS: DiscoveredDoc[] = [
     "navTitle": "Configuring your vault",
     "group": "Start here",
     "order": 2
+  },
+  {
+    "slug": "notion-property-mapping",
+    "href": "/docs/notion-property-mapping",
+    "navTitle": "Notion property mapping",
+    "group": "Reference",
+    "order": 2
   }
 ]
