@@ -114,3 +114,17 @@ Phases execute in numeric order: 11 → 12 → 13 → 14 → 15. Phases 13, 14, 
 | 13. Landing Page | v1.1 | 5/5 | Complete    | 2026-04-23 |
 | 14. Docs Section | v1.1 | 0/TBD | Not started | - |
 | 15. Changelog Page | v1.1 | 0/TBD | Not started | - |
+
+## Backlog
+
+### Phase 999.1: Keyboard-triggered clipboard dictation recording (BACKLOG)
+
+**Goal:** [Captured for future planning]
+
+Idea: a third recording mode alongside the existing meeting and voice-memo flows. The user binds a global keyboard combo that starts a quick recording session; audio is transcribed live as the user speaks; when the user ends the recording, the transcript is saved inside the app and the final text is placed directly on the system clipboard for immediate paste. Positions PS Transcribe as a dictation-to-clipboard tool, not just a session recorder.
+
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (promote with /gsd-review-backlog when ready)
