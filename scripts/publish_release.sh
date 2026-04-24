@@ -63,6 +63,32 @@ fi
 
 TAG="v$VERSION"
 
+# --- Resolve user-facing release notes (needed by both publish + appcast-only paths) ---
+NOTES_FILE="$RELEASE_NOTES_DIR/v$VERSION.md"
+NOTES_TEMPLATE="$RELEASE_NOTES_DIR/TEMPLATE.md"
+
+if [[ ! -f "$NOTES_FILE" ]]; then
+  if [[ ! -f "$NOTES_TEMPLATE" ]]; then
+    echo "ERROR: release notes not found at $NOTES_FILE and no template at $NOTES_TEMPLATE"
+    exit 1
+  fi
+  sed "s/{{VERSION}}/$VERSION/g" "$NOTES_TEMPLATE" > "$NOTES_FILE"
+  echo "Scaffolded $NOTES_FILE from template."
+  echo "Edit the file with the user-facing release notes, then rerun this script."
+  exit 1
+fi
+
+if grep -q "TODO: fill in user-facing release notes" "$NOTES_FILE"; then
+  echo "ERROR: $NOTES_FILE still contains the TODO placeholder."
+  echo "Fill in the release notes before publishing."
+  exit 1
+fi
+
+if [[ ! -s "$NOTES_FILE" ]]; then
+  echo "ERROR: $NOTES_FILE is empty"
+  exit 1
+fi
+
 # --- Sign DMG with EdDSA (Sparkle) ---
 echo "=== Signing DMG with EdDSA ==="
 SIGN_OUTPUT=$("$SPARKLE_BIN/sign_update" "$DMG_PATH" 2>&1) || {
@@ -93,7 +119,16 @@ update_appcast() {
   min_system=$(/usr/libexec/PlistBuddy -c "Print :LSMinimumSystemVersion" "$INFO_PLIST")
 
   local dmg_url="https://github.com/$RELEASES_REPO/releases/download/$TAG/PS.Transcribe.dmg"
-  local release_url="https://github.com/$RELEASES_REPO/releases/tag/$TAG"
+
+  # Render user-facing release notes (Markdown) to HTML via GitHub's GFM API.
+  # This keeps notes self-contained in the appcast — Sparkle renders the HTML
+  # inline in its update dialog instead of fetching an external URL (which
+  # would drag in GitHub's nav/sidebar chrome).
+  local notes_html
+  notes_html=$(gh api -X POST /markdown -f mode=gfm -f "text=$(cat "$NOTES_FILE")" 2>/dev/null) || {
+    echo "ERROR: gh api /markdown failed to render $NOTES_FILE"
+    return 1
+  }
 
   local new_item
   new_item=$(cat <<ITEM
@@ -103,7 +138,9 @@ update_appcast() {
       <sparkle:version>$VERSION</sparkle:version>
       <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>$min_system</sparkle:minimumSystemVersion>
-      <sparkle:releaseNotesLink>$release_url</sparkle:releaseNotesLink>
+      <description><![CDATA[
+$notes_html
+      ]]></description>
       <enclosure url="$dmg_url" sparkle:edSignature="$SIGNATURE" length="$DMG_LENGTH" type="application/octet-stream" />
     </item>
 ITEM
@@ -184,32 +221,6 @@ if gh release view "$TAG" -R "$RELEASES_REPO" >/dev/null 2>&1; then
   echo "ERROR: release $TAG already exists on $RELEASES_REPO."
   echo "Delete it first (gh release delete $TAG -R $RELEASES_REPO --yes --cleanup-tag) or bump the version."
   echo "To update just the appcast for an existing release, run with APPCAST_ONLY=1."
-  exit 1
-fi
-
-# --- Load user-facing release notes from release-notes/v<version>.md ---
-NOTES_FILE="$RELEASE_NOTES_DIR/v$VERSION.md"
-NOTES_TEMPLATE="$RELEASE_NOTES_DIR/TEMPLATE.md"
-
-if [[ ! -f "$NOTES_FILE" ]]; then
-  if [[ ! -f "$NOTES_TEMPLATE" ]]; then
-    echo "ERROR: release notes not found at $NOTES_FILE and no template at $NOTES_TEMPLATE"
-    exit 1
-  fi
-  sed "s/{{VERSION}}/$VERSION/g" "$NOTES_TEMPLATE" > "$NOTES_FILE"
-  echo "Scaffolded $NOTES_FILE from template."
-  echo "Edit the file with the user-facing release notes, then rerun this script."
-  exit 1
-fi
-
-if grep -q "TODO: fill in user-facing release notes" "$NOTES_FILE"; then
-  echo "ERROR: $NOTES_FILE still contains the TODO placeholder."
-  echo "Fill in the release notes before publishing."
-  exit 1
-fi
-
-if [[ ! -s "$NOTES_FILE" ]]; then
-  echo "ERROR: $NOTES_FILE is empty"
   exit 1
 fi
 
