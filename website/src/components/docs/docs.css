@@ -1,0 +1,131 @@
+/* Scoped prose styles for docs MDX pages. Ported from
+   design/ps-transcribe-web-unzipped/docs.html (lines 93–205) verbatim.
+   Wrap docs page.mdx content with class="prose" in the docs layout. */
+
+.prose {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--color-ink);
+}
+
+.prose h1 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 40px;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  margin: 0 0 14px;
+}
+
+.prose h2 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 26px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  margin: 56px 0 14px;
+  position: relative;
+}
+
+.prose h2 .anchor {
+  position: absolute;
+  left: -84px;
+  top: 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-ink-ghost);
+  text-decoration: none;
+}
+.prose h2 .anchor::before { content: "# "; }
+@media (max-width: 1100px) { .prose h2 .anchor { display: none; } }
+
+.prose h3 {
+  font-family: var(--font-sans);
+  font-size: 17px;
+  font-weight: 600;
+  margin: 32px 0 8px;
+  letter-spacing: -0.005em;
+}
+/* H3 anchor: present but visually subdued; follows same positioning scheme
+   so links still work but chrome is less noisy inside sub-sections. */
+.prose h3 .anchor {
+  position: absolute;
+  left: -84px;
+  top: 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-ink-ghost);
+  text-decoration: none;
+}
+.prose h3 { position: relative; }
+.prose h3 .anchor::before { content: "# "; }
+@media (max-width: 1100px) { .prose h3 .anchor { display: none; } }
+
+.prose p { margin: 0 0 16px; color: var(--color-ink); }
+.prose p + p { margin-top: -4px; }
+
+.prose strong { font-weight: 600; }
+.prose em { font-style: italic; color: var(--color-accent-ink); }
+
+.prose ul, .prose ol { margin: 0 0 18px; padding-left: 20px; }
+.prose li { margin: 4px 0; }
+
+.prose a {
+  color: var(--color-accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 0.5px;
+}
+.prose a:hover { text-decoration-thickness: 1px; }
+
+/* Inline code pill styling is handled by the MDX `code` override (Tailwind
+   utilities); fenced blocks get the following treatment. Strip the pill
+   styles when code is inside a pre. */
+.prose pre {
+  background: var(--color-paper-warm);
+  border: 0.5px solid var(--color-rule);
+  border-radius: 8px;
+  padding: 16px 18px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-x: auto;
+  margin: 0 0 22px;
+  position: relative;
+}
+.prose pre::before {
+  content: attr(data-lang);
+  position: absolute;
+  top: 8px;
+  right: 14px;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+.prose pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+}
+
+/* hr soft */
+.prose .hr-soft,
+.prose hr.hr-soft {
+  border: 0;
+  border-top: 0.5px solid var(--color-rule);
+  margin: 48px 0;
+}
+
+/* Lede body width — mirrored in the Lede component's Tailwind classes
+   (max-w-[56ch]); kept here so any .lede-classed paragraph in MDX also
+   honors the measure without the component wrapper. */
+.prose .lede {
+  max-width: 56ch;
+}
