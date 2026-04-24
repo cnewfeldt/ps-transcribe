@@ -24,5 +24,12 @@ export const DISCOVERED_DOCS: DiscoveredDoc[] = [
     "navTitle": "Notion property mapping",
     "group": "Reference",
     "order": 2
+  },
+  {
+    "slug": "troubleshooting",
+    "href": "/docs/troubleshooting",
+    "navTitle": "Troubleshooting",
+    "group": "Help",
+    "order": 2
   }
 ]
