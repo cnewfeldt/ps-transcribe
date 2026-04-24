@@ -116,7 +116,7 @@ Phases execute in numeric order: 11 → 12 → 13 → 14 → 15. Phases 13, 14, 
 | 11. Website Scaffolding & Vercel Deployment | v1.1 | 3/3 | Complete    | 2026-04-22 |
 | 12. Chronicle Design System Port | v1.1 | 4/4 | Complete    | 2026-04-22 |
 | 13. Landing Page | v1.1 | 5/5 | Complete    | 2026-04-23 |
-| 14. Docs Section | v1.1 | 4/4 | Complete   | 2026-04-24 |
+| 14. Docs Section | v1.1 | 4/4 | Complete    | 2026-04-24 |
 | 15. Changelog Page | v1.1 | 0/TBD | Not started | - |
 
 ## Backlog
