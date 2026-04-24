@@ -9,9 +9,9 @@
     <key>CFBundleIdentifier</key>
     <string>com.pstranscribe.app</string>
     <key>CFBundleVersion</key>
-    <string>2.1.0</string>
+    <string>2.1.1</string>
     <key>CFBundleShortVersionString</key>
-    <string>2.1.0</string>
+    <string>2.1.1</string>
     <key>CFBundleExecutable</key>
     <string>PSTranscribe</string>
     <key>CFBundleIconFile</key>
@@ -27,10 +27,10 @@
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.productivity</string>
     <key>SUFeedURL</key>
-    <string>https://raw.githubusercontent.com/cnewfeldt/ps-transcribe/gh-pages/appcast.xml</string>
+    <string>https://raw.githubusercontent.com/cnewfeldt/ps-transcribe-releases/main/appcast.xml</string>
     <key>SUEnableAutomaticChecks</key>
     <true/>
     <key>SUPublicEDKey</key>
-    <string>LT2/oCSuJPmnri+6b62DV1WhHxSmWrJ1nZzbAK2ipV4=</string>
+    <string>JazWiJeCNOZCUMeI2DkU6xW4AU2Zp3CnjtHcMR6B6GE=</string>
 </dict>
 </plist>

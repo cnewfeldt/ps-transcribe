@@ -1,12 +1,18 @@
 # Changelog
 
-## [Unreleased] — 2026-04-23
+## [2.1.1] — 2026-04-23
 
 ### Distribution / Tooling
 - New public releases repo `cnewfeldt/ps-transcribe-releases` hosts the signed DMG. Evergreen download URL: `github.com/cnewfeldt/ps-transcribe-releases/releases/latest/download/PS.Transcribe.dmg`.
-- `scripts/publish_release.sh` reads version from `Info.plist`, scaffolds `release-notes/v<version>.md` from a project-local template when missing, refuses to publish while the TODO placeholder is present, and uploads the DMG via `gh release create`. Supports `DRAFT=1` and `PRERELEASE=1`.
+- `scripts/publish_release.sh` reads version from `Info.plist`, scaffolds `release-notes/v<version>.md` from a project-local template when missing, refuses to publish while the TODO placeholder is present, and uploads the DMG via `gh release create`. Supports `DRAFT=1`, `PRERELEASE=1`, and `APPCAST_ONLY=1`.
 - `release-notes/` holds user-facing, non-technical release notes — `v2.1.0.md` shipped, `TEMPLATE.md` provides `{{VERSION}}`-substituted scaffold for future versions. CHANGELOG.md stays internal.
 - README gains a `Download` section pointing users at the public releases repo; install instructions separated from the `Build` section for contributors.
+
+### Auto-updates (Sparkle)
+- New EdDSA signing key pair generated via Sparkle's `generate_keys`; public key baked into `Info.plist` via `SUPublicEDKey`, private key lives in the macOS keychain.
+- `SUFeedURL` moved from `cnewfeldt/ps-transcribe` gh-pages (branch never existed) to `raw.githubusercontent.com/cnewfeldt/ps-transcribe-releases/main/appcast.xml`. Decouples update delivery from source-repo visibility.
+- `publish_release.sh` now signs the DMG via `sign_update` before upload, fetches the current `appcast.xml` from the public repo (or bootstraps a fresh feed on first release), prepends a new `<item>` entry with EdDSA signature, byte length, release-notes link, and minimum system version, then pushes it back via `gh api`. `APPCAST_ONLY=1` refreshes the feed without creating a new release (needed after flipping a draft public).
+- Existing `AppUpdaterController` + `CheckForUpdatesView` wiring unchanged — they just work now that the feed URL resolves.
 
 ## [2.1.0] — 2026-04-20
 
