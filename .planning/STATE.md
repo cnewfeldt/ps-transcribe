@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: — Marketing Website
 status: executing
-stopped_at: Phase 13 context gathered
-last_updated: "2026-04-23T16:19:45.412Z"
+stopped_at: Phase 14 context gathered
+last_updated: "2026-04-24T06:44:30.341Z"
 last_activity: 2026-04-23
 progress:
-  total_phases: 5
+  total_phases: 6
   completed_phases: 3
   total_plans: 12
   completed_plans: 12
@@ -79,6 +79,6 @@ None blocking v1.1 scaffolding. Phase 11 is independent of the macOS app codebas
 
 ## Session Continuity
 
-Last session: 2026-04-23T06:42:19.956Z
-Stopped at: Phase 13 context gathered
-Resume file: .planning/phases/13-landing-page/13-CONTEXT.md
+Last session: 2026-04-24T06:44:30.337Z
+Stopped at: Phase 14 context gathered
+Resume file: .planning/phases/14-docs-section/14-CONTEXT.md
