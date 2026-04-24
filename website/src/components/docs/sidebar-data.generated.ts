@@ -3,4 +3,12 @@
 
 export type DiscoveredDoc = { slug: string; href: string; navTitle: string; group: string; order: number }
 
-export const DISCOVERED_DOCS: DiscoveredDoc[] = []
+export const DISCOVERED_DOCS: DiscoveredDoc[] = [
+  {
+    "slug": "configuring-your-vault",
+    "href": "/docs/configuring-your-vault",
+    "navTitle": "Configuring your vault",
+    "group": "Start here",
+    "order": 2
+  }
+]
