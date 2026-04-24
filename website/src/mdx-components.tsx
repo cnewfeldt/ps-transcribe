@@ -7,6 +7,7 @@ import { PrevNext } from '@/components/docs/PrevNext'
 import { ShortcutTable } from '@/components/docs/ShortcutTable'
 import { ShortcutRow } from '@/components/docs/ShortcutRow'
 import { Kbd } from '@/components/docs/Kbd'
+import { TableOfContents } from '@/components/docs/TableOfContents'
 
 /**
  * Element overrides apply a MINIMAL set of classes. The bulk of prose styles
@@ -27,6 +28,7 @@ const components: MDXComponents = {
   ShortcutTable,
   ShortcutRow,
   Kbd,
+  TableOfContents,
 
   // Inline code — fenced blocks are handled by the `pre` override below,
   // which strips the inline styles via the `pre code` selector in docs.css.
