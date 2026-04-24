@@ -1,0 +1,107 @@
+import { TableOfContents } from '@/components/docs/TableOfContents'
+
+export const metadata = {
+  title: 'Keyboard shortcuts',
+  description: 'PS Transcribe is built for the keyboard. Four shortcuts cover 90% of the app; the rest are for speaker management and navigation.',
+}
+
+export const doc = {
+  group: 'Reference',
+  order: 1,
+  navTitle: 'Keyboard shortcuts',
+}
+
+<article className="docs-article prose col-start-1 col-end-2 md:col-start-2 md:col-end-3 lg:col-start-2 lg:col-end-3 px-7 lg:px-14 pt-14 pb-24 max-w-[720px]">
+
+<Crumbs trail={['Docs', 'Reference', 'Keyboard shortcuts']} />
+
+# Keyboard shortcuts
+
+<Lede>PS Transcribe is built for the keyboard. Four shortcuts cover 90% of the app; the rest are for speaker management and navigation.</Lede>
+
+<hr />
+
+## Recording
+
+<ShortcutTable>
+  <ShortcutRow
+    keys={[{ k: '⌘', tone: 'navy' }, { k: 'R', tone: 'navy' }]}
+    label="Start a meeting"
+    sub="Captures mic + system audio in parallel."
+  />
+  <ShortcutRow
+    keys={[{ k: '⌘', tone: 'sage' }, { k: '⇧', tone: 'sage' }, { k: 'R', tone: 'sage' }]}
+    label="Start a quick memo"
+    sub="Mic only. Single-speaker. No diarization pass."
+  />
+  <ShortcutRow
+    keys={[{ k: '⌘' }, { k: '.' }]}
+    label="Stop and save"
+    sub="Runs VAD, final recognition, and diarization."
+  />
+  <ShortcutRow
+    keys={[{ k: '⌘' }, { k: '⇧' }, { k: '.' }]}
+    label="Stop without saving"
+    sub="Discards the session. Prompts for confirmation."
+  />
+  <ShortcutRow
+    keys={[{ k: 'Space' }]}
+    label="Pause / resume"
+    sub="Only available during a recording."
+  />
+</ShortcutTable>
+
+## Transcript
+
+<ShortcutTable>
+  <ShortcutRow
+    keys={[{ k: '⌘' }, { k: 'E' }]}
+    label="Rename speaker"
+    sub="Click a bubble, then ⌘E. Every bubble from that speaker updates."
+  />
+  <ShortcutRow
+    keys={[{ k: '⌘' }, { k: 'F' }]}
+    label="Find in session"
+    sub="Scoped to the currently-open transcript."
+  />
+  <ShortcutRow
+    keys={[{ k: '⌘' }, { k: 'K' }]}
+    label="Quick switcher"
+    sub="Fuzzy jump to any session in the library."
+  />
+  <ShortcutRow
+    keys={[{ k: '⌘' }, { k: 'J' }]}
+    label="Jump to live"
+    sub="Scrolls to the current recording position."
+  />
+</ShortcutTable>
+
+## Layout
+
+<ShortcutTable>
+  <ShortcutRow
+    keys={[{ k: '⌘' }, { k: '⇧' }, { k: 'S' }]}
+    label="Toggle sidebar"
+    sub="Hides the library column."
+  />
+  <ShortcutRow
+    keys={[{ k: '⌘' }, { k: '⇧' }, { k: 'I' }]}
+    label="Toggle inspector"
+    sub="Hides the session-metadata column."
+  />
+  <ShortcutRow
+    keys={[{ k: '⌘' }, { k: '0' }]}
+    label="Reset zoom"
+    sub="Returns transcript text to default size."
+  />
+</ShortcutTable>
+
+<Note label="Customize">
+  All shortcuts can be rebound in *Preferences → Keyboard*. Your overrides are written to `~/Library/Application Support/PS Transcribe/shortcuts.json`.
+</Note>
+
+<PrevNext currentSlug="keyboard-shortcuts" />
+
+</article>
+
+<TableOfContents items={tableOfContents} />

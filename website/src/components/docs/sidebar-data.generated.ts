@@ -10,5 +10,12 @@ export const DISCOVERED_DOCS: DiscoveredDoc[] = [
     "navTitle": "Getting started",
     "group": "Start here",
     "order": 1
+  },
+  {
+    "slug": "keyboard-shortcuts",
+    "href": "/docs/keyboard-shortcuts",
+    "navTitle": "Keyboard shortcuts",
+    "group": "Reference",
+    "order": 1
   }
 ]
