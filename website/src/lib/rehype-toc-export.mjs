@@ -1,11 +1,3 @@
-import type { Plugin } from 'unified'
-import type { Root, Element } from 'hast'
-import { visit } from 'unist-util-visit'
-import { toString } from 'mdast-util-to-string'
-import { valueToEstree } from 'estree-util-value-to-estree'
-
-export type TocItem = { depth: 2 | 3; id: string; text: string }
-
 /**
  * Custom rehype plugin: collects H2 + H3 headings from the compiled HAST,
  * then injects `export const tableOfContents = [...]` into the MDX module's
@@ -13,12 +5,21 @@ export type TocItem = { depth: 2 | 3; id: string; text: string }
  *     import Page, { tableOfContents } from './page.mdx'
  *
  * MUST run AFTER rehype-slug so heading IDs are present.
+ *
+ * NOTE: This file is authored as `.mjs` (not `.ts`) because Next 16's
+ * `@next/mdx` loader resolves plugins via plain Node `import()` at build time,
+ * which cannot execute TypeScript source files. The TS types we care about
+ * are enforced in consumers (TableOfContents.tsx) via a local TocItem type.
  */
-export const rehypeTocExport: Plugin<[], Root> = () => (tree) => {
-  const items: TocItem[] = []
-  visit(tree, 'element', (node: Element) => {
+import { visit } from 'unist-util-visit'
+import { toString } from 'mdast-util-to-string'
+import { valueToEstree } from 'estree-util-value-to-estree'
+
+export const rehypeTocExport = () => (tree) => {
+  const items = []
+  visit(tree, 'element', (node) => {
     if (node.tagName !== 'h2' && node.tagName !== 'h3') return
-    const id = (node.properties?.id as string) ?? ''
+    const id = (node.properties && node.properties.id) || ''
     if (!id) return
     items.push({
       depth: node.tagName === 'h2' ? 2 : 3,
@@ -52,8 +53,10 @@ export const rehypeTocExport: Plugin<[], Root> = () => (tree) => {
   // Inject an mdxjsEsm node at the top of the tree. MDX compiler hoists it
   // into the compiled module's ES exports.
   tree.children.unshift({
-    type: 'mdxjsEsm' as never,
+    type: 'mdxjsEsm',
     value: '',
     data: { estree },
-  } as never)
+  })
 }
+
+export default rehypeTocExport

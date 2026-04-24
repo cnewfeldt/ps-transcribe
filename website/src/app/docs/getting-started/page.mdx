@@ -1,0 +1,78 @@
+import { TableOfContents } from '@/components/docs/TableOfContents'
+
+export const metadata = {
+  title: 'Getting started',
+  description: 'Install PS Transcribe, grant two permissions, point it at an Obsidian folder, and start recording — in five minutes.',
+}
+
+export const doc = {
+  group: 'Start here',
+  order: 1,
+  navTitle: 'Getting started',
+}
+
+<article className="docs-article prose col-start-1 col-end-2 md:col-start-2 md:col-end-3 lg:col-start-2 lg:col-end-3 px-7 lg:px-14 pt-14 pb-24 max-w-[720px]">
+
+<Crumbs trail={['Docs', 'Start here', 'Getting started']} />
+
+# Getting started
+
+<Lede>Install, grant two permissions, point PS Transcribe at an Obsidian folder, and start recording. Five minutes.</Lede>
+
+<hr />
+
+## Install
+
+Download the latest signed DMG from [GitHub Releases](https://github.com/cnewfeldt/ps-transcribe/releases/latest). Drag `PS Transcribe.app` into `/Applications`. On first launch, Gatekeeper will verify the Developer ID signature.
+
+Auto-updates are handled by Sparkle — future releases appear as a quiet banner in the app, nothing forced.
+
+<Note label="Requirements">
+  macOS 26 or later. Apple Silicon required.
+</Note>
+
+## Grant permissions
+
+Two prompts, both required:
+
+1. **Microphone** — for capturing your side of the call.
+2. **Screen &amp; System Audio Recording** — for capturing the other side via ScreenCaptureKit. PS Transcribe does not record your screen; it uses the system-audio tap exposed by the same API.
+
+If you miss a prompt, re-open it in *System Settings → Privacy &amp; Security*.
+
+## Point at an Obsidian vault
+
+Open **Preferences → Vault** and pick the folder where transcripts should land. A typical setup:
+
+```yaml
+Vault path:      ~/Documents/Obsidian/Work
+Meetings path:   Meetings/{{year}}
+Memos path:      Memos/{{year}}-{{month}}
+Filename:        {{date}} — {{title}}.md
+```
+
+Template tokens are resolved at save time. Frontmatter is written automatically — date, duration, participants, and tags are filled in for every saved session.
+
+## Record something
+
+Press <Kbd tone="navy">⌘</Kbd>&nbsp;<Kbd tone="navy">R</Kbd> anywhere in the app. A red dot appears in the sidebar. PS Transcribe starts two streams: your mic, and the system-audio tap for whoever else is in the call.
+
+While recording, the transcript renders as it goes — not polished yet, just enough to follow along. When you press <Kbd>⌘</Kbd>&nbsp;<Kbd>.</Kbd> to stop, the app runs voice-activity detection, final speech recognition, and speaker diarization. Usually under a minute for a 30-minute call on Apple Silicon.
+
+<Note variant="sage" label='What "on-device" actually means'>
+  Parakeet-TDT, Silero VAD, and the diarization clusterer all run locally via FluidAudio. No API keys. No network calls during transcription. You can verify with Little Snitch or the Network tab in Activity Monitor.
+</Note>
+
+## Send to Notion (optional)
+
+If you've connected a Notion integration in **Preferences → Integrations**, each session offers a "Send to Notion" toggle before you stop. The transcript posts as a new database page with frontmatter mapped to properties.
+
+Leave it off entirely and PS Transcribe never talks to Notion — the integration stays dormant.
+
+<hr />
+
+<PrevNext currentSlug="getting-started" />
+
+</article>
+
+<TableOfContents items={tableOfContents} />
