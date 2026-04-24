@@ -1,0 +1,64 @@
+import { TableOfContents } from '@/components/docs/TableOfContents'
+
+export const metadata = {
+  title: 'Troubleshooting',
+  description: 'Common symptoms when PS Transcribe misbehaves and what to check first.',
+}
+
+export const doc = {
+  group: 'Help',
+  order: 2,
+  navTitle: 'Troubleshooting',
+}
+
+<article className="docs-article prose col-start-1 col-end-2 md:col-start-2 md:col-end-3 lg:col-start-2 lg:col-end-3 px-7 lg:px-14 pt-14 pb-24 max-w-[720px]">
+
+<Crumbs trail={['Docs', 'Help', 'Troubleshooting']} />
+
+# Troubleshooting
+
+<Lede>Common symptoms when PS Transcribe misbehaves and what to check first. Almost all of these come down to a macOS permission or a missing model download.</Lede>
+
+<hr />
+
+## The app can't hear the other side of the call
+
+PS Transcribe needs **Screen & System Audio Recording** permission, not just microphone access. The permission is granted at first launch, but if you denied it then or if macOS reset permissions after an update, re-grant it in *System Settings -- Privacy & Security -- Screen & System Audio Recording*. Restart PS Transcribe after toggling the permission.
+
+We do not record the screen. macOS bundles system-audio capture under the screen-recording API; there is no way to request one without the other.
+
+## Speaker names are wrong
+
+The diarizer auto-labels speakers as `Speaker 1`, `Speaker 2`, and so on based on voice clustering. Click any transcript bubble and press <Kbd>⌘</Kbd> <Kbd>E</Kbd> to rename that speaker everywhere in the session. The frontmatter `participants` field picks up the new names at save time.
+
+If the diarizer merged two speakers or split one, there is no per-bubble correction yet -- rename to the best approximation and fix up in Obsidian after save. Tracked in the backlog.
+
+## Models didn't download on first launch
+
+Parakeet-TDT and the diarization models are downloaded at first launch (roughly 400 MB total). If the download failed (no network, full disk, or interrupted), **Preferences -- Models -- Redownload** re-runs the fetch. Free up disk space first -- the installer is not resumable.
+
+<Note label="Disk space">
+  The models unpack to roughly 800 MB on disk. Plan on 1.5 GB free before installing.
+</Note>
+
+## Notion sync failed
+
+Three likely causes, in order:
+
+1. **Token is wrong or expired.** Regenerate the integration at [https://www.notion.so/my-integrations](https://www.notion.so/my-integrations) and paste the new token in **Preferences -- Integrations -- Notion**.
+2. **The integration isn't shared with your database.** Open the database in Notion, click the three-dot menu, choose **Connections -- Add connections**, and select your integration.
+3. **Property type mismatch.** PS Transcribe skips frontmatter fields whose Notion property exists but has the wrong type. Check the Notion activity feed to see which field was ignored.
+
+## Transcript is slow to appear after I stopped
+
+Expected. When you press <Kbd>⌘</Kbd> <Kbd>.</Kbd>, the app runs voice-activity detection, final speech recognition, and speaker diarization on the full audio. This typically takes under a minute for a 30-minute call on Apple Silicon; longer for denser audio or more speakers. The live transcript you saw during recording was a preview pass, not the final one.
+
+## Sparkle didn't show the update banner
+
+The Sparkle feed polls on launch, not while running. Quit and restart PS Transcribe; if a new version is out, the banner appears within a few seconds. To force a check, **PS Transcribe -- Check for Updates** in the menu bar. If no banner appears and you know a new version shipped, the appcast feed may be blocked by your network -- the feed URL is `https://github.com/cnewfeldt/ps-transcribe/releases.atom`.
+
+<PrevNext currentSlug="troubleshooting" />
+
+</article>
+
+<TableOfContents items={tableOfContents} />

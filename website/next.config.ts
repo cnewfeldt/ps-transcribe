@@ -1,9 +1,27 @@
 import type { NextConfig } from 'next'
 import createMDX from '@next/mdx'
-import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
+
+// Pin Turbopack's workspace root to this directory. Without this, Next 16's
+// auto-detection walks up the filesystem looking for a lockfile and can
+// select a stray `bun.lockb` in the user's home, which breaks relative
+// plugin paths like `./src/lib/rehype-toc-export` during `next build`.
+const HERE = dirname(fileURLToPath(import.meta.url))
+
+// Absolute path to the local rehype plugin. @next/mdx's mdx-js-loader calls
+// `require.resolve(pluginPath, { paths: [this.context] })` where `this.context`
+// is the directory of the .mdx file being compiled, not the project root.
+// A relative path like `./src/lib/rehype-toc-export` therefore cannot resolve.
+// Using an absolute path computed from next.config.ts's own directory sidesteps
+// the issue entirely and still keeps the option JSON-serializable for Turbopack.
+const REHYPE_TOC_EXPORT_PATH = join(HERE, 'src', 'lib', 'rehype-toc-export.mjs')
 
 const nextConfig: NextConfig = {
   pageExtensions: ['ts', 'tsx', 'mdx'],
+  turbopack: {
+    root: HERE,
+  },
 }
 
 // Turbopack requires plugins and options to be JSON-serializable, so plugins
@@ -12,19 +30,6 @@ const nextConfig: NextConfig = {
 // a build function. This is the D-14 "acceptable fallback" — anchors render as
 // "#" (CSS handles positioning/styling) rather than per-heading lowercase
 // labels like "# install".
-//
-// The custom local plugin is referenced via its absolute file path (computed
-// from process.cwd(), which is always the website/ root when `pnpm build` or
-// `pnpm dev` is invoked). @next/mdx's loader calls require.resolve(path, {
-// paths: [loaderContext] }), which only honors `paths` for module-style
-// lookups; `./`-style relative paths resolve from the loader's own __dirname
-// (deep inside node_modules) and would fail. An absolute path sidesteps that
-// entirely while remaining a plain string (Turbopack-safe).
-//
-// Note: We avoid `import.meta.url` here because Next 16 compiles next.config.ts
-// to CJS before executing it, and `import.meta` is undefined in CJS.
-const TOC_EXPORT_PLUGIN = resolve(process.cwd(), 'src/lib/rehype-toc-export.mjs')
-
 const withMDX = createMDX({
   options: {
     remarkPlugins: ['remark-gfm'],
@@ -39,7 +44,7 @@ const withMDX = createMDX({
         },
       ],
       ['rehype-external-links', { target: '_blank', rel: ['noopener', 'noreferrer'] }],
-      TOC_EXPORT_PLUGIN,
+      REHYPE_TOC_EXPORT_PATH,
     ],
   },
 })

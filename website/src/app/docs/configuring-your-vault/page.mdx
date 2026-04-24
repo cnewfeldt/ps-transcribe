@@ -1,0 +1,82 @@
+import { TableOfContents } from '@/components/docs/TableOfContents'
+
+export const metadata = {
+  title: 'Configuring your vault',
+  description: 'Point PS Transcribe at an Obsidian folder, customize how files are named, and understand what lands in frontmatter.',
+}
+
+export const doc = {
+  group: 'Start here',
+  order: 2,
+  navTitle: 'Configuring your vault',
+}
+
+<article className="docs-article prose col-start-1 col-end-2 md:col-start-2 md:col-end-3 lg:col-start-2 lg:col-end-3 px-7 lg:px-14 pt-14 pb-24 max-w-[720px]">
+
+<Crumbs trail={['Docs', 'Start here', 'Configuring your vault']} />
+
+# Configuring your vault
+
+<Lede>PS Transcribe writes every transcript as a markdown file inside an Obsidian vault you pick. Four settings decide where files land and what gets filled in automatically.</Lede>
+
+<hr />
+
+## Set the vault path
+
+Open **Preferences -- Vault**. The first field is the path to your Obsidian vault folder -- the same folder you'd open in Obsidian itself. Any disk works; the vault does not need to be under `~/Documents`. PS Transcribe writes files directly; Obsidian picks them up the next time the vault index refreshes.
+
+If you don't use Obsidian, pick any folder. The files are plain markdown -- every editor can read them.
+
+## Understand the path tokens
+
+The meetings and memos paths accept template tokens that resolve at save time:
+
+```text
+{{year}}    2026
+{{month}}   04
+{{date}}    2026-04-23
+{{title}}   the name you gave the session
+```
+
+Example layout:
+
+```yaml
+Meetings path:  Meetings/{{year}}
+Memos path:     Memos/{{year}}-{{month}}
+Filename:       {{date}} -- {{title}}.md
+```
+
+A meeting recorded on April 23, 2026 with the title "Design review" lands at `<vault>/Meetings/2026/2026-04-23 -- Design review.md`. Rename in Obsidian afterward if you like; PS Transcribe will not touch files it has already saved.
+
+<Note label="On-device">
+  Vault location does not affect processing. Transcription, speaker diarization, and frontmatter generation all run locally regardless of whether your vault lives on the Mac's internal drive or an external volume.
+</Note>
+
+## What gets written to frontmatter
+
+Every saved session includes a YAML frontmatter block at the top of the file:
+
+```yaml
+---
+date: 2026-04-23
+duration: 00:32:14
+participants: [You, Sam, Priya]
+tags: [meeting, design-review]
+---
+```
+
+`date` and `duration` are filled in automatically. `participants` starts with whoever the diarizer identified and auto-labeled; rename any speaker with <Kbd>⌘</Kbd> <Kbd>E</Kbd> in-app before saving and the frontmatter updates. `tags` default to the session type (`meeting` or `memo`); add more in Preferences or per-session.
+
+These are the only fields PS Transcribe writes. If you want more properties, add them yourself in Obsidian -- PS Transcribe reads frontmatter on re-open but will not overwrite fields it does not own.
+
+## Meetings and memos take different paths
+
+PS Transcribe treats meetings (dual-stream, diarized) and memos (mic-only, no diarization) as two different things and writes them to two different paths. A memo recorded during a standup does not land in your meetings archive, and a meeting does not pollute your scratch memo folder.
+
+You can point both paths at the same folder if you prefer a single stream; the filename tokens are enough to keep them distinct.
+
+<PrevNext currentSlug="configuring-your-vault" />
+
+</article>
+
+<TableOfContents items={tableOfContents} />

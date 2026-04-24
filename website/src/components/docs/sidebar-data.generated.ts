@@ -5,6 +5,20 @@ export type DiscoveredDoc = { slug: string; href: string; navTitle: string; grou
 
 export const DISCOVERED_DOCS: DiscoveredDoc[] = [
   {
+    "slug": "configuring-your-vault",
+    "href": "/docs/configuring-your-vault",
+    "navTitle": "Configuring your vault",
+    "group": "Start here",
+    "order": 2
+  },
+  {
+    "slug": "faq",
+    "href": "/docs/faq",
+    "navTitle": "FAQ",
+    "group": "Help",
+    "order": 1
+  },
+  {
     "slug": "getting-started",
     "href": "/docs/getting-started",
     "navTitle": "Getting started",
@@ -17,5 +31,19 @@ export const DISCOVERED_DOCS: DiscoveredDoc[] = [
     "navTitle": "Keyboard shortcuts",
     "group": "Reference",
     "order": 1
+  },
+  {
+    "slug": "notion-property-mapping",
+    "href": "/docs/notion-property-mapping",
+    "navTitle": "Notion property mapping",
+    "group": "Reference",
+    "order": 2
+  },
+  {
+    "slug": "troubleshooting",
+    "href": "/docs/troubleshooting",
+    "navTitle": "Troubleshooting",
+    "group": "Help",
+    "order": 2
   }
 ]

@@ -1,0 +1,63 @@
+import { TableOfContents } from '@/components/docs/TableOfContents'
+
+export const metadata = {
+  title: 'Notion property mapping',
+  description: 'How PS Transcribe sends transcripts to Notion and which frontmatter fields map to which property types.',
+}
+
+export const doc = {
+  group: 'Reference',
+  order: 2,
+  navTitle: 'Notion property mapping',
+}
+
+<article className="docs-article prose col-start-1 col-end-2 md:col-start-2 md:col-end-3 lg:col-start-2 lg:col-end-3 px-7 lg:px-14 pt-14 pb-24 max-w-[720px]">
+
+<Crumbs trail={['Docs', 'Reference', 'Notion property mapping']} />
+
+# Notion property mapping
+
+<Lede>PS Transcribe can post each saved session as a new page in a Notion database. The transcript becomes the page body; frontmatter fields become properties -- if a matching property exists.</Lede>
+
+<hr />
+
+## Connect the integration
+
+Create an internal integration in Notion at [https://www.notion.so/my-integrations](https://www.notion.so/my-integrations). The default capabilities (read / update / insert content) are sufficient. Copy the integration token.
+
+In PS Transcribe, open **Preferences -- Integrations -- Notion** and paste the token. The connection is verified on save; the token is stored in the macOS keychain, not in plain-text preferences.
+
+<Note label="No token, no traffic">
+  Leave the field empty and PS Transcribe never contacts Notion. The integration is off by default and stays dormant until you connect it.
+</Note>
+
+## Pick a destination database
+
+In Notion, open the database you want transcripts to land in. Click the three-dot menu, choose **Connections -- Add connections**, and select the integration you created. Notion restricts database access per-integration; without this step, PS Transcribe will see a "database not found" error when it tries to post.
+
+Back in PS Transcribe Preferences, pick the database from the dropdown. The dropdown is populated by querying the integration for pages it has access to. If your database is missing from the list, the share step has not propagated yet -- refresh in 30 seconds.
+
+## Map frontmatter to Notion properties
+
+On save, each frontmatter field is looked up in the destination database. If a property with the same name exists and the type matches, PS Transcribe writes the value. Default mappings:
+
+| Frontmatter field | Notion property type | Written as |
+| --- | --- | --- |
+| `date` | Date | ISO date at the start of the recording |
+| `duration` | Number | Minutes, rounded to the nearest integer |
+| `participants` | Multi-select | One option per diarized speaker |
+| `tags` | Multi-select | `meeting` or `memo`, plus any you added |
+
+The session title becomes the page title. The full transcript is written to the page body as a set of toggle blocks, one per speaker turn, so the page stays scrollable even for long sessions.
+
+## Fields Notion ignores
+
+If a frontmatter field does not have a matching property, PS Transcribe skips it silently. If a property exists but the type does not match (for example, a `Text` property where we expected `Multi-select`), the field is also skipped. Check the Notion activity feed after a save to confirm which fields landed.
+
+Add or rename database properties at any time; the next save picks up the changes automatically. PS Transcribe does not modify your database schema.
+
+<PrevNext currentSlug="notion-property-mapping" />
+
+</article>
+
+<TableOfContents items={tableOfContents} />
