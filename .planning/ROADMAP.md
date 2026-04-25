@@ -103,7 +103,11 @@
   2. Release cards appear in reverse chronological order with the latest release at the top of the page
   3. Subsection groupings from the markdown source (e.g., `### UX`, `### Features`, `### Fixes`) render as visually distinct sections within each card
   4. Each release card shows version number, release date, and the bulleted changes for that release
-**Plans**: TBD
+**Plans**: 4 plans
+- [ ] 15-01-PLAN.md — Foundation: Pill primitive (live/breaking) + section-color classifier + inline-markdown renderer + SITE constants (RELEASES_URL, SPARKLE_APPCAST_URL)
+- [ ] 15-02-PLAN.md — ReleaseCard server component + VersionsAside client component (IntersectionObserver scroll-spy + Subscribe block)
+- [ ] 15-03-PLAN.md — page.tsx (hero + two-column grid + 10 release cards) + Nav changelogActive derivation + sitemap entries + human UAT checkpoint
+- [ ] 15-04-PLAN.md — RSS 2.0 Route Handler at /changelog/rss.xml with CDATA escape + URL allowlist + human UAT checkpoint
 **UI hint**: yes
 
 ## Progress
@@ -117,7 +121,7 @@ Phases execute in numeric order: 11 → 12 → 13 → 14 → 15. Phases 13, 14, 
 | 12. Chronicle Design System Port | v1.1 | 4/4 | Complete    | 2026-04-22 |
 | 13. Landing Page | v1.1 | 5/5 | Complete    | 2026-04-23 |
 | 14. Docs Section | v1.1 | 4/4 | Complete    | 2026-04-24 |
-| 15. Changelog Page | v1.1 | 0/TBD | Not started | - |
+| 15. Changelog Page | v1.1 | 0/4 | Not started | - |
 
 ## Backlog
 
