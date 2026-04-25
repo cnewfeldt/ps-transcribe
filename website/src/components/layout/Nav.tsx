@@ -14,6 +14,7 @@ export function Nav() {
   const scrolled = useScrolled(6)
   const pathname = usePathname()
   const docsActive = pathname?.startsWith('/docs') ?? false
+  const changelogActive = pathname?.startsWith('/changelog') ?? false
 
   return (
     <header
@@ -43,7 +44,13 @@ export function Nav() {
           >
             Docs
           </Link>
-          <Link className={`${linkBase} ${linkIdle}`} href="/changelog">Changelog</Link>
+          <Link
+            className={`${linkBase} ${changelogActive ? linkActive : linkIdle}`}
+            href="/changelog"
+            aria-current={changelogActive ? 'page' : undefined}
+          >
+            Changelog
+          </Link>
           <a className={`${linkBase} ${linkIdle}`} href={SITE.REPO_URL}>GitHub</a>
         </nav>
       </div>
