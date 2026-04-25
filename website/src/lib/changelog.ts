@@ -49,9 +49,19 @@ export function getAllReleases(): ChangelogEntry[] {
       current.sections.push(currentSection)
       continue
     }
-    if (!currentSection) continue
     const b = line.match(RE_BULLET)
-    if (b) currentSection.items.push(b[1].trim())
+    if (b) {
+      // Orphan-bullet case: 4 oldest releases (v1.0.0..v1.2.0) place bullets
+      // directly under the `## [version]` line with no `### Section` heading.
+      // Synthesize a default 'Changes' section so the card renders bullets
+      // instead of an empty card. The classifier in lib/section-color.ts
+      // routes 'Changes' to the 'default' bucket (visually quiet).
+      if (!currentSection) {
+        currentSection = { title: 'Changes', items: [] }
+        current.sections.push(currentSection)
+      }
+      currentSection.items.push(b[1].trim())
+    }
   }
 
   cached = entries
