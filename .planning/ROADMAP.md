@@ -23,7 +23,7 @@
 - [x] **Phase 12: Chronicle Design System Port** — palette tokens, font loading (Inter + Spectral + JetBrains Mono), reusable primitives, light-mode only (completed 2026-04-22)
 - [x] **Phase 13: Landing Page** — hero with download CTA, feature blocks, keyboard-shortcuts callout, nav + footer (completed 2026-04-23)
 - [x] **Phase 14: Docs Section** — MDX-rendered doc pages with sidebar nav, initial pages (Getting Started, Shortcuts, FAQ, Troubleshooting), right-hand TOC (completed 2026-04-24)
-- [ ] **Phase 15: Changelog Page** — build-time parsing of `CHANGELOG.md` rendered as release cards in reverse chronological order
+- [x] **Phase 15: Changelog Page** — build-time parsing of `CHANGELOG.md` rendered as release cards in reverse chronological order (completed 2026-04-25)
 
 ## Phase Details
 
@@ -106,7 +106,7 @@
 **Plans**: 4 plans
 - [x] 15-01-PLAN.md — Foundation: Pill primitive (live/breaking) + section-color classifier + inline-markdown renderer + SITE constants (RELEASES_URL, SPARKLE_APPCAST_URL)
 - [x] 15-02-PLAN.md — ReleaseCard server component + VersionsAside client component (IntersectionObserver scroll-spy + Subscribe block)
-- [ ] 15-03-PLAN.md — page.tsx (hero + two-column grid + 10 release cards) + Nav changelogActive derivation + sitemap entries + human UAT checkpoint
+- [x] 15-03-PLAN.md — page.tsx (hero + two-column grid + 10 release cards) + Nav changelogActive derivation + sitemap entries + human UAT checkpoint
 - [x] 15-04-PLAN.md — RSS 2.0 Route Handler at /changelog/rss.xml with CDATA escape + URL allowlist + human UAT checkpoint
 **UI hint**: yes
 
@@ -121,7 +121,7 @@ Phases execute in numeric order: 11 → 12 → 13 → 14 → 15. Phases 13, 14, 
 | 12. Chronicle Design System Port | v1.1 | 4/4 | Complete    | 2026-04-22 |
 | 13. Landing Page | v1.1 | 5/5 | Complete    | 2026-04-23 |
 | 14. Docs Section | v1.1 | 4/4 | Complete    | 2026-04-24 |
-| 15. Changelog Page | v1.1 | 3/4 | In Progress|  |
+| 15. Changelog Page | v1.1 | 4/4 | Complete   | 2026-04-25 |
 
 ## Backlog
 
@@ -132,7 +132,7 @@ Phases execute in numeric order: 11 → 12 → 13 → 14 → 15. Phases 13, 14, 
 Idea: a third recording mode alongside the existing meeting and voice-memo flows. The user binds a global keyboard combo that starts a quick recording session; audio is transcribed live as the user speaks; when the user ends the recording, the transcript is saved inside the app and the final text is placed directly on the system clipboard for immediate paste. Positions PS Transcribe as a dictation-to-clipboard tool, not just a session recorder.
 
 **Requirements:** TBD
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [ ] TBD (promote with /gsd-review-backlog when ready)
