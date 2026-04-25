@@ -18,7 +18,6 @@ export function Footer() {
         </div>
         <FooterColumn title="Product">
           <Link href="/docs">Documentation</Link>
-          <Link href="/changelog">Changelog</Link>
           <a href={SITE.DMG_URL}>Download DMG</a>
           <a href={SITE.APPCAST_URL}>Sparkle appcast</a>
         </FooterColumn>

@@ -43,7 +43,6 @@ export function Nav() {
           >
             Docs
           </Link>
-          <Link className={`${linkBase} ${linkIdle}`} href="/changelog">Changelog</Link>
           <a className={`${linkBase} ${linkIdle}`} href={SITE.REPO_URL}>GitHub</a>
         </nav>
       </div>
