@@ -6,11 +6,11 @@
 
 ## Current Milestone
 
-### v1.1 — Marketing Website (in progress)
+### v1.1 — Marketing Website (scope-complete)
 
-**Milestone goal:** Ship a marketing website for PS Transcribe at `ps-transcribe.vercel.app` — landing page, docs, and changelog — built in Next.js on Vercel and reusing the Chronicle design system already shipping in the macOS app.
+**Milestone goal:** Ship a marketing website for PS Transcribe at `ps-transcribe.vercel.app` — landing page and docs — built in Next.js on Vercel and reusing the Chronicle design system already shipping in the macOS app.
 
-**Approach:** Work outside-in: scaffold the Next.js project and Vercel deployment first (so every later change previews on a URL), port the Chronicle design tokens and primitives second (so every later page inherits the visual system), then build the three content pages in the order of dependency weight — landing, docs, changelog. The user will feed the Claude Design brief (already at `.planning/research/CLAUDE-DESIGN-BRIEF.md`, BRIEF-01 complete) into Claude Design to get HTML/CSS mocks; those mocks become the visual input to phases 13–15.
+**Approach:** Work outside-in: scaffold the Next.js project and Vercel deployment first (so every later change previews on a URL), port the Chronicle design tokens and primitives second (so every later page inherits the visual system), then build the two content pages in the order of dependency weight — landing, then docs. The user fed the Claude Design brief (`.planning/research/CLAUDE-DESIGN-BRIEF.md`, BRIEF-01 complete) into Claude Design to get HTML/CSS mocks; those mocks were the visual input to phases 13–14.
 
 ## Phases
 
@@ -23,7 +23,6 @@
 - [x] **Phase 12: Chronicle Design System Port** — palette tokens, font loading (Inter + Spectral + JetBrains Mono), reusable primitives, light-mode only (completed 2026-04-22)
 - [x] **Phase 13: Landing Page** — hero with download CTA, feature blocks, keyboard-shortcuts callout, nav + footer (completed 2026-04-23)
 - [x] **Phase 14: Docs Section** — MDX-rendered doc pages with sidebar nav, initial pages (Getting Started, Shortcuts, FAQ, Troubleshooting), right-hand TOC (completed 2026-04-24)
-- [ ] **Phase 15: Changelog Page** — build-time parsing of `CHANGELOG.md` rendered as release cards in reverse chronological order
 
 ## Phase Details
 
@@ -44,7 +43,7 @@
 **UI hint**: yes
 
 ### Phase 12: Chronicle Design System Port
-**Goal**: Every page rendered by the Next.js site inherits the Chronicle visual language — the exact paper palette from the macOS app, the Inter + Spectral + JetBrains Mono font stack, and a small set of reusable primitives — so landing/docs/changelog can all be built against a consistent base without reinventing styles.
+**Goal**: Every page rendered by the Next.js site inherits the Chronicle visual language — the exact paper palette from the macOS app, the Inter + Spectral + JetBrains Mono font stack, and a small set of reusable primitives — so landing and docs can both be built against a consistent base without reinventing styles.
 **Depends on**: Phase 11
 **Requirements**: DESIGN-01, DESIGN-02, DESIGN-03, DESIGN-04
 **Success Criteria** (what must be TRUE):
@@ -60,7 +59,7 @@
 **UI hint**: yes
 
 ### Phase 13: Landing Page
-**Goal**: `ps-transcribe.vercel.app/` shows a complete landing page that communicates what PS Transcribe does, shows the Chronicle UI in-situ, and converts visitors to the GitHub Releases DMG download — navigable to Docs, Changelog, and GitHub from both nav and footer.
+**Goal**: `ps-transcribe.vercel.app/` shows a complete landing page that communicates what PS Transcribe does, shows the Chronicle UI in-situ, and converts visitors to the GitHub Releases DMG download — navigable to Docs and GitHub from both nav and footer.
 **Depends on**: Phase 12
 **Requirements**: LAND-01, LAND-02, LAND-03, LAND-04, LAND-05, LAND-06, LAND-07
 **Success Criteria** (what must be TRUE):
@@ -68,7 +67,7 @@
   2. A real product screenshot of the Chronicle UI is visible above the fold or in an adjacent hero-anchored section
   3. Feature blocks describe dual-stream capture, chat-bubble transcript, Obsidian save-to-vault, and Notion auto-send — each with a meta label, sub-headline, and short paragraph
   4. A shortcuts callout shows `⌘R`, `⌘⇧R`, `⌘.`, and `⌘⇧S` as JetBrains Mono key chips
-  5. Top nav and footer both surface working links to Docs, Changelog, and GitHub; footer includes copyright and MIT license line
+  5. Top nav and footer both surface working links to Docs and GitHub; footer includes copyright and MIT license line
 **Plans**: 5 plans
 - [x] 13-01-PLAN.md — Foundation: screenshot copy, SITE constants, CHANGELOG parser, Spectral italic, verify-landing.mjs script
 - [x] 13-02-PLAN.md — Shared chrome: useScrolled + useReveal hooks, Reveal wrapper, LinkButton, Nav, Footer mounted in layout.tsx
@@ -94,22 +93,10 @@
 - [x] 14-04-PLAN.md — Fresh editorial copy: Configuring your vault + Notion property mapping + FAQ (8–12 Q&A) + Troubleshooting (5–8 issues) in Chronicle voice, anchored to PROJECT.md facts (DOCS-03)
 **UI hint**: yes
 
-### Phase 15: Changelog Page
-**Goal**: `ps-transcribe.vercel.app/changelog` renders the project's `CHANGELOG.md` as styled release cards — parsed at build time, sorted newest-first, preserving the subsection structure (UX / Features / Fixes) from the source markdown so the site stays in sync with the app's release history without duplication.
-**Depends on**: Phase 12
-**Requirements**: LOG-01, LOG-02, LOG-03, LOG-04
-**Success Criteria** (what must be TRUE):
-  1. Adding a new version entry to the repo's `CHANGELOG.md` and rebuilding the site produces a new release card on `/changelog`
-  2. Release cards appear in reverse chronological order with the latest release at the top of the page
-  3. Subsection groupings from the markdown source (e.g., `### UX`, `### Features`, `### Fixes`) render as visually distinct sections within each card
-  4. Each release card shows version number, release date, and the bulleted changes for that release
-**Plans**: TBD
-**UI hint**: yes
-
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 11 → 12 → 13 → 14 → 15. Phases 13, 14, and 15 all depend only on Phase 12 and can technically parallelize, but default execution runs them sequentially.
+Phases execute in numeric order: 11 → 12 → 13 → 14. Phases 13 and 14 both depend only on Phase 12 and can technically parallelize, but default execution runs them sequentially.
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -117,7 +104,6 @@ Phases execute in numeric order: 11 → 12 → 13 → 14 → 15. Phases 13, 14, 
 | 12. Chronicle Design System Port | v1.1 | 4/4 | Complete    | 2026-04-22 |
 | 13. Landing Page | v1.1 | 5/5 | Complete    | 2026-04-23 |
 | 14. Docs Section | v1.1 | 4/4 | Complete    | 2026-04-24 |
-| 15. Changelog Page | v1.1 | 0/TBD | Not started | - |
 
 ## Backlog
 

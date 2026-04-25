@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: — Marketing Website
-status: executing
-stopped_at: Phase 14 context gathered
-last_updated: "2026-04-24T21:41:04.784Z"
-last_activity: 2026-04-24
+status: scope-complete
+stopped_at: Phase 15 reverted; milestone scope reduced to phases 11–14
+last_updated: "2026-04-25T00:00:00.000Z"
+last_activity: 2026-04-25
 progress:
-  total_phases: 6
+  total_phases: 4
   completed_phases: 4
   total_plans: 16
   completed_plans: 16
@@ -21,25 +21,25 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Users can record conversations and voice memos with accurate, private, on-device transcription. All processing stays on-device.
-**Current focus:** Phase 12 — chronicle-design-system-port
+**Current focus:** Milestone v1.1 scope-complete — phases 11–14 shipped; phase 15 reverted (no public changelog)
 
 **2026-04-04 scope reduction:** Phases 5 (Ollama Integration) and 6 (Live LLM Analysis) were abandoned in v1.0. PS Transcribe is scoped to transcription only; LLM analysis of transcripts is not part of the product. Implementation preserved at git tag `archive/llm-analysis-attempt`.
 
 ## Current Position
 
-Phase: 999.1
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-04-24
+Phase: v1.1 scope-complete (no active phase)
+Plan: --
+Status: Awaiting milestone close-out or next milestone planning
+Last activity: 2026-04-25
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity (v1.0 cumulative):**
 
 - Total plans completed (v1.0): 28
-- v1.1 plans completed: 0
+- v1.1 plans completed: 16
 - Average duration: --
 - Total execution time: --
 
@@ -48,7 +48,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | v1.0 (1–10) | 28 | — | — |
-| 11–15 (v1.1) | 0 | — | — |
+| 11–14 (v1.1) | 16 | — | — |
 | 11 | 3 | - | - |
 | 12 | 4 | - | - |
 | 13 | 5 | - | - |
@@ -80,6 +80,6 @@ None blocking v1.1 scaffolding. Phase 11 is independent of the macOS app codebas
 
 ## Session Continuity
 
-Last session: 2026-04-24T06:44:30.337Z
-Stopped at: Phase 14 context gathered
-Resume file: .planning/phases/14-docs-section/14-CONTEXT.md
+Last session: 2026-04-25T00:00:00.000Z
+Stopped at: Milestone v1.1 scope-complete; phase 15 reverted (changelog out of scope)
+Resume file: --

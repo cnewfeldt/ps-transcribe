@@ -48,18 +48,17 @@ Users can record meetings and voice memos with accurate, private, on-device tran
 
 **Shipped:** v1.0 PS Transcribe (2026-04-14). Full rebrand from Tome, all 12 security findings resolved, crash recovery + diarization fixes, session library with right-click "Show in Finder" and Obsidian deep-link, recording naming + lifecycle, three-state mic button, model onboarding, Notion integration. 8 active phases, 45 requirements satisfied, 28 plans shipped. See [`milestones/v1.0-ROADMAP.md`](milestones/v1.0-ROADMAP.md).
 
-**In progress — v1.1 Marketing Website:** Phases 11-14 complete. Phase 11 (2026-04-22) — Next.js 16 scaffold at `/website` deployed to https://ps-transcribe-web.vercel.app. Phase 12 (2026-04-22) — Chronicle design system ported (paper palette, Spectral/Inter/JetBrains Mono, navy/sage accents). Phase 13 (2026-04-23) — Landing page shipped: hero with product screenshot + release-aware download CTA, three pillar cards, four feature blocks with mini-mockups (DualStream / ChatBubble / ObsidianVault / Notion), keyboard shortcut grid, FinalCTA, sticky Nav with scroll state, Footer with version stamp. LAND-01..LAND-07 satisfied, 5/5 plans executed, human UAT approved 5/5. Phase 14 (2026-04-24) — Docs section shipped: MDX pipeline with `@next/mdx` + rehype plugin stack, 7 custom MDX components (Note/Lede/Crumbs/PrevNext/ShortcutTable/ShortcutRow/Kbd), build-time sidebar codegen from `page.mdx` `doc` exports (SC-1 drift-by-construction), three-column layout with Sidebar + TOC scroll-spy + `/docs` redirect, 6 pages live (Getting Started, Keyboard Shortcuts, Configuring Your Vault, Notion Property Mapping, FAQ, Troubleshooting). DOCS-01..DOCS-05 satisfied, 4/4 plans executed, human UAT approved 7/7. Phase 15 (Changelog Page) is next.
+**v1.1 Marketing Website (scope-complete):** Phases 11-14 complete; phase 15 (Changelog Page) was scoped, planned, and built but reverted on 2026-04-25 — public release notes are out of scope. Phase 11 (2026-04-22) — Next.js 16 scaffold at `/website` deployed to https://ps-transcribe-web.vercel.app. Phase 12 (2026-04-22) — Chronicle design system ported (paper palette, Spectral/Inter/JetBrains Mono, navy/sage accents). Phase 13 (2026-04-23) — Landing page shipped: hero with product screenshot + release-aware download CTA, three pillar cards, four feature blocks with mini-mockups (DualStream / ChatBubble / ObsidianVault / Notion), keyboard shortcut grid, FinalCTA, sticky Nav with scroll state, Footer with version stamp. LAND-01..LAND-07 satisfied (LAND-06 amended to drop `/changelog` link from nav), 5/5 plans executed, human UAT approved 5/5. Phase 14 (2026-04-24) — Docs section shipped: MDX pipeline with `@next/mdx` + rehype plugin stack, 7 custom MDX components (Note/Lede/Crumbs/PrevNext/ShortcutTable/ShortcutRow/Kbd), build-time sidebar codegen from `page.mdx` `doc` exports (SC-1 drift-by-construction), three-column layout with Sidebar + TOC scroll-spy + `/docs` redirect, 6 pages live (Getting Started, Keyboard Shortcuts, Configuring Your Vault, Notion Property Mapping, FAQ, Troubleshooting). DOCS-01..DOCS-05 satisfied, 4/4 plans executed, human UAT approved 7/7.
 
 ## Current Milestone: v1.1 Marketing Website
 
-**Goal:** Build and ship a marketing website at `ps-transcribe-web.vercel.app` — landing, docs, and changelog — using Next.js on Vercel, reusing the Chronicle design system for visual cohesion with the app.
+**Goal:** Build and ship a marketing website at `ps-transcribe-web.vercel.app` — landing and docs — using Next.js on Vercel, reusing the Chronicle design system for visual cohesion with the app.
 
 > Note: the canonical `ps-transcribe.vercel.app` slug was already claimed by another Vercel account at phase 11 setup time (2026-04-22), so the fallback slug `ps-transcribe-web.vercel.app` is the production host. A custom domain (v1.2 candidate) will supersede this.
 
 **Target features:**
 - Landing page — hero, feature highlights, product screenshots, download CTA pointing at GitHub Releases
 - Docs / help section — getting started, keyboard shortcuts, FAQ, troubleshooting (MDX content)
-- Changelog page — styled release-notes sourced from `CHANGELOG.md`
 - Chronicle design-system port — paper palette, Spectral/Inter/JetBrains Mono typography, navy accent, sage speaker-green
 - Vercel deployment — preview URLs per commit, production on `ps-transcribe-web.vercel.app` (see note above on slug fallback)
 - Repo layout — `/website` subdirectory in this repo (separate `package.json` from the Swift package)
@@ -69,6 +68,7 @@ Users can record meetings and voice memos with accurate, private, on-device tran
 - No custom domain (Vercel subdomain only; custom domain deferred)
 - No pricing page, no commerce — download CTA points at GitHub Releases
 - No blog, no newsletter
+- No public changelog — `CHANGELOG.md` stays a developer-internal artifact; no `/changelog` route, RSS feed, or nav link (decided 2026-04-25, after a built page was reverted)
 - No analytics stack decision in this milestone (default Vercel Analytics if enabled)
 
 ## Next Milestone Goals

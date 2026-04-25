@@ -6,7 +6,7 @@ created: 2026-04-21
 
 # Milestone v1.1 — Marketing Website Requirements
 
-**Goal:** Build and ship a marketing website at `ps-transcribe.vercel.app` — landing, docs, and changelog — using Next.js on Vercel, reusing the Chronicle design system.
+**Goal:** Build and ship a marketing website at `ps-transcribe.vercel.app` — landing and docs — using Next.js on Vercel, reusing the Chronicle design system.
 
 ## Active Requirements
 
@@ -36,7 +36,7 @@ created: 2026-04-21
 - [ ] **LAND-03**: Hero or adjacent section embeds at least one product screenshot of the Chronicle UI
 - [ ] **LAND-04**: Feature blocks communicate dual-stream capture, chat-bubble transcript, Obsidian save-to-vault, Notion auto-send
 - [ ] **LAND-05**: Keyboard-shortcuts callout displays ⌘R / ⌘⇧R / ⌘. / ⌘⇧S in mono key chips
-- [ ] **LAND-06**: Top navigation includes links to `Docs`, `Changelog`, and `GitHub`
+- [ ] **LAND-06**: Top navigation includes links to `Docs` and `GitHub`
 - [ ] **LAND-07**: Footer contains copyright, MIT license acknowledgment, and quick links
 
 ### DOCS — Documentation section
@@ -47,18 +47,11 @@ created: 2026-04-21
 - [ ] **DOCS-04**: Right-hand "On this page" TOC extracts page headings automatically (collapses below 1200px)
 - [ ] **DOCS-05**: Inline code and code blocks render with JetBrains Mono; inline code uses `paperSoft` pill background
 
-### LOG — Changelog page
-
-- [ ] **LOG-01**: Changelog page parses the project's `CHANGELOG.md` at build time and renders each release as a Card
-- [ ] **LOG-02**: Releases display in reverse chronological order (newest at top)
-- [ ] **LOG-03**: Release cards preserve subsection grouping (e.g., UX / Features / Fixes) from the markdown source
-- [ ] **LOG-04**: Each release card shows version, release date, and change bullets
-
 ## Coverage
 
-- Total: 26 requirements
+- Total: 22 requirements
 - Completed: 1 (BRIEF-01)
-- Pending: 25 — all mapped to phases 11–15
+- Pending: 21 — all mapped to phases 11–14
 
 ## Out of Scope
 
@@ -108,9 +101,5 @@ The following are deliberately not part of this milestone:
 | DOCS-03    | 14       | TBD  | Pending   |
 | DOCS-04    | 14       | TBD  | Pending   |
 | DOCS-05    | 14       | TBD  | Pending   |
-| LOG-01     | 15       | TBD  | Pending   |
-| LOG-02     | 15       | TBD  | Pending   |
-| LOG-03     | 15       | TBD  | Pending   |
-| LOG-04     | 15       | TBD  | Pending   |
 
-**Coverage check:** 25/25 pending requirements mapped to exactly one phase. No orphans, no duplicates.
+**Coverage check:** 21/21 pending requirements mapped to exactly one phase. No orphans, no duplicates.
