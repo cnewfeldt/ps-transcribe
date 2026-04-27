@@ -1,173 +1,235 @@
-# Project Research Summary
+# Research Summary: PS Transcribe v1.2
 
-**Project:** PS Transcribe (formerly Tome) -- macOS local transcription app
-**Domain:** macOS native audio transcription with on-device LLM integration
-**Researched:** 2026-03-31
-**Confidence:** HIGH (architecture grounded in real codebase; stack and pitfalls verified against official sources)
+**Project:** PS Transcribe v1.2 -- Standalone Dictation + Model Auto-Update
+**Domain:** macOS native app -- global-hotkey dictation + independent ASR model update channel
+**Researched:** 2026-04-27
+**Confidence:** HIGH (hotkey mechanism, clipboard, file I/O); MEDIUM (model manifest hosting strategy, model-FluidAudio compatibility contract)
+
+---
 
 ## Executive Summary
 
-PS Transcribe is a shipped macOS native app (v1.2.1) that captures dual-stream audio (mic + system) and transcribes it locally using Parakeet-TDT via FluidAudio. The next milestone adds three major capabilities: a session library (grid of past recordings with metadata), an Ollama-powered live LLM analysis panel, and a series of security and UX hardening items identified in a codebase audit. The recommended approach follows the existing architectural pattern: Swift 6 actors for I/O, @Observable @MainActor wrappers for UI state, and SwiftUI views bound to those observables. All new capabilities fit cleanly into this pattern without requiring new frameworks or major structural changes.
+v1.2 adds two independent capability clusters to an existing, shipped macOS transcription app: (1) keyboard-triggered clipboard dictation and plain-folder output, and (2) an out-of-band ASR model update channel separate from Sparkle. Both clusters are additive -- they reuse the existing FluidAudio streaming pipeline, session library, and markdown writer, with no changes to the core recording state machine. The critical architectural decision is the global hotkey mechanism: `sindresorhus/KeyboardShortcuts` (wrapping Carbon `RegisterEventHotKey`) is the correct choice because it requires no Accessibility or Input Monitoring permissions, is App Store compatible, and ships a SwiftUI `Recorder` view out of the box. `CGEventTap` and `NSEvent.addGlobalMonitorForEvents` are rejected for v1.2 -- both require user-facing permission grants that create friction on every fresh install.
 
-The most important architectural decision is that LLM analysis must be completely decoupled from the transcription pipeline. Ollama runs on localhost as an external process; if it is not running, the recording and transcription features must be unaffected. The session library requires a new lightweight index file (sessions-index.json in AppSupport) rather than repurposing the existing per-session JSONL crash recovery files. Both are greenfield additions with no required changes to existing audio or transcription code.
+The model auto-update channel has one unresolved hosting decision: whether to use the HuggingFace refs API (lightweight, no infrastructure) or a project-owned manifest JSON on gh-pages (more control, enables SHA-256 per-file checksums, supports `min_app_version` compatibility gating). The Architecture researcher recommends the project-owned manifest; the Stack researcher validates HuggingFace refs as sufficient for version detection. Resolve this with an ADR before Phase B planning locks -- the manifest approach is safer long-term.
 
-The highest-risk work is the rebrand and security hardening, not the new features. A bundle ID change silently destroys UserDefaults (vault paths, all settings) for existing users and can break the Sparkle update chain permanently if not handled before the first renamed release ships. The security audit identified 12 findings that must be resolved before launch. These are pre-launch blockers that must come before the feature work, not after.
+The build is structured as Phase A foundation (~5.5 hours), then Phase B (model update) and Phase C (dictation) in parallel (~9.5 and ~13.5 hours respectively), then Phase D integration and hardening. The main risks are: incomplete staging logic during model download, the model-FluidAudio compatibility contract (a new model version could require a newer FluidAudio SDK than the pinned commit), and NSPasteboard clipboard history pollution (write `org.nspasteboard.TransientType` markers or every dictation session lands in Alfred/Maccy history, contradicting the privacy proposition).
+
+---
 
 ## Key Findings
 
-### Recommended Stack
+### Stack Additions
 
-The existing Swift 6 / SwiftUI / FluidAudio / Sparkle stack is solid and does not need replacement. New capabilities require one optional new dependency (mattt/ollama-swift for Ollama HTTP with NDJSON streaming) and three built-in system frameworks (SwiftData for persistence, LazyVGrid for the library grid, SF Symbols symbolEffect() for mic button animation). Architecture research noted that rolling a thin ~80-line OllamaClient actor using URLSession.bytes is also viable and avoids the dependency entirely -- the tradeoff favors the dependency-free approach given the codebase's pattern of direct URLSession usage elsewhere.
+The existing stack (Swift 6.2, SwiftUI, FluidAudio ea50062, Sparkle 2.9.0, @Observable / actors) is unchanged. v1.2 requires exactly one new SwiftPM dependency and several new files built on existing system frameworks.
 
-**Core technologies:**
-- `mattt/ollama-swift` (optional): Ollama HTTP client -- zero dependencies, swift-tools-version 6.0, AsyncSequence streaming. Alternative: URLSession.bytes + JSONDecoder in ~80 lines.
-- `SwiftData`: Session library persistence -- @Model macro, @Query reactivity in views, @ModelActor for background writes. Target is macOS 26, well within SwiftData's macOS 14+ requirement.
-- `SwiftUI LazyVGrid`: Session library grid -- native, lazy-rendered, .adaptive column sizing. No third-party grid library needed.
-- `SF Symbols symbolEffect()`: Three-state mic button animation -- .pulse for recording state, .replace transition between symbols. Available macOS 14+, target is macOS 26.
+**New dependency:**
+- `KeyboardShortcuts` 2.4.0 (sindresorhus) -- global hotkey registration via Carbon `RegisterEventHotKey`. No Accessibility or Input Monitoring permission required. Includes a SwiftUI `Recorder` view for user-configurable shortcuts. App Store compatible. Default recommended shortcut: `Cmd+Shift+D` (avoids macOS 15+ Option-only restriction).
 
-### Expected Features
+**New code built on existing frameworks (no new SwiftPM dependencies):**
+- `DictationHotkeyController` -- KeyboardShortcuts wrapper (mirrors `AppUpdaterController.swift` pattern)
+- `DictationLogger` actor -- plain markdown writer without YAML frontmatter (separate actor, not a mode flag on `TranscriptLogger`)
+- `ModelUpdateService` actor -- URLSession poll against manifest or HuggingFace refs API; exposes `@Observable` `ModelUpdateState` enum
+- `dictationFolderPath`, `installedModelVersion`, `modelLastCheckedDate` keys in `AppSettings`
+- Dictation + Model Updates sections in `SettingsView`
+- `NSPasteboard.general` write in dictation coordinator (no entitlement; writes are unrestricted in non-sandboxed apps)
 
-The research draws a clear line between features that must ship in this milestone (P1) and features that require Ollama integration to stabilize first (P2). The session library and lifecycle fixes are P1 because they are prerequisites for everything else -- naming, Obsidian links, missing-file detection, and LLM analysis storage all depend on sessions being reliably indexed.
+**Explicitly excluded:**
+- `CGEventTap` and `NSEvent.addGlobalMonitorForEvents` -- both require permission grants; rejected
+- Security-scoped bookmarks -- app is not sandboxed; raw URL path access works across launches
+- `swift-huggingface` library -- one `URLSession` call to the refs endpoint is sufficient
+- Sparkle for model updates -- wrong tool; Sparkle updates app binaries, not model weight files
+- Any cloud API or telemetry
 
-**Must have (table stakes for this milestone):**
-- Session library with grid view and stable file paths -- users expect a history of recordings; absence feels like data loss
-- Proper session lifecycle (stop -> save -> index, no silent overwrite) -- prerequisite for reliable library
-- Recording naming (before/during/after, date fallback) -- the library's UX anchor
-- Three-state mic button (idle/recording/error) -- surfaces the silent failure state competitors are criticized for
-- ASR model onboarding (download prompt, progress, success/fail) -- new installs are broken without this
-- Missing-file detection in library -- low cost, high trust value
-- Obsidian deep links from library -- low complexity, high value for the target audience
-- Security hardening (12 findings from SECURITY-SCAN.md) -- pre-launch blockers
+**No entitlement changes needed.** Current `PSTranscribe.entitlements` (audio-input + screen-capture, no app-sandbox) is sufficient for all v1.2 capabilities.
 
-**Should have (differentiators, P2 after P1 is stable):**
-- Ollama detection/configuration + model browser -- must be discrete and stable before the analysis panel is wired up
-- Live LLM analysis panel (summary, action items, key topics during recording) -- the primary differentiator; no competitor does this fully offline
+### Feature Table Stakes vs Differentiators vs Anti-Features
 
-**Defer to later milestone or never:**
-- Calendar integration -- scope creep, privacy surface, not aligned with intentional-recording UX
-- Cloud sync -- violates offline-first contract; let the vault path be a cloud-synced folder if users want it
-- Video recording -- permanently out of scope
+**Must have (P1 -- dictation is not credible without these):**
+- Single global hotkey activates dictation from any app (Cmd+Shift+D default, user-configurable)
+- Both toggle and press-and-hold modes; default to toggle
+- Menu bar icon change (pulsing) while dictation is active
+- Floating HUD showing live partial transcript during dictation
+- Final transcript placed on `NSPasteboard.general` on stop, with clipboard history exclusion markers
+- Previous clipboard content restored after paste (3-second delay, configurable)
+- Transcript saved to session library alongside meeting recordings
+- Escape or second hotkey tap cancels without clipboard write (30-second confirmation threshold)
+- User-configurable output folder (plain OS folder, not vault-specific)
+- Clean markdown output -- no YAML frontmatter
+- Date-based filename with millisecond or UUID component: `2026-04-27-103045-ABC123.md`
+- `DictationOutputMode` enum: `.clipboard`, `.plainFolder`, `.both`
 
-### Architecture Approach
+**Should have (P2 -- model update channel):**
+- Version check on launch + 24-hour repeating timer
+- "Update available" badge in Settings > Model (no blocking alerts)
+- User-initiated download with progress (reuses v1.0 Phase 4 model download UI)
+- Installed version record in UserDefaults
+- Disk space preflight before download (`volumeAvailableCapacityForImportantUsage` vs `manifest.modelSizeBytes * 2`)
 
-The new components follow the existing actor + @Observable service pair pattern. Each I/O subsystem gets a raw actor (OllamaClient, SessionIndexActor) and a @MainActor @Observable wrapper (OllamaService, SessionLibrary) that views bind to. The InsightsPanel is a read-only consumer of OllamaService state -- it never touches TranscriptStore or the transcription pipeline directly. ContentView coordinates the session lifecycle (stop -> TranscriptLogger.finalizeFrontmatter -> SessionIndexActor.appendEntry) and triggers Ollama analysis on utterance batch thresholds.
+**Competitive differentiators:**
+- On-device dictation, zero cloud dependency -- "Cmd+V, private" positioning
+- Every dictation session recoverable from session library (fire-and-forget apps discard audio)
+- Streaming live transcript in floating HUD -- visibly faster than cloud competitors
+- Plain-folder output -- vault-agnostic, supports Logseq/Bear/plain `notes/` workflows
+- Model update independent of app release
 
-**Major components:**
-1. `SessionIndexActor` (actor) -- reads/writes sessions-index.json in AppSupport; one lightweight SessionEntry per completed session
-2. `SessionLibrary` (@Observable, @MainActor) -- wraps SessionIndexActor; drives LibraryView via @Query-like pattern
-3. `LibraryView` -- SwiftUI grid using LazyVGrid; reads SessionLibrary; checks FileManager.fileExists per entry at render time
-4. `OllamaClient` (actor) -- raw HTTP to localhost:11434; health check, model list, streaming chat via URLSession.bytes + .lines
-5. `OllamaService` (@Observable, @MainActor) -- wraps OllamaClient; exposes connection status, available models, streaming chunks, accumulated insights
-6. `InsightsPanel` -- SwiftUI view; reads OllamaService only; shown/hidden via HStack + withAnimation in ContentView
-7. `ContentView` (modified) -- adds split-view layout, wires session lifecycle to SessionIndexActor, triggers OllamaService.analyzeTranscript on utterance batches
+**Anti-features (out of scope):**
+- Cloud ASR fallback -- violates privacy proposition
+- LLM cleanup/reformatting of dictated text -- removed 2026-04-04 scope reduction
+- Auto-paste via accessibility API -- fragile, requires broader permissions, breaks in sandboxed apps
+- Silent background model installation -- large binary, hostile on metered connections
+- Telemetry / usage analytics -- hard constraint: none
+
+### Architecture Integration
+
+The integration surface is clean. v1.2 adds three new service-layer actors and one new HUD window. `LibraryStore` is lifted from `ContentView` to `PSTranscribeApp` scope so the dictation path can share it. A new shared `anySessionActive: Bool` flag at app scope provides mutual exclusion between meeting recordings, dictation sessions, and model update applies. The existing `TranscriptionEngine` is not modified for dictation -- `DictationCoordinator` owns a separate mic-only engine instance (Option B from Architecture research, preferred over modifying the existing state machine).
+
+**New components:**
+1. `DictationHotkeyController` -- KeyboardShortcuts wrapper; fires `onHotkey` on MainActor
+2. `DictationCoordinator` -- orchestrates hotkey press -> engine start -> HUD -> stop -> clipboard write -> library save
+3. `DictationWindowController` + `DictationHUD` -- NSPanel (`.nonactivatingPanel`, level `.floating`, joins all spaces, `sharingType = .none`)
+4. `ModelUpdateService` -- manifest fetch, version compare, download-to-staging, SHA-256 verify, atomic rename, rollback
+
+**Existing components modified:**
+- `PSTranscribeApp.swift` -- lift `LibraryStore`, add `anySessionActive`, instantiate new services
+- `AppSettings.swift` -- add dictation + model update keys
+- `TranscriptLogger.swift` -- add `startPlainSession` + `finalizePlain` (~40 lines)
+- `TranscriptionEngine.swift` -- add `reloadModels()` for post-update hot-swap
+- `ContentView.swift` -- accept injected `LibraryStore`; add NotificationCenter listener for library refresh
+- `SettingsView.swift` -- add Dictation section and Model Updates section
+- `Models.swift` -- add `SessionType.dictation` and `DictationOutputMode` enum
 
 ### Critical Pitfalls
 
-1. **UserDefaults silently lost on bundle ID change** -- Implement a migration at first launch that copies keys from the old domain (group.Tome / io.github.gremble.Tome) to the new domain before anything reads settings. This must ship in the first rebrand release. Recovery after the fact requires asking users to re-enter vault paths.
+18 pitfalls were researched. The CGEventTap pitfalls (1-4) are preserved as **conditional warnings only** -- they apply if hold-to-talk or modifier-only hotkeys are ever required in a future version. The v1.2 KeyboardShortcuts/`RegisterEventHotKey` path avoids all of them by design.
 
-2. **Sparkle appcast breaks after rebrand** -- Never reset CFBundleVersion. The SUFeedURL must stay consistent or existing installs must receive a transitional update pointing to the new feed before the old feed is retired. Test end-to-end with a staging appcast before any public release.
+**Active pitfalls for v1.2 (must be addressed in implementation):**
 
-3. **Sequential try? fixes cause data loss** -- The TranscriptLogger.swift write/remove/move sequence has no rollback. Bulk-replacing try? with try + catch without auditing each call site will lose transcripts on mid-sequence failure. Fix cleanup-type try? instances first (safe), then tackle file I/O sequences with explicit rollback.
+1. **NSPasteboard clipboard history pollution** (Pitfall 5) -- every dictation without `org.nspasteboard.TransientType` marker ends up in Alfred/Maccy/Pasta history, directly contradicting the privacy proposition. Write both `TransientType` and `AutoGeneratedType` markers alongside the text on every clipboard write. Non-breaking additive change. HIGH confidence.
 
-4. **Ollama unavailability hangs the recording pipeline** -- Always health-check GET http://127.0.0.1:11434/ with a 2-second timeout before any generation request. LLM analysis failure must never affect transcript capture. Never initiate a streaming request unless health check passes.
+2. **Model file partial download corrupts app state** (Pitfall 11) -- download to staging directory (`<repo>-staging/`), verify SHA-256 per file against manifest checksums, then perform atomic APFS rename into production. If app relaunches with a staging file and no completed checksum record, delete it and re-trigger download. HIGH confidence.
 
-5. **Ollama context window silently truncates long transcripts** -- Always set num_ctx explicitly (minimum 16384 for live transcription use). The default 2048-4096 token window means summaries of meetings longer than ~15 minutes are silently wrong. Use a sliding window strategy for very long sessions.
+3. **New model version breaks ASR API compatibility with pinned FluidAudio** (Pitfall 12) -- FluidAudio v0.13.7 and v0.13.2.5 both had breaking model structure changes. Model manifest must include `min_app_version` (or `min_fluid_audio_version`). If required SDK version exceeds bundled FluidAudio, defer update until Sparkle ships a new app build. HIGH confidence.
+
+4. **Model swap during active recording session** (Pitfall 13) -- CoreML model files held open by FluidAudio are not safe to rename mid-session. Gate atomic rename on `anySessionActive == false`. Set `updatePending: Bool`; apply on next session stop. HIGH confidence.
+
+5. **Plain-folder file naming collision** (Pitfall 9) -- dictation sessions can be seconds apart; second-granularity timestamps collide. Append millisecond component or UUID suffix. HIGH confidence.
+
+6. **Obsidian frontmatter leaking into plain-folder output** (Pitfall 10) -- existing serializer writes YAML frontmatter unconditionally. Add `TranscriptFormat` enum (`.obsidian` / `.plain`); `DictationLogger` always uses `.plain`. HIGH confidence.
+
+7. **HUD not covered by privacy mode** (Pitfall 17) -- apply `sharingType = .none` to the HUD NSPanel at creation. Note documented limitation: ScreenCaptureKit (Zoom, Teams, OBS) captures the composited display regardless of `sharingType`. This is an unfixable macOS API limitation; document it explicitly.
+
+**Conditional pitfalls (CGEventTap path only -- not applicable with KeyboardShortcuts):**
+- CGEventTap silently disabled after re-sign -- irrelevant; `RegisterEventHotKey` does not use TCC
+- Wrong permission type (Accessibility vs. Input Monitoring) -- irrelevant; no permission required
+- Tap callback blocks event thread causing timeout -- irrelevant; Carbon callback is lightweight
+
+---
 
 ## Implications for Roadmap
 
-Based on research, suggested phase structure:
+### Phase A: Foundation
 
-### Phase 1: Rebrand and Security Hardening
-**Rationale:** The bundle ID change and 12 security findings are pre-launch blockers that affect every user. These must be addressed before any feature work ships. Doing this first prevents the catastrophic UserDefaults data loss scenario and fixes the Sparkle update chain while the user base is still small.
-**Delivers:** Clean bundle ID, migrated UserDefaults, hardened file I/O, fixed CI keychain, pinned GitHub Actions, correct FileProtectionType attributes, Sparkle migration plan locked in.
-**Addresses:** Security hardening (P1 in feature research), all 12 SECURITY-SCAN.md findings.
-**Avoids:** Pitfalls 1 (UserDefaults loss), 2 (Sparkle break), 3 (try? data loss), security mistakes table in PITFALLS.md.
+**Rationale:** Shared data model changes and `LibraryStore` lift are required by both Phase B and Phase C. Nothing in B or C can compile cleanly without these.
+**Delivers:** No user-visible change. Internal scaffolding.
+**Implements:** `SessionType.dictation`, `DictationOutputMode` enum in `Models.swift`; all v1.2 keys in `AppSettings`; `anySessionActive` flag at app scope; `LibraryStore` lifted to `PSTranscribeApp`; `TranscriptLogger.startPlainSession` + `finalizePlain`.
+**Avoids:** State machine fragmentation (Pitfall 16), frontmatter leak (Pitfall 10).
+**Estimated:** ~5.5 hours.
+**Research flag:** Standard Swift patterns. Skip research phase.
 
-### Phase 2: Session Lifecycle and Library
-**Rationale:** The session library is the foundational UI surface that all other new features depend on. Recording naming, Obsidian links, missing-file detection, and LLM analysis storage all require indexed sessions with stable file paths. Fix the lifecycle (stop -> save -> index) before building the grid that displays it.
-**Delivers:** SessionIndexActor, SessionEntry model, SessionLibrary observable, LibraryView grid, recording naming (before/during/after), missing-file detection, Obsidian deep links.
-**Uses:** SwiftData (or JSONL index -- architecture research recommends a lightweight sessions-index.json over SwiftData for this simple schema), SwiftUI LazyVGrid.
-**Implements:** SessionIndexActor + SessionLibrary architecture components; ContentView session lifecycle modifications.
-**Avoids:** Anti-pattern of repurposing JSONL crash recovery files as the library index (ARCHITECTURE.md anti-pattern 3).
+### Phase B: Model Auto-Update (parallel with C)
 
-### Phase 3: UX Polish and Onboarding
-**Rationale:** The three-state mic button and ASR model onboarding are table-stakes items that are relatively self-contained. They do not depend on the session library or Ollama. Shipping them with Phase 2 is possible but keeping them discrete makes each phase verifiable independently.
-**Delivers:** Three-state mic button (idle/recording/error with SF Symbols symbolEffect), ASR model download prompt with progress on first launch, graceful error messaging throughout.
-**Uses:** SF Symbols symbolEffect() (.pulse, .replace), existing TranscriptionEngine error propagation.
-**Implements:** ControlBar modifications, OnboardingView updates.
-**Avoids:** UX pitfall of removing waveform with no replacement confidence indicator (PITFALLS.md UX pitfalls).
+**Rationale:** Fully independent of dictation. Can start immediately after Phase A. Resolve the manifest hosting ADR before writing download code -- the decision gates the checksum approach.
+**Delivers:** Settings > Model section with current version, "Check for Updates" button, download progress, and update badge.
+**Implements:** `ModelUpdateService` (manifest fetch, version compare, staging download, SHA-256 verify, atomic rename, rollback), `TranscriptionEngine.reloadModels()`, SettingsView model section, OnboardingView model version display.
+**Avoids:** Partial download corruption (Pitfall 11), FluidAudio incompatibility (Pitfall 12), swap during active session (Pitfall 13), disk space exhaustion (Pitfall 14).
+**Estimated:** ~9.5 hours.
+**Research flag:** Manifest hosting strategy needs an ADR before Phase B planning locks. Everything else is standard.
 
-### Phase 4: Ollama Integration
-**Rationale:** Ollama integration is its own discrete product surface. It requires a health check architecture, model browser, and decoupled async design that must be solid before the live analysis panel is wired to the recording pipeline. Separating Ollama setup from the analysis panel allows each to be validated independently.
-**Delivers:** OllamaClient actor, OllamaService observable, Ollama server detection with OllamaState enum (.notInstalled / .notRunning / .modelNotLoaded / .ready), in-app model browser with download progress, Settings UI for Ollama endpoint configuration.
-**Uses:** URLSession.bytes + .lines for NDJSON streaming (or mattt/ollama-swift 1.8.0 -- decision to be made at phase start).
-**Implements:** OllamaClient + OllamaService architecture components; Ollama health check flow.
-**Avoids:** Pitfall 4 (Ollama hangs recording pipeline), anti-pattern 1 (HTTP calls on MainActor), integration gotchas table (URLSession.data vs URLSession.bytes, /api/tags vs / for health check).
+### Phase C: Dictation (parallel with B)
 
-### Phase 5: Live LLM Analysis Panel
-**Rationale:** The differentiating feature of the product. Depends on Phase 4 (Ollama) being stable and Phase 2 (session lifecycle) being reliable. Wire the OllamaService into the recording pipeline only after both are independently verified.
-**Delivers:** InsightsPanel view (summary, action items, key topics), split-view layout in ContentView, utterance batch threshold triggering, in-flight task cancellation on new utterance batch, accumulated insights stored alongside session.
-**Implements:** InsightsPanel component, ContentView split-view layout, OllamaService.analyzeTranscript wired to handleNewUtterance.
-**Avoids:** Pitfall 5 (context truncation -- set num_ctx minimum 16384), anti-pattern 2 (trigger on every utterance -- debounce with 5-utterance or 30-second threshold), NavigationSplitView for the panel (use HStack + withAnimation).
+**Rationale:** The headline feature of v1.2. Fully independent of model update. NSPanel HUD and coordinator can be built in parallel once the hotkey controller is wired.
+**Delivers:** Global hotkey (`Cmd+Shift+D`) activates dictation from any app. Floating HUD shows live partial transcript. Final text written to clipboard with privacy markers. Optionally written to plain OS folder. Session saved to library.
+**Implements:** `DictationHotkeyController` (KeyboardShortcuts), `DictationCoordinator`, `DictationWindowController`, `DictationHUD`, `DictationLogger`, clipboard write with `TransientType` markers, NSOpenPanel plain-folder picker in settings, hotkey recorder in Settings via `KeyboardShortcuts.Recorder`.
+**Avoids:** Clipboard history pollution (Pitfall 5), filename collision (Pitfall 9), frontmatter leak (Pitfall 10), HUD privacy mode gap (Pitfall 17), settings bloat (Pitfall 18).
+**Estimated:** ~13.5 hours.
+**Research flag:** All decisions locked. Skip research phase.
+
+### Phase D: Integration and Hardening
+
+**Rationale:** End-to-end validation of feature interactions: mutual exclusion between recording and model update, model update deferred by active dictation, rollback path, SettingsView UX audit. Required before shipping.
+**Delivers:** Verified e2e flows. QA checklist from PITFALLS.md "Looks Done But Isn't" section completed.
+**Addresses:** Concurrent session guard, model update rollback simulation, SettingsView three-folder-picker audit (default `~/Documents/PS Transcribe Dictations/` so folder picker is an override not a requirement).
+**Research flag:** Standard patterns. Skip research phase.
 
 ### Phase Ordering Rationale
 
-- Phase 1 (rebrand/security) must come first because a bundle ID change after features ship doubles the migration complexity and creates two cohorts of users with different stored state.
-- Phase 2 (session library) unblocks Phase 5 (LLM analysis storage) -- without indexed sessions, there is nowhere to persist analysis results.
-- Phase 4 (Ollama integration) must be stable and decoupled before Phase 5 wires it into the recording loop -- a flaky Ollama integration in the recording pipeline is worse than no integration.
-- Phases 3 (UX polish) and 4 (Ollama) are independent and could run in parallel if multiple developers are available.
-- The build order in ARCHITECTURE.md (SessionEntry -> SessionIndexActor -> SessionLibrary -> LibraryView -> OllamaClient -> OllamaService -> InsightsPanel -> ContentView integration) should be followed within each phase.
+- A must precede B and C: shared data model is a compile-time dependency.
+- B and C are fully independent: no shared code, different concerns. Parallelize for speed.
+- D only starts when B and C are complete: integration testing requires both features to exist.
+- If parallelism is not available, build B before C -- it is simpler and establishes the `anySessionActive` guard that C also depends on for mutual exclusion.
 
 ### Research Flags
 
-Phases likely needing deeper research during planning:
-- **Phase 4 (Ollama Integration):** Decision between mattt/ollama-swift and a hand-rolled URLSession client needs to be made with current package inspection. The architecture research recommends hand-rolling (~80 lines) but this should be confirmed against the current ollama-swift API surface if structured outputs are anticipated.
-- **Phase 5 (Live LLM Analysis):** The sliding window strategy for long transcripts (>16K tokens) needs a concrete implementation design. The right chunking approach (fixed token count vs. utterance-boundary-aware) affects analysis quality and is non-trivial.
+**Needs resolution before Phase B begins:**
+- **Manifest hosting strategy** -- HuggingFace refs API (no infrastructure, no per-file checksums) vs. project-owned JSON on gh-pages (enables SHA-256 per file and `min_app_version`). Write an ADR in `.planning/` before Phase B planning.
 
-Phases with standard patterns (skip research-phase):
-- **Phase 1 (Security Hardening):** All findings are documented with specific fixes in PITFALLS.md and SECURITY-SCAN.md. No new research needed.
-- **Phase 2 (Session Library):** LazyVGrid, SessionIndexActor pattern, and file-based index approach are well-documented with working examples in ARCHITECTURE.md.
-- **Phase 3 (UX Polish):** SF Symbols symbolEffect() API is stable and documented. The three-state enum pattern is well-established.
+**Needs confirmation before Phase C begins:**
+- **Model locale support** -- confirm Parakeet-TDT v3 coreml is English-only. If `transcriptionLocale` in `AppSettings` is exposed as a user setting, `DictationCoordinator` must inherit it correctly.
+
+**Standard patterns (skip research phase):**
+- Phase A: data model changes, settings keys
+- Phase C dictation mechanics: KeyboardShortcuts, NSPanel, NSPasteboard -- all well-documented, decisions locked
+- Phase D integration testing: follows existing v1.0 QA patterns
+
+---
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Core choices are built-in system frameworks. ollama-swift inspected directly. SwiftData patterns verified against Apple docs and community sources. |
-| Features | MEDIUM | Competitor feature details from public sources; some LLM UX patterns from product reviews. The P1/P2 split is well-reasoned but competitor feature parity claims should be validated. |
-| Architecture | HIGH | Existing codebase inspected directly. Ollama HTTP API verified against official docs. All architectural recommendations are grounded in actual code, not speculation. |
-| Pitfalls | HIGH (codebase) / MEDIUM (Ollama) | Rebrand and security pitfalls derived from direct codebase audit -- HIGH confidence. Ollama-specific pitfalls (context truncation, timeout behavior) from community sources -- MEDIUM confidence. |
+| Stack | HIGH | KeyboardShortcuts 2.4.0 verified; Carbon behavior verified; HuggingFace refs API live-verified 2026-04-27; NSPasteboard write unaffected by macOS 26 clipboard privacy |
+| Features | HIGH (dictation), MEDIUM (model update) | Dictation patterns verified across 6+ shipping apps; model update UX has macMLX as closest reference only |
+| Architecture | HIGH | All findings from direct codebase inspection 2026-04-27; component map reflects actual files |
+| Pitfalls | HIGH (model integrity, session guard, clipboard markers), MEDIUM (manifest hosting, FluidAudio compatibility) | CGEventTap pitfalls real but conditional -- not applicable to chosen mechanism |
 
-**Overall confidence:** HIGH
+**Overall confidence:** HIGH for the dictation track; MEDIUM for the model update track pending manifest hosting decision.
 
 ### Gaps to Address
 
-- **SwiftData vs. JSONL for session index:** Architecture research recommends a lightweight sessions-index.json (JSONL/JSON array) over SwiftData for the simple session library schema. Stack research recommends SwiftData. These should be reconciled at Phase 2 planning -- the JSONL approach avoids SwiftData's @ModelActor threading complexity for a simple 5-field struct, but SwiftData provides @Query reactivity. Decision point: if @Query reactivity is wanted, use SwiftData; if simplicity and explicit control are preferred, use a JSON array with SessionIndexActor.
-- **ollama-swift dependency vs. URLSession direct:** Commit to one approach at Phase 4 start. Architecture research leans toward URLSession direct (dependency-minimal, ~80 lines, matches existing codebase patterns). Stack research recommends ollama-swift. The deciding factor should be whether structured outputs or tool calling are anticipated -- if yes, take the dependency; if no, roll thin client.
-- **Rebrand timing relative to feature work:** PITFALLS.md is unambiguous that rebrand must ship before features, but it is not clear from research whether the bundle ID change is already planned for the next release or a later one. This should be confirmed at roadmap creation.
+- **Manifest hosting strategy** -- resolve before Phase B. Recommendation: project-owned manifest on gh-pages to support per-file SHA-256 checksums and `min_app_version` gating. Write ADR.
+- **FluidAudio model locale** -- confirm whether Parakeet-TDT v3 supports locales beyond English. Low risk if app currently only supports English; confirm before Phase C to avoid a late-breaking constraint.
+- **DictationOutputMode default** -- decide whether `.clipboard` or `.both` is the out-of-box default. Research supports `.clipboard` as the simplest first-run experience.
+- **HUD position** -- lock to bottom-center for v1.2 (matches SuperWhisper default, mirrors macOS Dictation feedback window). Configuration deferred to v2+.
+
+---
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- Existing codebase (`ContentView.swift`, `TranscriptStore.swift`, `SessionStore.swift`, `TranscriptLogger.swift`, `Models.swift`) -- architecture and pitfall grounding
-- https://github.com/mattt/ollama-swift -- Package.swift and API inspected directly
-- https://developer.apple.com/documentation/swiftui/lazyvgrid -- LazyVGrid API
-- https://developer.apple.com/videos/play/wwdc2023/10258/ -- SF Symbols symbolEffect() API
-- https://docs.ollama.com/api/streaming -- Ollama HTTP API
-- https://developer.apple.com/documentation/foundation/urlsession/asyncbytes -- URLSession.bytes pattern
-- https://sparkle-project.org/documentation/publishing/ -- Sparkle version comparison behavior
-- https://docs.ollama.com/faq -- Ollama context window defaults
+
+- `sindresorhus/KeyboardShortcuts` README + Package.swift -- v2.4.0 verified; no Accessibility required; SwiftUI Recorder included
+- `FluidInference/FluidAudio` source (commit ea50062) -- `ModelRegistry.swift` inspected; no native version-check API
+- `https://huggingface.co/api/models/FluidInference/parakeet-tdt-0.6b-v3-coreml/refs` -- live API response verified 2026-04-27
+- Apple Developer Forum thread 735223 -- `RegisterEventHotKey` correct for sandboxed global shortcuts
+- Direct codebase inspection: `PSTranscribe/Sources/PSTranscribe/` (2026-04-27)
+- `nspasteboard.org` -- `org.nspasteboard.TransientType` and `AutoGeneratedType` marker spec; confirmed by Alfred/Maccy behavior
+- FluidAudio GitHub Releases (v0.13.7, v0.13.2.5) -- breaking model structure changes confirmed across minor versions
 
 ### Secondary (MEDIUM confidence)
-- https://fatbobman.com/en/posts/concurret-programming-in-swiftdata/ -- SwiftData @ModelActor patterns
-- https://www.hackingwithswift.com/quick-start/swiftdata/how-swiftdata-works-with-swift-concurrency -- SwiftData concurrency
-- MacWhisper, Granola, Meetily public feature documentation -- competitor feature analysis
-- https://www.arsturn.com/blog/what-happens-when-you-exceed-the-token-context-limit-in-ollama -- Ollama context truncation behavior
-- https://useyourloaf.com/blog/swiftui-tasks-blocking-the-mainactor/ -- SwiftUI main actor task blocking
 
-### Tertiary (LOW confidence)
-- Sparkle version numbering issue: https://github.com/openclaw/openclaw/issues/26965 -- referenced for rebrand version reset pitfall; needs validation against current Sparkle 2.9.0 behavior
+- macMLX -- model update UX reference: `.macmlx-meta.json` sidecar, orange badge, 24h throttle
+- SuperWhisper changelog -- clipboard restore at 3s, cancel threshold at 30s, per-mode shortcuts
+- mjtsai.com/blog/2025/05/12 -- macOS 15.4 clipboard privacy preview: reads trigger alert, writes do not
+- GitHub issue feedback-assistant/reports#552 -- macOS 15 Option-only modifier restriction for `RegisterEventHotKey`
+- Apple Developer Forums thread 792152 -- NSWindowSharingType bypass by ScreenCaptureKit (documented limitation)
+
+### Tertiary (informational)
+
+- Wispr Flow, MacWhisper Global, Axii, Voxt documentation -- competitive feature matrix validation
+- danielraffel.me TIL 2026-02-19 -- CGEventTap silent disable after re-sign (conditional risk only, not applicable to v1.2 path)
 
 ---
-*Research completed: 2026-03-31*
+
+*Research completed: 2026-04-27*
 *Ready for roadmap: yes*

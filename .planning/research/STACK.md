@@ -1,121 +1,257 @@
-# Stack Research
+# Stack Research: v1.2 New Features
 
-**Domain:** macOS native app -- Ollama LLM integration, session library UI, animated SwiftUI components
-**Researched:** 2026-03-31
-**Confidence:** MEDIUM-HIGH (core choices HIGH, some SwiftData/Swift 6 interaction details MEDIUM)
+**Domain:** macOS native app -- dictation tooling + out-of-band model update channel
+**Researched:** 2026-04-27
+**Confidence:** HIGH (global hotkey, clipboard, folder picker); MEDIUM (model update channel -- no FluidAudio-native version-check API exists, custom approach required)
 
-## Existing Stack (Do Not Revisit)
+---
+
+## Scope
+
+This document covers ONLY the stack additions required for v1.2's three new capabilities:
+
+1. Keyboard-triggered clipboard dictation (global hotkey + NSPasteboard write)
+2. Plain-folder dictation output (user-configurable OS folder, no Obsidian)
+3. Model auto-update (out-of-band ASR model version checking, separate from Sparkle)
+
+The existing validated stack (Swift 6.2, SwiftUI, FluidAudio, Sparkle, actor concurrency, @Observable) is NOT re-researched here.
+
+---
+
+## Existing Stack (Reference Only)
 
 | Technology | Version | Role |
 |------------|---------|------|
 | Swift | 6.2 | Language |
 | SwiftUI + AppKit | macOS 26.0+ | UI framework |
 | FluidAudio | commit ea50062 | ASR / VAD / diarization |
-| Sparkle | 2.9.0 | Auto-update |
+| Sparkle | 2.9.0 | App binary auto-update |
 | AVFoundation + ScreenCaptureKit | system | Audio capture |
 | @Observable / actors | Swift stdlib | State + concurrency |
 
-## Recommended Stack (New Capabilities Only)
+---
 
-### Core Technologies
+## Feature 1: Global Hotkey (Clipboard Dictation Trigger)
 
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| mattt/ollama-swift | 1.8.0 | Ollama API client | Zero dependencies, swift-tools-version 6.0, AsyncSequence streaming, macOS 13+. Written by a respected Swift community author. Simpler and more maintained than OllamaKit for this use case. |
-| SwiftData | macOS 14+ (bundled) | Session library persistence | Native Apple framework, @Model macro eliminates boilerplate, integrates cleanly with @Observable and SwiftUI. Correct choice for a new, single-device app on macOS 26. |
-| SwiftUI LazyVGrid | macOS 11+ (bundled) | Grid view for session library | Native, zero-dependency, lazy rendering handles large session lists without extra libraries. .adaptive column sizing gives responsive grid automatically. |
-| SF Symbols symbolEffect() | macOS 14+ (bundled) | Three-state mic button animation | Built-in, no import needed. `.symbolEffect(.pulse)` for recording state, `.symbolEffect(.appear/.disappear)` for transitions. Compile-time safe. Introduced WWDC23, expanded in SF Symbols 6 and 7. |
+### Decision: KeyboardShortcuts by sindresorhus -- REQUIRED new SwiftPM dependency
 
-### Supporting Libraries
-
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| mattt/ollama-swift | 1.8.0 | Ollama HTTP client with streaming | All Ollama interactions -- model listing, chat streaming, server detection |
-| Foundation URLSession | system | Fallback HTTP for Ollama health check | Use `GET http://localhost:11434/` to detect server running; returns "Ollama is running" with 200. Can be done directly or via ollama-swift. |
-
-### Development Tools
-
-| Tool | Purpose | Notes |
-|------|---------|-------|
-| Swift Package Manager | Dependency management | Already in use. Add ollama-swift via `Package.swift` with `.upToNextMajor(from: "1.8.0")`. |
-| Xcode Instruments (Time Profiler) | LLM streaming performance | Token-by-token updates to `@Observable` state need profiling to ensure main thread isn't blocked during rapid token arrival. |
-
-## Installation
-
+**Package:** `https://github.com/sindresorhus/KeyboardShortcuts`
+**Version:** `2.4.0` (released September 2025, latest verified as of 2026-04-27)
+**SwiftPM declaration:**
 ```swift
-// In Package.swift dependencies array:
-.package(url: "https://github.com/mattt/ollama-swift", from: "1.8.0"),
-
-// In target dependencies:
-.product(name: "Ollama", package: "ollama-swift"),
+.package(url: "https://github.com/sindresorhus/KeyboardShortcuts", from: "2.4.0"),
 ```
 
-SwiftData, LazyVGrid, and symbolEffect are system frameworks -- no installation needed.
+**Why this over every alternative:**
 
-## Alternatives Considered
+| Approach | Requires Accessibility? | Sandbox OK? | User-configurable UI? | Verdict |
+|----------|------------------------|-------------|----------------------|---------|
+| `NSEvent.addGlobalMonitorForEvents` | YES | Breaks without it | No | REJECT |
+| `CGEventTap` | YES (Input Monitoring) | Needs entitlement | No | REJECT |
+| Carbon `RegisterEventHotKey` raw | No | Yes | No built-in UI | REJECT (bare) |
+| soffes/HotKey | No | Unclear | No UI component | REJECT |
+| **KeyboardShortcuts 2.4.0** | **No** | **Yes -- App Store compatible** | **Yes -- `Recorder` SwiftUI view** | **USE** |
 
-| Recommended | Alternative | When to Use Alternative |
-|-------------|-------------|-------------------------|
-| mattt/ollama-swift | kevinhermawan/OllamaKit (v5.0.8) | OllamaKit is fine if you need its higher-level abstractions (it powers the Ollamac app). For this project, ollama-swift is leaner, has no transitive dependencies, and uses swift-tools-version 6.0 matching the project's Swift 6.2 toolchain. |
-| mattt/ollama-swift | Raw URLSession + JSONDecoder | Acceptable if you want zero new dependencies. The streaming implementation is non-trivial (chunked JSON decoding of Ollama's NDJSON format). Not worth building in-house. |
-| SwiftData | CoreData | Use CoreData only if you need NSCompoundPredicate, NSFetchedResultsController, or iOS 16 support. This project targets macOS 26 only, so SwiftData's Swift-native API is strictly better. |
-| SwiftData | SQLite.swift or GRDB | Use only if SwiftData's query capabilities prove insufficient. The session library schema is simple (id, name, date, path, duration) -- SwiftData handles this easily. |
-| SF Symbols symbolEffect() | Lottie / custom CALayer animation | Use Lottie only for animations that cannot be expressed as symbol effects or SwiftUI phase animations. Three-state mic button is well within SF Symbols' built-in repertoire (.record.circle, .mic.fill, .exclamationmark.triangle). |
-| SwiftUI LazyVGrid | NSCollectionView | NSCollectionView is more powerful for complex data sources, but LazyVGrid with @Observable state is sufficient for a session grid. Avoid AppKit unless SwiftUI's grid has a concrete, demonstrated limitation. |
+**Key verified facts:**
 
-## What NOT to Use
+- Wraps Carbon `RegisterEventHotKey` internally. Carbon is the ONLY macOS API for global hotkeys that requires no Accessibility or Input Monitoring permission. The narrow contract ("fire when THIS exact combo is pressed, nothing else") is why Apple does not gate it.
+- `NSEvent.addGlobalMonitorForEvents` requires granting the app Accessibility in System Settings. That forces a manual user step on every install, adds an `com.apple.security.accessibility` entitlement, and blocks App Store distribution. Rejected.
+- `CGEventTap` requires Input Monitoring permission -- same user-friction problem, different entitlement. Rejected.
+- **macOS 15+ (Sequoia) modifier restriction:** `RegisterEventHotKey` no longer fires when the ONLY modifiers are Option or Option+Shift alone. Apple introduced this to prevent keystroke-logging malware. Any shortcut that includes Cmd, Ctrl, or Cmd+Option still works. Default dictation shortcut recommendation: `Cmd+Shift+D`.
+- `KeyboardShortcuts.Recorder` is a native SwiftUI view -- drop it into `SettingsView` to let users reassign the hotkey without any custom UI work.
 
-| Avoid | Why | Use Instead |
-|-------|-----|-------------|
-| CloudKit sync for session library | App is explicitly offline-first. Adding CloudKit couples the session library to iCloud account state and network availability -- violates the product's core constraint. | Local SwiftData store with configurable vault path (already established pattern in app). |
-| Combine publishers for Ollama streaming | The codebase uses async/await actors, not Combine pipelines. Mixing paradigms creates cognitive overhead and actor boundary confusion in Swift 6. | AsyncSequence (what ollama-swift provides natively). |
-| OpenAI-compatible wrapper libraries | These add an abstraction layer above Ollama that implies cloud API patterns (rate limits, API keys, error shapes). Ollama-specific libraries have cleaner ergonomics for local server use. | mattt/ollama-swift directly. |
-| @MainActor everywhere on SwiftData models | @ModelActor is the correct isolation primitive for background persistence operations (e.g., saving session records during recording). @MainActor on model access creates UI jank if called during heavy transcription. | @ModelActor for write operations, main context for read/display. |
-| Third-party grid libraries (GridStack, etc.) | Unmaintained or minimal update cadence. LazyVGrid covers the use case with zero extra surface area. | SwiftUI LazyVGrid with .adaptive(minimum: 180) columns. |
+**Entitlement impact:** None. No new keys in `PSTranscribe.entitlements`.
 
-## Stack Patterns by Variant
+**Integration point:** New `DictationHotkeyController.swift` in `Sources/PSTranscribe/App/`, following the exact pattern of `AppUpdaterController.swift`. Initialized in `PSTranscribeApp.swift`. On hotkey fire, calls into a new `DictationSession` coordinator (see below) on `@MainActor`.
 
-**For Ollama server detection:**
-- Poll `GET http://localhost:11434/` on app launch and on settings open
-- Use a 2-second timeout URLRequest so UI doesn't hang
-- Store server reachability as `@Observable` state so views react automatically
+---
 
-**For streaming LLM analysis during recording:**
-- Use `@ModelActor` for session persistence (background)
-- Use `@MainActor`-isolated `@Observable` for live token accumulation in the UI
-- Bridge via `PersistentIdentifier` -- never pass `@Model` instances across actor boundaries
+## Feature 2: Clipboard Write (NSPasteboard)
 
-**For the session library grid:**
-- Use `@Query` macro in the view for automatic SwiftData reactivity
-- Sort by `createdAt` descending by default
-- Detect missing files with `FileManager.default.fileExists(atPath:)` -- do not store file existence state in the model, check on-demand at render time
+### Decision: First-party NSPasteboard -- no new dependency
 
-**For three-state mic button animation:**
-- Use an enum (`idle / recording / error`) as the button's state type
-- Bind `symbolEffect(.pulse, isActive: state == .recording)` for the recording pulse
-- Use `.contentTransition(.symbolEffect(.replace))` when switching between symbols for smooth morphing
-- All three states map to existing SF Symbols: `mic` (idle), `record.circle.fill` (recording), `exclamationmark.microphone` (error)
+**API:** `NSPasteboard.general` (AppKit, already available via `import AppKit`).
+
+**Write pattern (Swift 6 / @MainActor safe):**
+
+```swift
+@MainActor
+func writeTranscriptToClipboard(_ text: String) {
+    let pb = NSPasteboard.general
+    pb.clearContents()
+    pb.setString(text, forType: .string)
+}
+```
+
+`NSPasteboard` is AppKit-owned and inherently main-thread-bound. Calling it from `@MainActor`-isolated code has no Swift 6 concurrency issues.
+
+**macOS 26 clipboard privacy warning (verified and resolved):**
+
+Apple introduced iOS-style clipboard privacy in macOS 15.4 (developer preview) and macOS 26. The permission prompt fires when an app READS the clipboard without a user-initiated paste action. **Writing to the clipboard does NOT trigger the prompt.** PS Transcribe places text on the clipboard and never reads it back. No impact on this feature.
+
+The privacy change was "absent by default in macOS 26" unless the developer preview flag is set, per community investigation as of late 2025. No entitlement or user-facing permission required.
+
+**Entitlement impact:** None. Non-sandboxed apps write to `NSPasteboard.general` freely.
+
+**Integration point:** Called at the end of a dictation session's `onFinal` callback chain in the dictation coordinator, after the final transcript is assembled from `TranscriptStore`. Same execution path that currently saves to vault files.
+
+---
+
+## Feature 3: Plain-Folder Dictation Output
+
+### Decision: Raw URL paths + NSOpenPanel -- no new dependency, no security-scoped bookmarks
+
+**Why no security-scoped bookmarks:** Security-scoped bookmarks are a sandbox mechanism. The existing `PSTranscribe.entitlements` (verified by direct inspection) contains only `com.apple.security.device.audio-input` and `com.apple.security.device.screen-capture` -- the `com.apple.security.app-sandbox` key is ABSENT. The app is NOT sandboxed. Raw `URL(fileURLWithPath:)` access works without any bookmark infrastructure, exactly as the existing `vaultMeetingsPath` / `vaultVoicePath` implementation already does.
+
+**Implementation pattern:** Identical to the existing Obsidian folder configuration in `SettingsView.swift` (the `obsidianFolderRow` pattern at line 135):
+
+1. `NSOpenPanel` with `canChooseDirectories = true`, `canChooseFiles = false` presents the picker.
+2. User selects a folder; the absolute path string is written to `UserDefaults`.
+3. New `AppSettings` key: `dictationFolderPath` (String, default `""` = disabled, save to library only).
+4. A new `DictationLogger` actor in `Sources/PSTranscribe/Storage/` writes clean markdown without YAML frontmatter. This is a new actor (not a mode parameter on the existing `TranscriptLogger`) to keep the clean-output path isolated from the YAML-heavy meeting transcript path.
+
+**Output format for plain folder:** Markdown filename `YYYY-MM-DD-HH-mm-ss.md`, body is the verbatim transcript text, no frontmatter. Optionally: an H1 heading with the timestamp if file names alone are too sparse.
+
+**Entitlement impact:** None.
+
+**Integration point:** `AppSettings` gets one new persisted property. `SettingsView` gets a new "Dictation" section with a folder picker row. New `DictationLogger` actor in `Storage/` is called from the dictation session coordinator after transcription completes.
+
+---
+
+## Feature 4: Model Auto-Update Channel
+
+### Decision: Custom HuggingFace refs API poll via URLSession -- no new library
+
+**Why not Sparkle:** Sparkle updates the app binary (`.app` bundle). The FluidAudio Parakeet-TDT CoreML model files (~2.7 GB) are downloaded separately by `AsrModels.downloadAndLoad(version: .v3)` on first run and cached in the user's local directory. Model weights and app binaries have completely different update cycles. Wrong tool.
+
+**Why no FluidAudio-native version API (verified):** Inspection of `ModelRegistry.swift` at commit `ea50062` confirms that FluidAudio's registry layer exposes only URL construction helpers (HuggingFace download paths). There is no `checkForModelUpdate()` method, no local version manifest, and no cached commit hash tracking. `AsrModels.downloadAndLoad` resolves to `{baseURL}/{repoPath}/resolve/main/{filePath}` -- it always pulls from `main` but does not do a lightweight version-check before potentially re-downloading.
+
+**Recommended mechanism: HuggingFace refs API**
+
+HuggingFace exposes a stable, unauthenticated, lightweight REST endpoint that returns the current commit SHA for any model repo's main branch:
+
+```
+GET https://huggingface.co/api/models/FluidInference/parakeet-tdt-0.6b-v3-coreml/refs
+```
+
+Live response verified 2026-04-27:
+```json
+{
+  "branches": [
+    {
+      "name": "main",
+      "ref": "refs/heads/main",
+      "targetCommit": "775be920d492d20e9e522ee0a969414fd6e6e0f7"
+    }
+  ]
+}
+```
+
+The model repo has no explicit version file (the `config.json` is 2 bytes, carries no version). Model artifacts are updated in place on `main`. The `targetCommit` SHA is the definitive signal that content changed -- this is the same approach HuggingFace's own Swift client (`swift-huggingface`) uses for cache invalidation.
+
+**Version check flow:**
+
+1. On app launch AND on a 24-hour repeating Task timer, fetch the refs endpoint via `URLSession.shared.data(from:)`.
+2. Decode the JSON with `JSONDecoder` -- trivial struct with `branches: [Branch]`, `Branch` has `name: String` and `targetCommit: String`.
+3. Compare `targetCommit` for `name == "main"` against the last-known SHA stored in `UserDefaults` key `fluidAudioModelCommitSHA`.
+4. If different (or if the UserDefaults key is absent -- first run), set an `@Observable` flag `modelUpdateAvailable = true` on `TranscriptionEngine` or a new `ModelUpdateChecker` observable.
+5. Surface a non-blocking "Speech model update available" banner in the UI. User explicitly taps "Update" to trigger re-download via the existing `AsrModels.downloadAndLoad(version: .v3)` call path.
+6. On successful re-download, write the new SHA to `UserDefaults`.
+
+**Why user-initiated, not silent download:** The model is ~2.7 GB. Silent background download on a metered connection is hostile. Show a banner, let the user choose when to download.
+
+**Network access:** The app is not sandboxed, so outbound `URLSession` calls require no entitlement. The existing Notion integration (`NotionService.swift`) already makes outbound HTTP calls in production -- the same `URLSession` pattern applies.
+
+**New code required:** A single `ModelUpdateChecker` actor in `Sources/PSTranscribe/App/` (or `Transcription/`). Roughly 60-80 lines. No new SwiftPM dependency.
+
+**Entitlement impact:** None.
+
+**Integration point:** `ModelUpdateChecker` is initialized in `PSTranscribeApp.swift` alongside `AppUpdaterController`. It publishes `modelUpdateAvailable: Bool` as an `@Observable` property. The UI layer (likely `ControlBar` or a new banner) reacts to this flag.
+
+---
+
+## Full Stack Change Summary
+
+### REQUIRED
+
+| Addition | Type | Priority |
+|----------|------|----------|
+| `KeyboardShortcuts` 2.4.0 (sindresorhus) | New SwiftPM dependency | REQUIRED |
+| `DictationHotkeyController` | New file -- `App/` | REQUIRED |
+| `DictationLogger` actor | New file -- `Storage/` | REQUIRED |
+| `dictationFolderPath` in `AppSettings` | Code change -- existing file | REQUIRED |
+| `ModelUpdateChecker` actor | New file -- `App/` or `Transcription/` | REQUIRED |
+| Dictation section in `SettingsView` | Code change -- existing file | REQUIRED |
+| `NSPasteboard.general` write call | Code change -- in dictation session coordinator | REQUIRED |
+
+### NOT NEEDED / EXPLICITLY EXCLUDED
+
+| Excluded | Reason |
+|----------|--------|
+| `NSEvent.addGlobalMonitorForEvents` | Requires Accessibility permission -- user-hostile, blocked by sandbox |
+| `CGEventTap` | Requires Input Monitoring entitlement -- same problem |
+| `com.apple.security.accessibility` entitlement | Only needed by NSEvent approach; that approach is rejected |
+| Security-scoped bookmarks | Sandbox feature only; app is not sandboxed |
+| `swift-huggingface` library | A full HuggingFace client; one URLSession call to the refs endpoint is sufficient |
+| Sparkle for model updates | Wrong tool; Sparkle updates app binaries, not model weight files |
+| CloudKit / iCloud sync | Hard constraint: offline-first, on-device only |
+| Any cloud LLM API | Hard constraint: offline-first |
+| Replacing or upgrading FluidAudio | Pinned to ea50062; model update channel is separate from FluidAudio version |
+
+---
+
+## Package.swift Change (the only change needed)
+
+```swift
+// In dependencies array -- add ONE line:
+.package(url: "https://github.com/sindresorhus/KeyboardShortcuts", from: "2.4.0"),
+
+// In PSTranscribe target dependencies array -- add ONE line:
+.product(name: "KeyboardShortcuts", package: "KeyboardShortcuts"),
+```
+
+All other additions (NSPasteboard, URLSession, NSOpenPanel, UserDefaults) use frameworks already imported in the existing codebase.
+
+---
+
+## Entitlements
+
+No changes to `PSTranscribe.entitlements`. The current file (`audio-input` + `screen-capture`, no `app-sandbox`) is sufficient for all three v1.2 features:
+
+| Capability | Entitlement needed? | Reason |
+|------------|-------------------|--------|
+| `RegisterEventHotKey` (via KeyboardShortcuts) | No | Carbon API, no permission gate |
+| `NSPasteboard.general` write | No | Non-sandboxed, writes are unrestricted |
+| NSOpenPanel + raw path file write | No | Non-sandboxed, user-selected path |
+| URLSession to HuggingFace refs API | No | Non-sandboxed, outbound network unrestricted |
+
+---
 
 ## Version Compatibility
 
-| Package | Compatible With | Notes |
-|---------|-----------------|-------|
-| mattt/ollama-swift 1.8.0 | Swift 6.0+, macOS 13+ | swift-tools-version 6.0 aligns with project's Swift 6.2. No known issues. |
-| SwiftData | macOS 14+ | Project targets macOS 26 -- well within compatibility range. @ModelActor weirdness (implicit context threading) is documented; use explicit init pattern. |
-| SF Symbols symbolEffect() | macOS 14+ (SF Symbols 5+) | symbolEffect(.pulse) requires macOS 14. Draw animations (SF Symbols 7) require macOS 26. Both safe given macOS 26+ target. |
-| OllamaKit 5.0.8 | Swift 5.9+, macOS unspecified | Not chosen, but confirmed active as of March 2025. |
+| Technology | macOS Target | Notes |
+|-----------|-------------|-------|
+| KeyboardShortcuts 2.4.0 | macOS 10.15+ | Well within macOS 26 target |
+| Carbon `RegisterEventHotKey` | All macOS | Deprecated but stable; Apple has not shipped a replacement |
+| macOS 15+ modifier restriction | macOS 15+ | Option-only shortcuts disabled; use Cmd+Shift+D as default |
+| `NSPasteboard` write (no prompt) | macOS 26 | Write path confirmed unaffected by new clipboard privacy rules |
+| HuggingFace refs API | n/a | Live-verified 2026-04-27; unauthenticated; stable pattern |
+
+---
 
 ## Sources
 
-- https://github.com/mattt/ollama-swift (Package.swift inspected directly -- HIGH confidence)
-- https://github.com/kevinhermawan/OllamaKit (README inspected -- MEDIUM confidence)
-- https://developer.apple.com/documentation/swiftui/lazyvgrid (official docs -- HIGH confidence)
-- https://developer.apple.com/videos/play/wwdc2023/10258/ (SF Symbols animation API -- HIGH confidence)
-- https://fatbobman.com/en/posts/concurret-programming-in-swiftdata/ (SwiftData @ModelActor patterns -- MEDIUM confidence, community source)
-- https://www.hackingwithswift.com/quick-start/swiftdata/how-swiftdata-works-with-swift-concurrency (SwiftData concurrency -- MEDIUM confidence)
-- https://github.com/ollama/ollama/issues/1378 (Ollama health check GET / endpoint -- HIGH confidence, official repo issue)
-- SwiftData vs CoreData comparison: multiple community sources 2025 -- MEDIUM confidence
+- https://github.com/sindresorhus/KeyboardShortcuts -- README + Package.swift inspected; v2.4.0 confirmed; Mac App Store + sandbox compatible; no Accessibility required -- HIGH confidence
+- https://developer.apple.com/forums/thread/735223 -- Apple Developer Forum: `RegisterEventHotKey` is the correct approach for sandboxed global shortcuts -- HIGH confidence
+- https://github.com/feedback-assistant/reports/issues/552 -- macOS 15 Option/Option+Shift modifier restriction for `RegisterEventHotKey` -- HIGH confidence (corroborated by Apple forum thread 763878)
+- https://github.com/blackboardsh/electrobun/issues/334 -- NSEvent vs RegisterEventHotKey Accessibility requirement analysis -- MEDIUM confidence (community, consistent with Apple docs)
+- https://mjtsai.com/blog/2025/05/12/pasteboard-privacy-preview-in-macos-15-4/ -- Clipboard privacy changes affect READs only, not writes -- MEDIUM confidence (developer blog, corroborated by MacRumors/9to5Mac reports)
+- https://huggingface.co/api/models/FluidInference/parakeet-tdt-0.6b-v3-coreml/refs -- Live API response verified 2026-04-27; `targetCommit` SHA present and current -- HIGH confidence
+- https://github.com/FluidInference/FluidAudio `Sources/FluidAudio/ModelRegistry.swift` (at commit ea50062) -- No native version-check API; URL construction only -- HIGH confidence (direct source inspection)
+- https://github.com/FluidInference/FluidAudio -- Current FluidAudio release: v0.14.1 (April 2026); AsrModels supports `.v2` and `.v3` enum cases -- HIGH confidence
+- https://huggingface.co/FluidInference/parakeet-tdt-0.6b-v3-coreml/tree/main -- Repo file listing; 68 commits; no version manifest file; `config.json` is 2 bytes -- HIGH confidence
 
 ---
-*Stack research for: PS Transcribe -- Ollama integration, session library, animated mic button*
-*Researched: 2026-03-31*
+
+*Stack research for: PS Transcribe v1.2 -- Standalone Dictation + Model Auto-Update*
+*Researched: 2026-04-27*

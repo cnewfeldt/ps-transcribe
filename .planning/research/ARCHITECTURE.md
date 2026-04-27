@@ -1,366 +1,536 @@
 # Architecture Research
 
-**Domain:** macOS native transcription app with local LLM integration
-**Researched:** 2026-03-31
-**Confidence:** HIGH (existing codebase inspected, Ollama API verified against official docs and ollama-swift library)
+**Domain:** macOS native audio transcription app -- v1.2 feature integration
+**Researched:** 2026-04-27
+**Confidence:** HIGH (all findings derived from direct source inspection)
 
-## Standard Architecture
+---
 
-### System Overview
+## Scope
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                        Presentation Layer                         │
-│  ┌─────────────┐  ┌──────────────┐  ┌────────────────────────┐  │
-│  │ ContentView │  │ LibraryView  │  │    InsightsPanel       │  │
-│  │ (session    │  │ (grid of     │  │  (live LLM output      │  │
-│  │  lifecycle) │  │  past        │  │   during recording)    │  │
-│  │             │  │  sessions)   │  │                        │  │
-│  └──────┬──────┘  └──────┬───────┘  └──────────┬─────────────┘  │
-│         │                │                      │                │
-├─────────┴────────────────┴──────────────────────┴────────────────┤
-│                        State Layer (@Observable, @MainActor)      │
-│  ┌────────────────┐  ┌──────────────────┐  ┌──────────────────┐ │
-│  │ TranscriptStore│  │  OllamaService   │  │  SessionLibrary  │ │
-│  │ (utterances,   │  │  (@Observable    │  │  (@Observable    │ │
-│  │  volatile text)│  │   status, chunks)│  │   session list)  │ │
-│  └────────┬───────┘  └────────┬─────────┘  └────────┬─────────┘ │
-│           │                   │                      │           │
-├───────────┴───────────────────┴──────────────────────┴───────────┤
-│                      Service / Engine Layer                       │
-│  ┌────────────────┐  ┌──────────────────┐  ┌──────────────────┐ │
-│  │TranscriptionEng│  │  OllamaClient    │  │ SessionIndexActor│ │
-│  │  (MainActor)   │  │  (actor, HTTP +  │  │  (actor, JSONL   │ │
-│  │                │  │   async stream)  │  │   index on disk) │ │
-│  └────────┬───────┘  └────────┬─────────┘  └────────┬─────────┘ │
-│           │                   │                      │           │
-├───────────┴───────────────────┴──────────────────────┴───────────┤
-│                      Infrastructure Layer                         │
-│  ┌──────────────────────┐  ┌────────────────────────────────┐   │
-│  │  Audio + FluidAudio  │  │  File System (vault + index)   │   │
-│  │  (MicCapture,        │  │  (TranscriptLogger,            │   │
-│  │   SystemAudioCapture,│  │   SessionStore,                │   │
-│  │   StreamingTranscrib)│  │   SessionIndexActor)           │   │
-│  └──────────────────────┘  └────────────────────────────────┘   │
-└──────────────────────────────────────────────────────────────────┘
-```
+This document covers only the v1.2 integration surface. The base architecture (actor-based concurrency, @Observable state, dual-stream ASR pipeline, Sparkle update mechanism) is treated as fixed. The three new features are:
 
-### Component Responsibilities
+1. Keyboard-triggered clipboard dictation
+2. Plain-folder dictation output
+3. Model auto-update (independent channel from Sparkle)
 
-| Component | Responsibility | Communicates With |
-|-----------|----------------|-------------------|
-| `ContentView` | Session lifecycle, top-level layout, split-view toggle | `TranscriptStore`, `TranscriptionEngine`, `OllamaService`, `TranscriptLogger`, `SessionStore` |
-| `InsightsPanel` | Display streaming LLM chunks during recording; show summary/actions/topics | `OllamaService` (read-only) |
-| `LibraryView` | Grid of past sessions, missing-file detection, Obsidian deep links | `SessionLibrary` (read-only) |
-| `TranscriptStore` | MainActor-isolated live utterances + volatile text | `TranscriptionEngine` writes; Views read |
-| `OllamaService` | Observable state: connection status, current model, streaming chunks, accumulated insights | `OllamaClient` calls; Views bind |
-| `SessionLibrary` | Observable list of `SessionEntry` structs from index file | `SessionIndexActor` loads/writes |
-| `OllamaClient` | Actor. HTTP to local Ollama: health check, model list, streaming chat | URLSession bytes API |
-| `SessionIndexActor` | Actor. Reads/writes `sessions-index.json` in AppSupport | FileManager |
-| `TranscriptionEngine` | MainActor. Existing: dual-stream audio orchestration | Audio capture, FluidAudio, `TranscriptStore` |
-| `TranscriptLogger` | Actor. Existing: markdown transcript file writes | FileManager |
-| `SessionStore` | Actor. Existing: per-session JSONL for crash recovery | FileManager |
+---
 
-## Recommended Project Structure
+## Existing Component Map (Integration Reference)
 
 ```
-Sources/Tome/
-├── App/
-│   ├── TomeApp.swift
-│   └── AppDelegate.swift
-├── Audio/
-│   ├── MicCapture.swift
-│   └── SystemAudioCapture.swift
-├── LLM/                            # NEW -- Ollama integration
-│   ├── OllamaClient.swift          # actor: raw HTTP, streaming
-│   └── OllamaService.swift         # @Observable: state exposed to UI
-├── Models/
-│   ├── Models.swift                # existing Utterance, SessionRecord
-│   └── SessionEntry.swift          # NEW -- library index entry
-├── Settings/
-│   └── AppSettings.swift
-├── Storage/
-│   ├── TranscriptLogger.swift      # existing
-│   ├── SessionStore.swift          # existing
-│   └── SessionIndexActor.swift     # NEW -- library index persistence
-├── Transcription/
-│   ├── TranscriptionEngine.swift
-│   └── StreamingTranscriber.swift
-└── Views/
-    ├── ContentView.swift           # modified -- adds split-view, mic button
-    ├── ControlBar.swift            # modified -- three-state mic button
-    ├── InsightsPanel.swift         # NEW -- LLM side panel
-    ├── LibraryView.swift           # NEW -- session grid
-    ├── TranscriptView.swift        # existing
-    ├── WaveformView.swift          # existing (or removed if replaced)
-    ├── OnboardingView.swift        # existing
-    ├── SettingsView.swift          # existing
-    └── CheckForUpdatesView.swift   # existing
+PSTranscribeApp.swift           -- @main, window/menubar/settings scene setup
+AppDelegate (nested)            -- window lifecycle, screen-share visibility
+  |
+  +-- ContentView.swift         -- session orchestrator, all @State for live sessions
+        |
+        +-- TranscriptionEngine.swift   -- @Observable @MainActor, owns Tasks + FluidAudio
+        |     +-- MicCapture.swift      -- AVAudioEngine tap, AsyncStream<AVAudioPCMBuffer>
+        |     +-- SystemAudioCapture.swift -- ScreenCaptureKit, AsyncStream + WAV buffer
+        |     +-- StreamingTranscriber.swift (x2) -- VAD+ASR worker per stream
+        |
+        +-- TranscriptStore.swift       -- @Observable @MainActor, utterances + volatile text
+        +-- TranscriptLogger.swift      -- actor, markdown writer + frontmatter
+        +-- SessionStore.swift          -- actor, JSONL crash-recovery checkpointing
+        +-- LibraryStore.swift          -- actor, library.json index (ApplicationSupport)
+        |
+        +-- CaptureDock.swift           -- UI: record button, status, timer
+        +-- LibrarySidebar.swift        -- UI: session list
+        +-- TranscriptView.swift        -- UI: live + past transcript display
+
+AppSettings.swift               -- @Observable @MainActor, UserDefaults-backed prefs
+  -- vaultMeetingsPath, vaultVoicePath, transcriptionLocale, inputDeviceID, ...
+
+OnboardingView.swift            -- model download prompt (shown when !hasCompletedOnboarding)
+AppUpdaterController.swift      -- Sparkle SPUUpdater wrapper
 ```
 
-### Structure Rationale
+**Model cache location:** `~/Library/Application Support/FluidAudio/Models/<repo-folderName>/`
+(e.g. `parakeet-tdt-0.6b-v3-coreml/`)
+**Library index:** `~/Library/Application Support/PSTranscribe/library.json`
+**Session checkpoints:** `~/Library/Application Support/PSTranscribe/sessions/` (JSONL)
 
-- **LLM/:** Isolates Ollama-specific code. `OllamaClient` is a pure HTTP actor; `OllamaService` is the @Observable bridge to UI. Separation matches the existing pattern of `TranscriptionEngine` (MainActor observable) on top of `StreamingTranscriber` (actor).
-- **Storage/SessionIndexActor.swift:** Follows the existing actor-per-file-type pattern (TranscriptLogger for markdown, SessionStore for JSONL, SessionIndexActor for the library index JSON).
-- **Models/SessionEntry.swift:** Library entry is a distinct model with different lifecycle than `SessionRecord` (which is per-utterance crash recovery). Keep them separate.
+---
 
-## Architectural Patterns
+## Feature 1: Keyboard-Triggered Clipboard Dictation
 
-### Pattern 1: Actor + @Observable Service Pair
+### New Components Required
 
-**What:** A raw actor handles all I/O and side effects. A @MainActor @Observable wrapper exposes state to SwiftUI and calls into the actor.
+| Component | File | Type | Purpose |
+|-----------|------|------|---------|
+| `GlobalHotkeyService` | `Sources/PSTranscribe/Services/GlobalHotkeyService.swift` | `@Observable @MainActor final class` | Registers/deregisters a global hotkey via `CGEventTap` or `NSEvent.addGlobalMonitorForEvents`; publishes `hotkeyFired` callback on MainActor |
+| `DictationHUD` | `Sources/PSTranscribe/Views/DictationHUD.swift` | `struct: View` | Compact floating NSPanel body -- shows live partial text + elapsed time + stop button |
+| `DictationWindowController` | `Sources/PSTranscribe/App/DictationWindowController.swift` | `@MainActor final class` (NSWindowController subclass) | Owns the NSPanel lifecycle; opened and closed by `DictationCoordinator` |
+| `DictationCoordinator` | `Sources/PSTranscribe/App/DictationCoordinator.swift` | `@Observable @MainActor final class` | Orchestrates the full dictation flow: hotkey-press -> engine start -> HUD open -> stop -> clipboard write -> library save |
 
-**When to use:** Any I/O-bound subsystem that also needs to drive UI. Already used for TranscriptionEngine. Use the same pattern for Ollama.
+### Existing Components Modified
 
-**Trade-offs:** Small boilerplate overhead for the wrapper; pays off in Swift 6 strict concurrency -- no @unchecked Sendable needed.
+| Component | File | What Changes |
+|-----------|------|--------------|
+| `PSTranscribeApp.swift` | existing | Instantiate `GlobalHotkeyService` + `DictationCoordinator` + `ModelUpdateService` at app scope; lift `LibraryStore` to app scope |
+| `AppSettings.swift` | existing | Add `dictationHotkey: KeyCombo` (stored in UserDefaults), `dictationOutputMode: DictationOutputMode` enum, `dictationFolderPath: String` |
+| `SettingsView.swift` | existing | Add Dictation section: hotkey recorder, output mode picker, plain-folder path chooser |
+| `TranscriptionEngine.swift` | existing | Add `reloadModels()` async method (for model update); dictation flow uses a separate engine instance owned by `DictationCoordinator` -- no changes to start/stop |
+| `TranscriptLogger.swift` | existing | Add `startPlainSession(vaultPath:)` + `finalizePlain()` methods that write clean markdown without YAML frontmatter |
+| `Models.swift` | existing | Add `case dictation` to `SessionType` enum; add `DictationOutputMode` enum |
+| `ContentView.swift` | existing | Accept `LibraryStore` as injected parameter (lifted from `@State` to app scope); add `NotificationCenter` listener for library refresh when dictation session ends |
+| `Tome.entitlements` | existing | Add accessibility entitlement if using global `CGEventTap` (`com.apple.security.temporary-exception.accessibility`) |
 
-**Example:**
+### Recording State Machine: Shared vs Separate Engine
+
+The existing `TranscriptionEngine` is `@MainActor` and designed for dual-stream (mic + system). Dictation needs mic only.
+
+**Option A -- Reuse same engine:** Add `startDictation()` to the existing `TranscriptionEngine` that skips `SystemAudioCapture`. Risk: `isRunning` is shared; a dictation session and a normal session cannot coexist. Requires mutual exclusion enforced from outside.
+
+**Option B -- Separate engine instance owned by `DictationCoordinator`:** `DictationCoordinator` holds its own `TranscriptionEngine(transcriptStore: dictationStore)` where `dictationStore` is a private `TranscriptStore`. No changes to the existing state machine. Mutual exclusion enforced by `DictationCoordinator.beginDictation()` checking a shared "any session active" flag.
+
+**Recommendation: Option B.** Safer -- the existing recording state machine is not modified. `DictationCoordinator` checks `ContentView.isRunning` (exposed via a shared `@Observable` flag or `NotificationCenter`) before starting. The two engines cannot run simultaneously.
+
+### Shared "Session Active" Guard
+
+Lift a boolean flag `anySessionActive: Bool` to `PSTranscribeApp` scope as `@Observable`. Both `ContentView.startSession()` and `DictationCoordinator.beginDictation()` set it on start and clear it on stop. Each checks the flag before starting. This replaces checking `isRunning` on a specific engine instance.
+
+### Data Flow: Hotkey Press to Clipboard Paste to Library Save
+
+```
+User presses hotkey
+    |
+GlobalHotkeyService fires on MainActor
+    |
+DictationCoordinator.beginDictation()
+    |-- guard anySessionActive == false
+    |-- anySessionActive = true
+    |-- DictationWindowController.show()        -- NSPanel appears (floating)
+    |-- dictationStore.clear()
+    |-- [if file output] transcriptLogger.startPlainSession(dictationFolderPath)
+    |-- dictationEngine.start(locale:, inputDeviceID:)   -- mic only, no ScreenCaptureKit
+    |
+    +-- [utterances arrive via dictationStore.utterances]
+    |       DictationHUD shows volatileYouText (live partials)
+    |       DictationCoordinator.handleNewUtterance()
+    |           -> transcriptLogger.append(...)     [if file output enabled]
+    |
+User presses hotkey again (toggle) OR taps stop button in HUD
+    |
+DictationCoordinator.endDictation()
+    |-- dictationEngine.stop()
+    |-- [if file output] transcriptLogger.endSession() + finalizePlain()
+    |-- [if clipboard or both]
+    |       let text = dictationStore.utterances.map { $0.text }.joined(separator: " ")
+    |       NSPasteboard.general.clearContents()
+    |       NSPasteboard.general.setString(text, forType: .string)
+    |-- LibraryStore.addEntry(LibraryEntry(sessionType: .dictation, ...))
+    |-- anySessionActive = false
+    |-- DictationWindowController.close()
+    |-- NotificationCenter.default.post(name: .dictationSessionEnded, object: nil)
+    |       -> ContentView.refreshLibrary()
+```
+
+**NSPasteboard write** is a single synchronous call on MainActor after `stop()` returns. No entitlement needed -- pasteboard write is always permitted in a macOS app.
+
+**HUD dismiss timing:** Dismiss the HUD immediately on stop, then run the async finalization (endSession, finalizePlain) as a `Task`. Do not block the user waiting for file finalization.
+
+---
+
+## Feature 2: Plain-Folder Dictation Output
+
+### Components
+
+No new actor required. Add two methods to the existing `TranscriptLogger` actor:
+
+- `startPlainSession(vaultPath: String)` -- creates a `.md` file with a simple date/time header, no YAML frontmatter, no Obsidian tags
+- `finalizePlain()` -- no-op (file was written utterance-by-utterance); closes the file handle
+
+**File format (plain output):**
+
+```markdown
+# Dictation -- 2026-04-27 14:30
+
+**You** (14:30:01)
+First utterance text.
+
+**You** (14:30:08)
+Second utterance text.
+```
+
+### Existing Components Modified
+
+| Component | File | What Changes |
+|-----------|------|--------------|
+| `TranscriptLogger.swift` | existing | `startPlainSession(vaultPath:)` + `finalizePlain()` -- ~40 lines |
+| `AppSettings.swift` | existing | `dictationFolderPath: String` (separate from vaultMeetingsPath/vaultVoicePath) |
+| `SettingsView.swift` | existing | Folder chooser for dictation plain output path in Dictation section |
+
+### DictationOutputMode Coexistence
+
 ```swift
-// Actor layer -- isolated I/O
-actor OllamaClient {
-    private let baseURL: URL
-
-    func checkHealth() async throws -> Bool { ... }
-    func listModels() async throws -> [String] { ... }
-    func streamChat(model: String, messages: [ChatMessage]) -> AsyncThrowingStream<String, Error> { ... }
-}
-
-// Observable layer -- UI state
-@Observable
-@MainActor
-final class OllamaService {
-    private(set) var isConnected = false
-    private(set) var availableModels: [String] = []
-    private(set) var streamingChunks: String = ""
-    private(set) var accumulatedInsights: LLMInsights?
-
-    private let client: OllamaClient
-
-    func connect() async {
-        isConnected = await (try? client.checkHealth()) ?? false
-        if isConnected {
-            availableModels = (try? await client.listModels()) ?? []
-        }
-    }
-
-    func analyzeTranscript(utterances: [Utterance]) async { ... }
+enum DictationOutputMode: String, Codable {
+    case clipboard     // NSPasteboard only, no file
+    case plainFolder   // file only, no clipboard
+    case both          // file AND clipboard
 }
 ```
 
-### Pattern 2: URLSession.bytes for NDJSON Streaming
+`DictationCoordinator.endDictation()` checks `settings.dictationOutputMode` and executes the appropriate paths. The file write and the clipboard write are independent operations -- both can run, either can be skipped.
 
-**What:** Use `URLSession.bytes(for:)` + `.lines` to consume Ollama's newline-delimited JSON stream as an `AsyncSequence<String>`. Decode each line independently.
+---
 
-**When to use:** Any Ollama endpoint with `"stream": true`. This is the canonical Swift pattern for NDJSON; Ollama's response is one JSON object per line with a `done` boolean.
+## Feature 3: Model Auto-Update
 
-**Trade-offs:** More manual than the third-party `ollama-swift` library, but zero additional dependency. Given the existing codebase uses no Ollama wrapper, rolling a thin client in ~80 lines avoids a dependency for a simple integration.
+### Background
 
-**Example:**
-```swift
-func streamChat(model: String, messages: [ChatMessage]) -> AsyncThrowingStream<String, Error> {
-    AsyncThrowingStream { continuation in
-        Task {
-            let request = buildRequest(endpoint: "/api/chat", body: ...)
-            let (asyncBytes, _) = try await URLSession.shared.bytes(for: request)
-            for try await line in asyncBytes.lines {
-                guard !line.isEmpty else { continue }
-                let chunk = try JSONDecoder().decode(OllamaChatChunk.self, from: Data(line.utf8))
-                if let token = chunk.message?.content {
-                    continuation.yield(token)
-                }
-                if chunk.done { continuation.finish(); return }
-            }
-            continuation.finish()
-        }
-    }
+FluidAudio's `AsrModels.downloadAndLoad(version:)` pulls from HuggingFace (`FluidInference/parakeet-tdt-0.6b-v3-coreml`). Models cache to `~/Library/Application Support/FluidAudio/Models/parakeet-tdt-0.6b-v3-coreml/`. There is no built-in version-check -- `downloadAndLoad` only downloads if models are absent. The app must implement check-download-verify-swap-rollback.
+
+### New Components Required
+
+| Component | File | Type | Purpose |
+|-----------|------|------|---------|
+| `ModelUpdateService` | `Sources/PSTranscribe/Services/ModelUpdateService.swift` | `@Observable @MainActor final class` | Version check, download, verify, swap, rollback; exposes `updateState: ModelUpdateState` |
+| `ModelUpdateState` | same file | enum | `.idle`, `.checking`, `.updateAvailable(version: String)`, `.downloading(progress: Double)`, `.verifying`, `.applying`, `.failed(String)`, `.upToDate` |
+| Model version manifest | hosted JSON (gh-pages) | external | Small JSON at a stable URL, published alongside `appcast.xml`, declaring the current model version identifier and per-file SHA-256 checksums |
+
+### Version Manifest Format
+
+Hosted at a raw URL on the `gh-pages` branch, parallel to `appcast.xml`:
+
+```json
+{
+  "model_id": "parakeet-tdt-0.6b-v3-coreml",
+  "version": "20260427",
+  "min_app_version": "1.2.0",
+  "files": [
+    { "name": "preprocessor.mlpackage", "sha256": "<hex>" },
+    { "name": "encoder.mlpackage",      "sha256": "<hex>" },
+    { "name": "decoder.mlpackage",      "sha256": "<hex>" },
+    { "name": "joint.mlpackage",        "sha256": "<hex>" }
+  ]
 }
 ```
 
-### Pattern 3: Split-View with Programmatic Visibility Toggle
+The app compares `manifest.version` against `AppSettings.installedModelVersion`. If manifest is newer AND `manifest.min_app_version` is satisfied, an update is available.
 
-**What:** Use SwiftUI's `HStack` + `withAnimation` + a `@State var showInsights: Bool` to slide the `InsightsPanel` in/out. Avoid `NavigationSplitView` for this use case -- it imposes navigation semantics that don't match a recording tool's layout.
+### Existing Components Modified
 
-**When to use:** A secondary panel that appears/disappears during a session, rather than a persistent navigation sidebar. The app window is small (280--360pt) and the panel should be additive, expanding the window width.
+| Component | File | What Changes |
+|-----------|------|--------------|
+| `AppSettings.swift` | existing | Add `installedModelVersion: String`, `modelAutoUpdateEnabled: Bool`, `modelLastCheckedDate: Date?` |
+| `SettingsView.swift` | existing | Add "Model Updates" section: current version string, "Check for Updates" button, auto-update toggle, last-checked date |
+| `TranscriptionEngine.swift` | existing | Add `reloadModels() async` -- nils `asrManager`/`vadManager`, calls `AsrModels.downloadAndLoad()` against the existing cache dir, reassigns both managers, sets `modelsReady = true` |
+| `OnboardingView.swift` | existing | Show `ModelUpdateService.updateState` in addition to `TranscriptionEngine.assetStatus` during first-run model download |
+| `PSTranscribeApp.swift` | existing | Instantiate `ModelUpdateService` at app scope; pass to `SettingsView` and `OnboardingView` |
 
-**Trade-offs:** Manual layout control vs. NavigationSplitView's built-in sidebar collapse. Manual is better here because the window geometry is already tightly constrained and NavigationSplitView on macOS enforces minimum column widths that break this app's compact UI.
-
-**Example:**
-```swift
-// In ContentView body
-HStack(spacing: 0) {
-    mainContent  // existing VStack, fixed ~340pt
-    if showInsights {
-        Divider()
-        InsightsPanel(service: ollamaService)
-            .frame(width: 280)
-            .transition(.move(edge: .trailing).combined(with: .opacity))
-    }
-}
-.animation(.easeInOut(duration: 0.2), value: showInsights)
-```
-
-## Data Flow
-
-### Ollama Streaming During Recording
+### Data Flow: Version Check to Hot-Swap
 
 ```
-TranscriptStore.utterances (updated by TranscriptionEngine)
-    ↓ onChange (ContentView observes utterance count)
-ContentView.handleNewUtterance()
-    ↓ every N utterances OR on threshold (e.g., 5 new utterances)
-OllamaService.analyzeTranscript(recentUtterances)
-    ↓ async Task
-OllamaClient.streamChat()  →  POST /api/chat  →  Ollama HTTP server (localhost:11434)
-    ↓ AsyncThrowingStream<String>
-OllamaService.streamingChunks += token  (on MainActor)
-    ↓ @Observable binding
-InsightsPanel re-renders with partial LLM output
-    ↓ on done
-OllamaService.accumulatedInsights updated with parsed summary/actions/topics
+App launch (or periodic check, or user taps "Check for Updates")
+    |
+ModelUpdateService.checkForUpdate()
+    |-- updateState = .checking
+    |-- URLSession.data(from: modelManifestURL)
+    |-- decode ModelVersionManifest
+    |-- guard manifest.min_app_version <= current app version
+    |-- compare manifest.version vs AppSettings.installedModelVersion
+    |
+    +-- [up to date]
+    |       updateState = .upToDate
+    |       AppSettings.modelLastCheckedDate = now
+    |
+    +-- [update available]
+            updateState = .updateAvailable(version: manifest.version)
+            |
+            [if autoUpdateEnabled OR user taps "Install Update"]
+            |-- guard anySessionActive == false
+            |           (surface "Stop recording before updating" if active)
+            |
+            ModelUpdateService.downloadAndApply()
+                |-- updateState = .downloading(progress: 0)
+                |-- download each model file to staging dir:
+                |       ~/Library/Application Support/FluidAudio/Models/<repo>-staging/
+                |   (reuse FluidAudio's DownloadUtils or roll URLSession download)
+                |-- updateState = .verifying
+                |-- SHA-256 each downloaded file against manifest.files[*].sha256
+                |-- [checksum mismatch] --> rm staging, updateState = .failed("Checksum mismatch")
+                |
+                |-- updateState = .applying
+                |-- backup current model dir:
+                |       mv <repo>/ -> <repo>-backup/
+                |-- rename staging to active:
+                |       mv <repo>-staging/ -> <repo>/
+                |-- TranscriptionEngine.reloadModels()
+                |       asrManager = nil; vadManager = nil
+                |       AsrModels.downloadAndLoad() -- hits disk (files already present)
+                |       asrManager = AsrManager(...); vadManager = VadManager()
+                |       modelsReady = true
+                |-- AppSettings.installedModelVersion = manifest.version
+                |-- AppSettings.modelLastCheckedDate = now
+                |-- rm <repo>-backup/
+                |-- updateState = .idle
+                |
+                [on failure after backup but before successful reload]
+                |-- mv <repo>/ -> <repo>-failed/   (preserve for diagnostics)
+                |-- mv <repo>-backup/ -> <repo>/
+                |-- TranscriptionEngine.reloadModels()   -- restore prior version
+                |-- updateState = .failed("Update failed -- previous version restored")
 ```
 
-### Session Library Load
+**Constraint:** `anySessionActive == false` is required before apply. The "Install Update" button and auto-update path both check this. If a session starts after the download completes but before apply, the apply is deferred until the session ends.
+
+**Entitlement concern:** All directory operations occur within `~/Library/Application Support/FluidAudio/` and `~/Library/Application Support/PSTranscribe/`, both of which are already accessible. No additional entitlements needed.
+
+---
+
+## Component Interaction Map
 
 ```
-App launch / LibraryView.onAppear
-    ↓
-SessionLibrary.load()  →  SessionIndexActor.readIndex()
-    ↓ reads sessions-index.json from AppSupport/Tome/
-[SessionEntry] decoded (Codable)
-    ↓
-SessionLibrary.sessions updated (MainActor)
-    ↓ @Observable binding
-LibraryView renders grid
-    ↓
-For each entry: FileManager.fileExists() → sets .missing flag
+PSTranscribeApp.swift (app scope)
+  |
+  +-- @State settings: AppSettings            [existing -- stays here]
+  +-- @State libraryStore: LibraryStore       [LIFTED from ContentView to app scope]
+  +-- @State anySessionActive: Bool           [NEW shared flag]
+  +-- @State globalHotkeyService: ...         [NEW]
+  +-- @State dictationCoordinator: ...        [NEW]
+  |     +-- owns: TranscriptionEngine (dictation instance, mic-only)
+  |     +-- owns: TranscriptStore (dictation)
+  |     +-- owns: TranscriptLogger (dictation)
+  |     +-- refs: LibraryStore (shared, injected from app scope)
+  |     +-- refs: AppSettings (shared)
+  |     +-- refs: anySessionActive flag
+  |
+  +-- @State modelUpdateService: ...          [NEW]
+  |     +-- refs: AppSettings (installedModelVersion)
+  |     +-- refs: anySessionActive flag (guard before apply)
+  |     +-- refs: transcriptionEngine (main instance, for reloadModels)
+  |
+  +-- ContentView(settings:, libraryStore:, anySessionActive:, ...)
+        +-- @State transcriptionEngine: ...    [existing -- stays in ContentView]
+        +-- sets anySessionActive on start/stop
 ```
 
-### Session Save and Index Update
+**LibraryStore lift:** Currently initialized as `@State private var libraryStore = LibraryStore()` inside `ContentView`. Must move to `PSTranscribeApp` so `DictationCoordinator` can share the same instance. Pass it into `ContentView` via initializer parameter, following the existing pattern for `AppSettings` and `NotionService`.
+
+---
+
+## Architectural Patterns for New Components
+
+### GlobalHotkeyService: Permission Tradeoffs
+
+Two approaches:
+
+**CGEventTap (global, background):** Works when the app is not frontmost. Requires Accessibility permission (`System Settings > Privacy & Security > Accessibility`). The permission dialog is one extra step users must approve. Tap must be created on a background dispatch queue; events forwarded to MainActor via `Task { @MainActor in ... }`. Wrap in a class conforming to `@unchecked Sendable` with an NSLock, matching the `MicCapture`/`AudioLevel` pattern.
+
+**NSEvent.addGlobalMonitorForEvents (simpler, same permission):** Available on macOS without entitlement changes, but still requires the same Accessibility permission in practice. Slightly simpler API than CGEventTap. Less control over event consumption.
+
+**Fallback: menu bar action only:** If permission friction is unacceptable, the HUD can also be triggered from the menu bar extra or a menu item with a keyboard shortcut registered only while the app is active. This requires no special permissions. Offer this as the default, with global hotkey as an opt-in setting.
+
+**Recommendation:** Ship with menu bar trigger as default (zero permission friction). Add global hotkey as a Settings toggle with a clear "requires Accessibility access" label. This avoids a permission prompt on first launch.
+
+### DictationHUD: NSPanel
+
+Use `NSPanel` with `.nonactivatingPanel` style mask so it floats without stealing focus from whatever the user is typing into. Set `window.level = .floating` and `window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]`. Use `NSHostingView<DictationHUD>` as the content. Apply the same `sharingType` logic as the main window (respects `hideFromScreenShare`).
+
+Position: vertically centered on the bottom quarter of the screen (mirroring macOS Dictation feedback window placement).
+
+### ModelUpdateService: Concurrency
+
+`ModelUpdateService` is `@Observable @MainActor`. Download work runs in `Task { ... }` (not `Task.detached` -- no Sendable issues since the actor boundary handles isolation). Progress updates from URLSession delegate are forwarded to MainActor using `await MainActor.run { self.updateState = .downloading(progress: p) }`.
+
+The directory rename (`FileManager.moveItem`) is synchronous and runs directly on MainActor after verification. It is fast (APFS rename is O(1) on the same volume) and does not require offloading.
+
+---
+
+## Full Data Flow Diagrams
+
+### Flow 1: Dictation (Complete Path)
 
 ```
-TranscriptLogger.finalizeFrontmatter() returns URL
-    ↓ (already on ContentView Task)
-SessionIndexActor.appendEntry(SessionEntry(...))
-    ↓ reads existing index, appends, writes atomically
-sessions-index.json updated
-    ↓
-ContentView calls SessionLibrary.reload()
-    ↓
-LibraryView reflects new session
+User presses global hotkey
+    |
+GlobalHotkeyService.onHotkey fires on MainActor
+    |
+DictationCoordinator.beginDictation()
+    |-- guard anySessionActive == false
+    |-- anySessionActive = true
+    |-- DictationWindowController.show()         -- NSPanel appears
+    |-- dictationStore.clear()
+    |-- [if .plainFolder or .both]
+    |       transcriptLogger.startPlainSession(settings.dictationFolderPath)
+    |-- dictationEngine.start(locale: settings.locale, inputDeviceID: settings.inputDeviceID)
+    |
+    +-- [utterances flow: StreamingTranscriber -> dictationStore -> DictationHUD]
+    |       DictationCoordinator.handleNewUtterance(utterance)
+    |           [if file output] transcriptLogger.append(...)
+    |
+User toggles hotkey again (or taps HUD stop button)
+    |
+DictationCoordinator.endDictation()
+    |-- [if file output] transcriptLogger.endSession()
+    |-- dictationEngine.stop()
+    |-- [if file output] transcriptLogger.finalizePlain()
+    |-- [if .clipboard or .both]
+    |       let text = dictationStore.utterances.map { $0.text }.joined(separator: " ")
+    |       NSPasteboard.general.clearContents()
+    |       NSPasteboard.general.setString(text, forType: .string)
+    |-- [if file output]
+    |       LibraryStore.addEntry(LibraryEntry(sessionType: .dictation, filePath: ..., ...))
+    |-- anySessionActive = false
+    |-- DictationWindowController.close()
+    |-- NotificationCenter.post(.dictationSessionEnded)
+            --> ContentView receives notification --> refreshLibrary()
 ```
 
-### Ollama Health Check Flow
+### Flow 2: Plain Folder Write
 
 ```
-App launch (ContentView .task) OR Settings change
-    ↓
-OllamaService.connect()
-    ↓
-OllamaClient.checkHealth()  →  GET http://localhost:11434/
-    Response "Ollama is running" (plain text, 200)  →  isConnected = true
-    Connection refused / timeout  →  isConnected = false
-    ↓ if connected
-OllamaClient.listModels()  →  GET /api/tags
-    →  OllamaService.availableModels populated
-    ↓
-InsightsPanel shows model selector or "Ollama not running" notice
+TranscriptLogger.startPlainSession(vaultPath: dictationFolderPath)
+    -- creates: <dictationFolderPath>/2026-04-27 14-30-00 Dictation.md
+    -- writes header only: "# Dictation -- 2026-04-27 14:30\n\n"
+    -- opens file handle, seeks to end
+
+TranscriptLogger.append(speaker: "You", text: "...", timestamp: ...)
+    -- appends: "**You** (14:30:01)\nText here.\n\n"
+
+TranscriptLogger.finalizePlain()
+    -- closes file handle
+    -- no frontmatter rewrite (there is no frontmatter)
+    -- returns currentFilePath
 ```
 
-## Component Boundaries
+### Flow 3: Model Auto-Update
 
-| Boundary | Communication | Rule |
-|----------|---------------|------|
-| `ContentView` → `OllamaService` | Direct property access (@Observable) | ContentView triggers analysis; reads state for InsightsPanel toggle |
-| `OllamaService` → `OllamaClient` | `await client.method()` | OllamaService is the only caller of OllamaClient |
-| `ContentView` → `SessionLibrary` | Direct property access (@Observable) | ContentView appends after session ends; LibraryView reads |
-| `SessionLibrary` → `SessionIndexActor` | `await actor.method()` | SessionLibrary is the only caller of SessionIndexActor |
-| `TranscriptStore` → `InsightsPanel` | Via `OllamaService` only | InsightsPanel never reads TranscriptStore directly -- it only displays what OllamaService has processed |
-| `TranscriptLogger` → `SessionIndexActor` | Never directly | ContentView coordinates both after session end; actors don't know about each other |
+```
+ModelUpdateService.checkForUpdate()
+    |-- URLSession fetch --> parse ModelVersionManifest
+    |-- compare manifest.version vs AppSettings.installedModelVersion
+    |
+    +-- [same] updateState = .upToDate
+    |
+    +-- [newer] updateState = .updateAvailable(version: "20260501")
+    |
+    [if autoUpdate OR user taps Install]
+    ModelUpdateService.downloadAndApply()
+        |-- guard anySessionActive == false
+        |-- download each file to <repo>-staging/ with progress updates
+        |-- verify SHA-256 per file
+        |-- [fail] rm staging, updateState = .failed(...)
+        |-- mv <repo>/ -> <repo>-backup/
+        |-- mv <repo>-staging/ -> <repo>/
+        |-- await transcriptionEngine.reloadModels()
+        |       -- asrManager = nil; vadManager = nil
+        |       -- let models = try await AsrModels.downloadAndLoad(version: .v3)
+        |             (reads from disk -- no network needed)
+        |       -- asrManager = AsrManager(config: .default); try await asr.loadModels(models)
+        |       -- vadManager = try await VadManager()
+        |       -- modelsReady = true
+        |-- AppSettings.installedModelVersion = manifest.version
+        |-- rm <repo>-backup/
+        |-- updateState = .idle
+        |
+        [if reloadModels() throws after swap]
+        |-- mv <repo>/ -> <repo>-failed/
+        |-- mv <repo>-backup/ -> <repo>/
+        |-- await transcriptionEngine.reloadModels()   -- reload from restored backup
+        |-- updateState = .failed("Updated rolled back -- prior version restored")
+```
 
-## Suggested Build Order
+---
 
-Build order is driven by dependencies. Later components depend on earlier ones.
+## New vs Modified: Quick Reference
 
-1. **SessionEntry model + SessionIndexActor** -- No dependencies on new code. Pure data + file I/O. Unblocks LibraryView.
+| Component | Status | File |
+|-----------|--------|------|
+| `GlobalHotkeyService` | NEW | `Sources/PSTranscribe/Services/GlobalHotkeyService.swift` |
+| `DictationCoordinator` | NEW | `Sources/PSTranscribe/App/DictationCoordinator.swift` |
+| `DictationWindowController` | NEW | `Sources/PSTranscribe/App/DictationWindowController.swift` |
+| `DictationHUD` | NEW | `Sources/PSTranscribe/Views/DictationHUD.swift` |
+| `ModelUpdateService` | NEW | `Sources/PSTranscribe/Services/ModelUpdateService.swift` |
+| `Models.swift` | MODIFIED | add `SessionType.dictation`, `DictationOutputMode` |
+| `AppSettings.swift` | MODIFIED | add dictation + model update keys |
+| `PSTranscribeApp.swift` | MODIFIED | lift `LibraryStore`, add new services at app scope |
+| `ContentView.swift` | MODIFIED | accept injected `LibraryStore`; add notification listener |
+| `TranscriptLogger.swift` | MODIFIED | add `startPlainSession` + `finalizePlain` |
+| `TranscriptionEngine.swift` | MODIFIED | add `reloadModels()` |
+| `SettingsView.swift` | MODIFIED | add Dictation section + Model Updates section |
+| `OnboardingView.swift` | MODIFIED | show model version from `ModelUpdateService` |
+| `Tome.entitlements` | MODIFIED (maybe) | add accessibility entitlement if using global CGEventTap |
 
-2. **SessionLibrary (@Observable)** -- Wraps SessionIndexActor. Unblocks LibraryView.
+---
 
-3. **LibraryView** -- Reads SessionLibrary. Can be built and tested with seed data before any recording changes.
+## Build Order
 
-4. **OllamaClient (actor)** -- Pure HTTP, no UI dependencies. Can be built and unit-tested against a running Ollama instance independently.
+```
+Phase A: Foundation -- no v1.2 feature dependencies (build first, unblocks B + C)
+  A1. Models.swift -- SessionType.dictation + DictationOutputMode enum        [30 min]
+  A2. AppSettings.swift -- all v1.2 keys                                       [1 hr]
+  A3. TranscriptLogger.swift -- startPlainSession + finalizePlain              [2 hr]
+  A4. PSTranscribeApp.swift -- lift LibraryStore, add anySessionActive flag    [1 hr]
+  A5. ContentView.swift -- accept injected LibraryStore (refactor, no new UX) [1 hr]
 
-5. **OllamaService (@Observable)** -- Wraps OllamaClient. Unblocks InsightsPanel.
+Phase B: Model Update Service (independent of dictation -- run in parallel with C)
+  B1. ModelUpdateService -- manifest fetch, version compare                    [2 hr]
+  B2. ModelUpdateService -- download, verify, staging directory management     [4 hr]
+  B3. TranscriptionEngine.reloadModels()                                       [2 hr]
+  B4. SettingsView Model Updates section                                       [1 hr]
+  B5. OnboardingView -- show model version                                     [30 min]
+  [total: ~9.5 hr]
 
-6. **InsightsPanel** -- Reads OllamaService. Standalone view with no session lifecycle coupling.
+Phase C: Dictation (depends on A -- run in parallel with B)
+  C1. GlobalHotkeyService -- menu bar trigger (default) + optional CGEventTap  [3 hr]
+  C2. DictationCoordinator -- engine lifecycle, begin/end flow                 [3 hr]
+       (depends on A3, C1)
+  C3. DictationHUD + DictationWindowController -- NSPanel + SwiftUI body       [3 hr]
+       (can be built parallel to C2)
+  C4. Wire C2 + C3 into PSTranscribeApp                                        [2 hr]
+       (depends on C2, C3)
+  C5. NSPasteboard write + plain folder output paths                           [1 hr]
+       (depends on C4, A3)
+  C6. LibraryStore.addEntry() from DictationCoordinator                        [1 hr]
+  C7. ContentView: NotificationCenter listener for library refresh             [30 min]
+  [total: ~13.5 hr]
 
-7. **ContentView split-view layout + mic button** -- Integrates InsightsPanel and new session lifecycle (stop → save → index). All dependencies exist by this point.
+Phase D: Integration + Hardening (depends on B + C complete)
+  D1. End-to-end dictation: hotkey -> HUD -> clipboard -> library
+  D2. End-to-end model update: manifest -> download -> reload
+  D3. Concurrent session guard: normal session blocks dictation + model update
+  D4. Model update rollback path (simulate bad checksum, simulate reload failure)
+  D5. Permission flow: Accessibility prompt for global hotkey
+  D6. SettingsView: hotkey recorder control (key combo capture via NSEvent)
+```
 
-8. **Wire OllamaService into session lifecycle** -- The last step: connect `handleNewUtterance` → `OllamaService.analyzeTranscript`. Done last because it requires both OllamaService and the session lifecycle changes to be stable.
+**Parallelism:** Phases B and C are fully independent of each other; both can start as soon as Phase A is done (~5.5 hrs). B runs ~9.5 hrs; C runs ~13.5 hrs. Phase D starts when both are done. Total on a single track: ~28.5 hrs. With two parallel implementation slots (B and C overlapping): ~19 hrs to Phase D start.
 
-## Anti-Patterns
+---
 
-### Anti-Pattern 1: Putting HTTP Calls in @Observable Service
+## Risk Assessment
 
-**What people do:** Call `URLSession` directly from `OllamaService` methods on the MainActor.
+| Risk | Severity | Mitigation |
+|------|----------|------------|
+| Global hotkey requires Accessibility permission -- friction on first launch | MEDIUM | Default to menu bar trigger; expose global hotkey as opt-in in Settings |
+| Race: dictation starts while normal session starts (between guard and anySessionActive set) | MEDIUM | Both paths set `anySessionActive` on `@MainActor` -- Swift actor isolation prevents this race |
+| Model swap while `AsrManager` holds loaded MLModels in memory | LOW | `reloadModels()` nils both managers before touching the directory; ARC drops MLModel refs before rename |
+| HuggingFace download URL changes between model releases | MEDIUM | Version manifest controls the per-file download URLs; update manifest without app release |
+| Plain-folder output path unset -- silent no-op | LOW | `DictationCoordinator.beginDictation()` validates `dictationFolderPath` before starting; surfaces error in HUD |
+| LibraryStore lift breaks ContentView initialization | LOW | `LibraryStore` is an actor with no constructor side effects; lift is straightforward |
+| `reloadModels()` called while engine is mid-session | HIGH | Guard on `anySessionActive` before apply; do not expose `reloadModels()` as public API except through `ModelUpdateService` |
 
-**Why it's wrong:** HTTP and MainActor don't mix. Blocking the main actor on I/O causes UI freezes. Swift 6 strict concurrency will also warn about this.
+---
 
-**Do this instead:** All URLSession calls live in `OllamaClient` (actor-isolated). `OllamaService` only calls actor methods with `await` and updates `@MainActor` state from the response.
+## Hard Constraints Respected
 
-### Anti-Pattern 2: Calling `OllamaService.analyzeTranscript` on Every Utterance
+- **Actor-based concurrency:** All new service classes are `@Observable @MainActor final class`; file I/O in actors; background work via `Task { ... }`; callbacks cross actor boundaries with `await MainActor.run { ... }`
+- **@Observable state:** New service classes use `@Observable`, not `ObservableObject` / `@Published`
+- **On-device only:** No new external API calls except the model version manifest fetch (a small JSON) and the model file downloads from HuggingFace (same source FluidAudio already uses)
+- **No new heavy dependencies:** `NSPasteboard`, `CGEventTap`, `URLSession` are all system frameworks; no `Package.swift` additions needed for dictation or model update
+- **Existing ASR pipeline unchanged:** Dictation reuses `TranscriptionEngine` / `StreamingTranscriber` / `MicCapture` without modifying their core logic
 
-**What people do:** Trigger a new LLM request for every single transcription callback.
-
-**Why it's wrong:** Ollama on consumer hardware takes 1-10 seconds per request. Firing a request every few seconds creates a queue backlog and the insights panel will always be showing stale analysis from 30+ requests ago.
-
-**Do this instead:** Debounce with a threshold (e.g., minimum 5 new utterances or 30 seconds since last analysis, whichever comes first). Cancel the in-flight Task before starting a new one.
-
-### Anti-Pattern 3: Storing Session Library State in SessionStore (JSONL)
-
-**What people do:** Repurpose the existing per-session JSONL crash recovery files as the library index.
-
-**Why it's wrong:** The JSONL files are per-session incremental logs -- they don't store the final file path (set only after `finalizeFrontmatter()` renames the file), the session title, or the duration. Scanning them at startup to build a library would require reading every file.
-
-**Do this instead:** A separate `sessions-index.json` in AppSupport stores one lightweight `SessionEntry` per completed session (path, title, date, duration). Written once after `finalizeFrontmatter()` returns the final path.
-
-### Anti-Pattern 4: NavigationSplitView for the Insights Panel
-
-**What people do:** Wrap the recording UI in a `NavigationSplitView` to get "free" sidebar behavior.
-
-**Why it's wrong:** `NavigationSplitView` on macOS enforces minimum column widths (~200pt+) and navigation semantics that conflict with the compact floating-window UX. The existing window is 280--360pt wide -- adding a 200pt sidebar column would require tripling the window width.
-
-**Do this instead:** `HStack` with `withAnimation` conditional inclusion of the panel and programmatic `frame(width:)` to control the window size expansion.
-
-## Integration Points
-
-### Ollama HTTP API
-
-| Endpoint | Method | Purpose | Notes |
-|----------|--------|---------|-------|
-| `GET /` | HTTP GET | Health check | Returns plain text "Ollama is running" on 200 |
-| `GET /api/tags` | HTTP GET | List installed models | Returns `{ "models": [...] }` |
-| `POST /api/chat` | HTTP POST, stream | LLM analysis | NDJSON stream, `done: true` marks end |
-
-Connection: `http://localhost:11434` (default, configurable in Settings)
-
-The `ollama-swift` package (github.com/mattt/ollama-swift) is an option but adds a dependency for ~80 lines of URLSession code. Recommend rolling a thin `OllamaClient` actor using `URLSession.bytes` + `.lines` to stay dependency-minimal. Revisit if structured outputs or tool calling are needed later.
-
-### Session Index File
-
-- Location: `ApplicationSupport/Tome/sessions-index.json`
-- Format: JSON array of `SessionEntry` (Codable)
-- Write strategy: Read existing array → append new entry → write atomically via temp file (matches existing TranscriptLogger pattern)
-- Missing-file detection: Check `FileManager.fileExists()` per entry at load time, set a `isMissing: Bool` flag in memory (never mutate the index for missing files)
+---
 
 ## Sources
 
-- Existing codebase inspected: `ContentView.swift`, `TranscriptStore.swift`, `SessionStore.swift`, `TranscriptLogger.swift`, `Models.swift` -- HIGH confidence
-- Ollama HTTP API: https://docs.ollama.com/api/streaming -- HIGH confidence (official docs)
-- Ollama Swift client: https://github.com/mattt/ollama-swift -- HIGH confidence (inspected README/API)
-- `URLSession.bytes` + `.lines` NDJSON pattern: https://developer.apple.com/documentation/foundation/urlsession/asyncbytes -- HIGH confidence (Apple docs)
-- SwiftUI `NavigationSplitView` on macOS: https://developer.apple.com/documentation/swiftui/navigationsplitview -- HIGH confidence (Apple docs)
-- Split-view panel pattern recommendation: derived from window geometry constraints in existing code -- MEDIUM confidence (validated against SwiftUI layout constraints)
+- Direct inspection: all files under `PSTranscribe/Sources/PSTranscribe/` (confirmed 2026-04-27)
+- FluidAudio internals: `AsrModels.swift`, `ModelNames.swift`, `MLModelConfigurationUtils.swift` (model cache at `~/Library/Application Support/FluidAudio/Models/<repo>/`)
+- `.planning/codebase/ARCHITECTURE.md`, `STRUCTURE.md`, `CONVENTIONS.md`, `INTEGRATIONS.md`, `CONCERNS.md`, `STACK.md`
+- `.planning/PROJECT.md` -- constraints and decisions
 
 ---
-*Architecture research for: macOS transcription app -- Ollama + session library + split-view UI*
-*Researched: 2026-03-31*
+*Architecture research for: PS Transcribe v1.2 feature integration*
+*Researched: 2026-04-27*
