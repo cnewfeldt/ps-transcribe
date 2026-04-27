@@ -48,6 +48,51 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(notionAutoSendEnabled, forKey: "notionAutoSendEnabled") }
     }
 
+    // MARK: - v1.2 Dictation Settings (Phase 16, D-03 / D-04)
+
+    /// Dictation output destination. Default `.clipboard` (D-08): plain folder is opt-in.
+    var dictationOutputMode: DictationOutputMode {
+        didSet { UserDefaults.standard.set(dictationOutputMode.rawValue, forKey: "dictationOutputMode") }
+    }
+
+    /// Plain-markdown output folder for hotkey dictation. Default `~/Documents/PS Transcribe Dictations`
+    /// (matches Phase 19 success criterion #4). Folder is created on first dictation save (Phase 18 owns creation),
+    /// not on app launch.
+    var dictationFolderPath: String {
+        didSet { UserDefaults.standard.set(dictationFolderPath, forKey: "dictationFolderPath") }
+    }
+
+    /// Hotkey activation model. Default `.toggle` (research-locked).
+    var dictationHotkeyMode: DictationHotkeyMode {
+        didSet { UserDefaults.standard.set(dictationHotkeyMode.rawValue, forKey: "dictationHotkeyMode") }
+    }
+
+    /// Seconds to wait after dictation paste before restoring the prior clipboard contents (DICT-06).
+    /// Default 3.0 seconds.
+    var clipboardRestoreDelay: TimeInterval {
+        didSet { UserDefaults.standard.set(clipboardRestoreDelay, forKey: "clipboardRestoreDelay") }
+    }
+
+    // MARK: - v1.2 Model Auto-Update Settings (Phase 16, D-04)
+
+    /// SHA / version identifier of the currently installed FluidAudio model. Empty until first
+    /// successful download. Phase 17 reads/writes this; Phase 16 only declares it.
+    var installedModelVersion: String {
+        didSet { UserDefaults.standard.set(installedModelVersion, forKey: "installedModelVersion") }
+    }
+
+    /// Last time the app checked the model manifest. nil = never checked. Drives the 24-hour
+    /// throttle in MODEL-01. Phase 17 reads/writes this; Phase 16 only declares it.
+    var modelLastCheckedDate: Date? {
+        didSet {
+            if let d = modelLastCheckedDate {
+                UserDefaults.standard.set(d, forKey: "modelLastCheckedDate")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "modelLastCheckedDate")
+            }
+        }
+    }
+
     init() {
         let defaults = UserDefaults.standard
         self.transcriptionLocale = defaults.string(forKey: "transcriptionLocale") ?? "en-US"
@@ -64,6 +109,29 @@ final class AppSettings {
         self.lastUsedSessionType = SessionType(rawValue: rawType) ?? .callCapture
         self.notionDatabaseID = defaults.string(forKey: "notionDatabaseID") ?? ""
         self.notionAutoSendEnabled = defaults.bool(forKey: "notionAutoSendEnabled")
+
+        // v1.2 Dictation keys (Phase 16, D-04)
+        let dictationModeRaw = defaults.string(forKey: "dictationOutputMode")
+            ?? DictationOutputMode.clipboard.rawValue
+        self.dictationOutputMode = DictationOutputMode(rawValue: dictationModeRaw) ?? .clipboard
+
+        self.dictationFolderPath = defaults.string(forKey: "dictationFolderPath")
+            ?? NSString("~/Documents/PS Transcribe Dictations").expandingTildeInPath
+
+        let hotkeyModeRaw = defaults.string(forKey: "dictationHotkeyMode")
+            ?? DictationHotkeyMode.toggle.rawValue
+        self.dictationHotkeyMode = DictationHotkeyMode(rawValue: hotkeyModeRaw) ?? .toggle
+
+        // TimeInterval (Double) -- UserDefaults.double returns 0.0 for missing keys, so check object presence.
+        if defaults.object(forKey: "clipboardRestoreDelay") == nil {
+            self.clipboardRestoreDelay = 3.0
+        } else {
+            self.clipboardRestoreDelay = defaults.double(forKey: "clipboardRestoreDelay")
+        }
+
+        // v1.2 Model Update keys (Phase 16, D-04) -- declared only; Phase 17 wires consumption.
+        self.installedModelVersion = defaults.string(forKey: "installedModelVersion") ?? ""
+        self.modelLastCheckedDate = defaults.object(forKey: "modelLastCheckedDate") as? Date
     }
 
     /// Apply current screen-share visibility to all app windows.
