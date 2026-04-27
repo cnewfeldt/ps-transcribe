@@ -47,7 +47,11 @@ v1.1 — Marketing Website (shipped 2026-04-25):
 
 ### Active
 
-_None — v1.1 shipped 2026-04-25. Run `/gsd-new-milestone` to seed the next milestone's requirements._
+v1.2 — Standalone Dictation + Model Auto-Update (in progress, requirements being defined):
+
+- Keyboard-triggered clipboard dictation (promotion of backlog 999.1)
+- Plain-folder dictation output (no Obsidian/Notion required)
+- Automatic FluidAudio ASR model version checking
 
 ### Out of Scope
 
@@ -73,14 +77,23 @@ _None — v1.1 shipped 2026-04-25. Run `/gsd-new-milestone` to seed the next mil
 
 > **Production slug fallback:** the canonical `ps-transcribe.vercel.app` was claimed by another Vercel account, so production lives at `ps-transcribe-web.vercel.app` until a custom domain replaces it.
 
-## Next Milestone Goals
+## Current Milestone: v1.2 Standalone Dictation + Model Auto-Update
 
-Run `/gsd-new-milestone` to capture the next milestone's scope. Candidate areas informed by v1.0 / v1.1 deferrals and tech debt:
+**Goal:** Make PS Transcribe useful as a standalone dictation tool -- hotkey-triggered capture that writes to clipboard and/or a plain OS folder with no Obsidian/Notion required -- and let the ASR model update without shipping a new app build.
+
+**Target features:**
+
+- **Keyboard-triggered clipboard dictation** -- global hotkey starts a quick recording session, live transcription as the user speaks, final text placed on the system clipboard for immediate paste, transcript also saved in the app's session library. Promotion of backlog phase 999.1.
+- **Plain-folder dictation output** -- user-configurable plain OS folder as a dictation destination. Transcripts land as clean markdown without an Obsidian vault or Notion workspace, so the dictation flow is fully self-contained.
+- **Model auto-update** -- automatic version-checking for the FluidAudio / Parakeet-TDT ASR model so users get newer ASR models without waiting for a Sparkle app release. Separate channel from app auto-update.
+
+## Future Candidate Goals (post-v1.2)
+
+Candidates considered for v1.2 and deferred to a later milestone:
 
 - **Custom domain** for the marketing site (replaces the `ps-transcribe-web.vercel.app` slug fallback).
 - **Nyquist validation gaps** across phases 1 / 2 / 3 / 8 / 10 (full `/gsd-validate-phase` sweep).
 - **Process improvement:** `requirements_completed` frontmatter on future SUMMARY.md files (so requirement traceability is mechanical, not manual).
-- **Model update strategy:** automatic speech-model version checking so users get newer FluidAudio ASR models without waiting for a Sparkle app release.
 
 <details>
 <summary>Archived: v1.1 Marketing Website goal</summary>
@@ -169,4 +182,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-27 after v1.1 milestone completion.*
+*Last updated: 2026-04-27 -- v1.2 milestone (Standalone Dictation + Model Auto-Update) initialized.*

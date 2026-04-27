@@ -1,9 +1,9 @@
 ---
 gsd_state_version: 1.0
-milestone: null
-milestone_name: null
-status: between-milestones
-stopped_at: v1.1 milestone shipped 2026-04-25; archived 2026-04-27
+milestone: v1.2
+milestone_name: Standalone Dictation + Model Auto-Update
+status: defining-requirements
+stopped_at: null
 last_updated: "2026-04-27T00:00:00.000Z"
 last_activity: 2026-04-27
 progress:
@@ -21,7 +21,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-27)
 
 **Core value:** Users can record meetings and voice memos with accurate, private, on-device transcription. All processing stays on-device.
-**Current focus:** Between milestones — v1.1 shipped and archived. Next milestone not yet defined.
+**Current focus:** v1.2 — Standalone Dictation + Model Auto-Update. Defining requirements.
 
 **Shipped milestones:**
 - v1.0 PS Transcribe (2026-04-14) — see `milestones/v1.0-ROADMAP.md`
@@ -33,10 +33,10 @@ See: .planning/PROJECT.md (updated 2026-04-27)
 
 ## Current Position
 
-Phase: --
+Phase: Not started (defining requirements)
 Plan: --
-Status: Awaiting next milestone (`/gsd-new-milestone`)
-Last activity: 2026-04-27
+Status: Defining requirements
+Last activity: 2026-04-27 -- v1.2 milestone (Standalone Dictation + Model Auto-Update) started
 
 Progress: [          ] 0%
 
@@ -70,17 +70,22 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent milestone-level d
 
 ### Pending Todos
 
-- [ ] Model update strategy: automatic speech-model version checking so users get newer FluidAudio ASR models without waiting for a Sparkle app release.
-- [ ] Custom domain for marketing site (v1.2 candidate).
-- [ ] Nyquist validation sweep across v1.0 phases 1, 2, 3, 8, 10.
-- [ ] `requirements_completed` frontmatter on future SUMMARY.md files (process improvement).
+In v1.2 scope (requirements being defined):
+- [ ] Keyboard-triggered clipboard dictation (promoted from backlog 999.1)
+- [ ] Plain-folder dictation output (no Obsidian/Notion required)
+- [ ] Model auto-update: automatic FluidAudio ASR model version checking
+
+Deferred to a later milestone (see PROJECT.md "Future Candidate Goals"):
+- [ ] Custom domain for marketing site
+- [ ] Nyquist validation sweep across v1.0 phases 1, 2, 3, 8, 10
+- [ ] `requirements_completed` frontmatter on future SUMMARY.md files (process improvement)
 
 ### Blockers/Concerns
 
-None. Project is between milestones with no in-flight work.
+None. v1.2 milestone just initialized; requirements gathering next.
 
 ## Session Continuity
 
 Last session: 2026-04-27T00:00:00.000Z
-Stopped at: v1.1 milestone close-out — archives written, PROJECT/STATE updated, tag pending
+Stopped at: v1.2 milestone initialized -- PROJECT/STATE updated, requirements gathering pending
 Resume file: --
