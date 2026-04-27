@@ -246,6 +246,8 @@ struct ControlBar: View {
             return "Call Capture"
         case .voiceMemo:
             return "Voice Memo"
+        case .dictation:
+            return "Dictation"
         case nil:
             return "Recording"
         }

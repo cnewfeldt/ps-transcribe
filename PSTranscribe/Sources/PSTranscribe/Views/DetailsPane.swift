@@ -104,6 +104,7 @@ struct DetailsPane: View {
         switch entry.sessionType {
         case .callCapture: return meetingsFolderName
         case .voiceMemo:   return voiceFolderName
+        case .dictation:   return "Dictation"
         }
     }
 

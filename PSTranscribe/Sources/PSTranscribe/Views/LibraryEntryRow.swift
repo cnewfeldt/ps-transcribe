@@ -157,6 +157,8 @@ struct LibraryEntryRow: View {
             return "phone.fill"
         case .voiceMemo:
             return "mic.fill"
+        case .dictation:
+            return "mic.circle.fill"
         }
     }
 

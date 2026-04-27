@@ -223,6 +223,7 @@ struct CaptureDock: View {
             switch activeSessionType {
             case .voiceMemo:   return "End Memo"
             case .callCapture: return "End Meeting"
+            case .dictation:   return "End Dictation"
             case .none:        return "Stop"
             }
         }

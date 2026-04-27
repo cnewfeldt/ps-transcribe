@@ -80,6 +80,7 @@ struct ContentView: View {
         switch activeSessionType {
         case .voiceMemo: return 6
         case .callCapture: return 120
+        case .dictation: return 6
         case .none: return 120
         }
     }
@@ -837,6 +838,11 @@ struct ContentView: View {
         case .voiceMemo:
             outputPath = settings.vaultVoicePath
             sourceApp = "Voice Memo"
+        case .dictation:
+            // Dictation is owned by DictationCoordinator (Phase 18), not the meeting startSession flow.
+            // This arm exists for switch exhaustiveness only; should never be reached in Phase 16.
+            transcriptionEngine?.lastError = "Internal error: startSession called with .dictation; use DictationCoordinator instead."
+            return
         }
 
         // Guard: without a configured Obsidian folder for this session type,
