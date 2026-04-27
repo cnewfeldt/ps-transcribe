@@ -79,42 +79,45 @@ Explicitly excluded. Documented to prevent scope creep, grounded in research and
 
 ## Traceability
 
-Which phases cover which requirements. Empty initially -- populated by `/gsd-plan-phase` and the roadmapper.
+Which phases cover which requirements.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DICT-01 | TBD | Pending |
-| DICT-02 | TBD | Pending |
-| DICT-03 | TBD | Pending |
-| DICT-04 | TBD | Pending |
-| DICT-05 | TBD | Pending |
-| DICT-06 | TBD | Pending |
-| DICT-07 | TBD | Pending |
-| DICT-08 | TBD | Pending |
-| DICT-09 | TBD | Pending |
-| DICT-10 | TBD | Pending |
-| DICT-11 | TBD | Pending |
-| FOLDER-01 | TBD | Pending |
-| FOLDER-02 | TBD | Pending |
-| FOLDER-03 | TBD | Pending |
-| FOLDER-04 | TBD | Pending |
-| FOLDER-05 | TBD | Pending |
-| MODEL-01 | TBD | Pending |
-| MODEL-02 | TBD | Pending |
-| MODEL-03 | TBD | Pending |
-| MODEL-04 | TBD | Pending |
-| MODEL-05 | TBD | Pending |
-| MODEL-06 | TBD | Pending |
-| MODEL-07 | TBD | Pending |
-| MODEL-08 | TBD | Pending |
-| MODEL-09 | TBD | Pending |
-| MODEL-10 | TBD | Pending |
+| DICT-01 | Phase 18 | Pending |
+| DICT-02 | Phase 18 | Pending |
+| DICT-03 | Phase 18 | Pending |
+| DICT-04 | Phase 18 | Pending |
+| DICT-05 | Phase 18 | Pending |
+| DICT-06 | Phase 18 | Pending |
+| DICT-07 | Phase 18 | Pending |
+| DICT-08 | Phase 18 | Pending |
+| DICT-09 | Phase 18 | Pending |
+| DICT-10 | Phase 18 | Pending |
+| DICT-11 | Phase 18 | Pending |
+| FOLDER-01 | Phase 18 | Pending |
+| FOLDER-02 | Phase 18 | Pending |
+| FOLDER-03 | Phase 18 | Pending |
+| FOLDER-04 | Phase 18 | Pending |
+| FOLDER-05 | Phase 18 | Pending |
+| MODEL-01 | Phase 17 | Pending |
+| MODEL-02 | Phase 17 | Pending |
+| MODEL-03 | Phase 17 | Pending |
+| MODEL-04 | Phase 17 | Pending |
+| MODEL-05 | Phase 17 | Pending |
+| MODEL-06 | Phase 17 | Pending |
+| MODEL-07 | Phase 17 | Pending |
+| MODEL-08 | Phase 17 | Pending |
+| MODEL-09 | Phase 17 | Pending |
+| MODEL-10 | Phase 17 | Pending |
 
 **Coverage:**
-- v1.2 requirements: 26 total (11 dictation + 5 plain-folder + 10 model auto-update)
-- Mapped to phases: 0 (roadmap pending)
-- Unmapped: 26 (expected at this stage)
+- v1.2 requirements: 26 total (11 dictation hotkey/clipboard + 5 plain-folder + 10 model auto-update)
+- Mapped to phases: 26/26
+- Phase 16 (Foundation): compiler-level prerequisite, no direct requirement mappings
+- Phase 17 (Model Auto-Update): MODEL-01 through MODEL-10 (10 requirements)
+- Phase 18 (Hotkey Dictation + Plain-Folder Output): DICT-01 through DICT-11 + FOLDER-01 through FOLDER-05 (16 requirements)
+- Phase 19 (Integration & Hardening): validates delivery of all 26 requirements end-to-end
 
 ---
 *Requirements defined: 2026-04-27*
-*Last updated: 2026-04-27 -- v1.2 milestone initialization, pre-roadmap.*
+*Last updated: 2026-04-27 -- traceability populated by roadmapper (v1.2 roadmap creation).*
