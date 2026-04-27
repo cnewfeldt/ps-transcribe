@@ -6,11 +6,15 @@ import Sparkle
 struct PSTranscribeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var settings: AppSettings
+    @State private var libraryStore: LibraryStore               // Phase 16, D-12
+    @State private var sessionCoordinator: SessionCoordinator   // Phase 16, D-07
     private let updaterController = AppUpdaterController()
     @State private var notionService = NotionService()
 
     init() {
         _settings = State(initialValue: AppSettings())
+        _libraryStore = State(initialValue: LibraryStore())                   // Phase 16, D-12
+        _sessionCoordinator = State(initialValue: SessionCoordinator())       // Phase 16, D-07
     }
 
     /// Opens a bundled license resource (e.g. "LICENSE" or "ThirdPartyLicenses")
@@ -33,7 +37,12 @@ struct PSTranscribeApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(settings: settings, notionService: notionService)
+            ContentView(
+                settings: settings,
+                notionService: notionService,
+                libraryStore: libraryStore,
+                sessionCoordinator: sessionCoordinator
+            )
                 .onAppear {
                     settings.applyScreenShareVisibility()
                 }

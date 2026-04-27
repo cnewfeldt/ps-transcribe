@@ -20,6 +20,8 @@ private let conferencingBundleIDs: [String: String] = [
 struct ContentView: View {
     @Bindable var settings: AppSettings
     let notionService: NotionService
+    let libraryStore: LibraryStore                       // Phase 16, D-12: injected from app scope
+    let sessionCoordinator: SessionCoordinator           // Phase 16, D-07: injected from app scope
     @State private var transcriptStore = TranscriptStore()
     @State private var transcriptionEngine: TranscriptionEngine?
     @State private var sessionStore = SessionStore()
@@ -34,7 +36,6 @@ struct ContentView: View {
     @State private var sessionElapsed: Int = 0
 
     // Library state
-    @State private var libraryStore = LibraryStore()
     @State private var libraryEntries: [LibraryEntry] = []
     @State private var selectedEntryID: UUID?
     @State private var activeLibraryEntryID: UUID?
@@ -295,6 +296,9 @@ struct ContentView: View {
             if transcriptionEngine == nil {
                 transcriptionEngine = TranscriptionEngine(transcriptStore: transcriptStore)
             }
+            // Phase 16, D-05/D-06: late-bind engine to SessionCoordinator. The coordinator is
+            // constructed at app scope before the engine exists, so we wire it here.
+            sessionCoordinator.engine = transcriptionEngine
             // Pre-download models at launch so recording can start immediately
             await transcriptionEngine?.prepareModels()
             // Scan for sessions left incomplete by a prior crash (STAB-01)
