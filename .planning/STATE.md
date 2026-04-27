@@ -1,11 +1,11 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.2
-milestone_name: Standalone Dictation + Model Auto-Update
-status: in-progress
-stopped_at: null
-last_updated: "2026-04-27T00:00:00.000Z"
-last_activity: 2026-04-27
+milestone_name: — Standalone Dictation + Model Auto-Update
+status: planning
+stopped_at: Phase 16 context gathered
+last_updated: "2026-04-27T19:36:48.973Z"
+last_activity: 2026-04-27 -- v1.2 roadmap created (Phases 16–19, 26 requirements mapped)
 progress:
   total_phases: 4
   completed_phases: 0
@@ -24,6 +24,7 @@ See: .planning/PROJECT.md (updated 2026-04-27)
 **Current focus:** v1.2 — Standalone Dictation + Model Auto-Update. Roadmap defined; ready to plan Phase 16.
 
 **Shipped milestones:**
+
 - v1.0 PS Transcribe (2026-04-14) — see `milestones/v1.0-ROADMAP.md`
 - v1.1 Marketing Website (2026-04-25) — see `milestones/v1.1-ROADMAP.md`
 
@@ -77,12 +78,14 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent milestone-level d
 ### Pending Todos
 
 v1.2 phases ready to plan:
+
 - [ ] Phase 16: Foundation — lift LibraryStore, anySessionActive flag, Models.swift enums, AppSettings keys, TranscriptLogger plain methods
 - [ ] Phase 17: Model Auto-Update — ModelUpdateService, reloadModels(), Settings > Model section
 - [ ] Phase 18: Hotkey Dictation + Plain-Folder Output — DictationHotkeyController, DictationCoordinator, DictationHUD, clipboard write, folder picker, DictationLogger
 - [ ] Phase 19: Integration & Hardening — mutual exclusion, rollback simulation, QA checklist
 
 Deferred to a later milestone (see PROJECT.md "Future Candidate Goals"):
+
 - [ ] Custom domain for marketing site
 - [ ] Nyquist validation sweep across v1.0 phases 1, 2, 3, 8, 10
 - [ ] `requirements_completed` frontmatter on future SUMMARY.md files (process improvement)
@@ -93,6 +96,6 @@ Deferred to a later milestone (see PROJECT.md "Future Candidate Goals"):
 
 ## Session Continuity
 
-Last session: 2026-04-27T00:00:00.000Z
-Stopped at: v1.2 roadmap created — Phases 16–19 defined, 26 requirements mapped, ready to plan Phase 16
-Resume file: .planning/ROADMAP.md
+Last session: 2026-04-27T19:36:48.970Z
+Stopped at: Phase 16 context gathered
+Resume file: .planning/phases/16-foundation/16-CONTEXT.md
