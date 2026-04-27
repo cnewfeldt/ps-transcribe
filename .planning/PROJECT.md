@@ -47,8 +47,9 @@ v1.1 — Marketing Website (shipped 2026-04-25):
 
 ### Active
 
-v1.2 — Standalone Dictation + Model Auto-Update (in progress, requirements being defined):
+v1.2 — Standalone Dictation + Model Auto-Update (in progress):
 
+- ✓ Foundation: SessionType.dictation + DictationOutputMode + DictationHotkeyMode enums, six v1.2 AppSettings keys, DictationLogger actor (plain markdown, no YAML), LibraryStore lift to PSTranscribeApp scope, SessionCoordinator with computed anySessionActive — v1.2 (Phase 16, completed 2026-04-27)
 - Keyboard-triggered clipboard dictation (promotion of backlog 999.1)
 - Plain-folder dictation output (no Obsidian/Notion required)
 - Automatic FluidAudio ASR model version checking
@@ -182,4 +183,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-27 -- v1.2 milestone (Standalone Dictation + Model Auto-Update) initialized.*
+*Last updated: 2026-04-27 -- v1.2 Phase 16 (Foundation) complete; scaffolding in place for Phases 17 and 18.*
