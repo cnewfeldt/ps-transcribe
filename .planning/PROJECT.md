@@ -78,7 +78,6 @@ _None — v1.1 shipped 2026-04-25. Run `/gsd-new-milestone` to seed the next mil
 Run `/gsd-new-milestone` to capture the next milestone's scope. Candidate areas informed by v1.0 / v1.1 deferrals and tech debt:
 
 - **Custom domain** for the marketing site (replaces the `ps-transcribe-web.vercel.app` slug fallback).
-- **OWNER placeholder** in `SUFeedURL` and `release-dmg.yml` — replace with the real GitHub repo URL once finalized.
 - **Nyquist validation gaps** across phases 1 / 2 / 3 / 8 / 10 (full `/gsd-validate-phase` sweep).
 - **Process improvement:** `requirements_completed` frontmatter on future SUMMARY.md files (so requirement traceability is mechanical, not manual).
 - **Model update strategy:** automatic speech-model version checking so users get newer FluidAudio ASR models without waiting for a Sparkle app release.

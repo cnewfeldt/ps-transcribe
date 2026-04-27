@@ -71,7 +71,6 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent milestone-level d
 ### Pending Todos
 
 - [ ] Model update strategy: automatic speech-model version checking so users get newer FluidAudio ASR models without waiting for a Sparkle app release.
-- [ ] OWNER placeholder replacement in `SUFeedURL` and `release-dmg.yml` (carried from v1.0).
 - [ ] Custom domain for marketing site (v1.2 candidate).
 - [ ] Nyquist validation sweep across v1.0 phases 1, 2, 3, 8, 10.
 - [ ] `requirements_completed` frontmatter on future SUMMARY.md files (process improvement).
