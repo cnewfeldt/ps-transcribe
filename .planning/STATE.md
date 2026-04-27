@@ -1,85 +1,87 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: — Marketing Website
-status: scope-complete
-stopped_at: Phase 15 reverted; milestone scope reduced to phases 11–14
-last_updated: "2026-04-25T00:00:00.000Z"
-last_activity: 2026-04-25
+milestone: null
+milestone_name: null
+status: between-milestones
+stopped_at: v1.1 milestone shipped 2026-04-25; archived 2026-04-27
+last_updated: "2026-04-27T00:00:00.000Z"
+last_activity: 2026-04-27
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 16
-  completed_plans: 16
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-21)
+See: .planning/PROJECT.md (updated 2026-04-27)
 
-**Core value:** Users can record conversations and voice memos with accurate, private, on-device transcription. All processing stays on-device.
-**Current focus:** Milestone v1.1 scope-complete — phases 11–14 shipped; phase 15 reverted (no public changelog)
+**Core value:** Users can record meetings and voice memos with accurate, private, on-device transcription. All processing stays on-device.
+**Current focus:** Between milestones — v1.1 shipped and archived. Next milestone not yet defined.
+
+**Shipped milestones:**
+- v1.0 PS Transcribe (2026-04-14) — see `milestones/v1.0-ROADMAP.md`
+- v1.1 Marketing Website (2026-04-25) — see `milestones/v1.1-ROADMAP.md`
 
 **2026-04-04 scope reduction:** Phases 5 (Ollama Integration) and 6 (Live LLM Analysis) were abandoned in v1.0. PS Transcribe is scoped to transcription only; LLM analysis of transcripts is not part of the product. Implementation preserved at git tag `archive/llm-analysis-attempt`.
 
+**2026-04-25 scope reduction:** Phase 15 (Changelog Page) was scoped, planned, built, and then reverted in v1.1. No public release-notes surface; `CHANGELOG.md` stays a developer-internal artifact.
+
 ## Current Position
 
-Phase: v1.1 scope-complete (no active phase)
+Phase: --
 Plan: --
-Status: Awaiting milestone close-out or next milestone planning
-Last activity: 2026-04-25
+Status: Awaiting next milestone (`/gsd-new-milestone`)
+Last activity: 2026-04-27
 
-Progress: [██████████] 100%
+Progress: [          ] 0%
 
 ## Performance Metrics
 
-**Velocity (v1.0 cumulative):**
+**Velocity (cumulative):**
 
-- Total plans completed (v1.0): 28
+- v1.0 plans completed: 28
 - v1.1 plans completed: 16
-- Average duration: --
-- Total execution time: --
+- Total plans (v1.0 + v1.1): 44
 
-**By Phase (v1.0 historical):**
+**By Milestone:**
 
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| v1.0 (1–10) | 28 | — | — |
-| 11–14 (v1.1) | 16 | — | — |
-| 11 | 3 | - | - |
-| 12 | 4 | - | - |
-| 13 | 5 | - | - |
-| 14 | 4 | - | - |
-
-*Updated after each plan completion.*
+| Milestone | Phases | Plans | Shipped |
+|-----------|--------|-------|---------|
+| v1.0 — PS Transcribe | 8 active (5/6 abandoned) | 28 | 2026-04-14 |
+| v1.1 — Marketing Website | 4 (15 reverted) | 16 | 2026-04-25 |
 
 ## Accumulated Context
 
 ### Decisions
 
-Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
+Decisions are logged in PROJECT.md Key Decisions table. Recent milestone-level decisions:
 
-- v1.1 phases continue v1.0 numbering — first v1.1 phase is 11, not 1
-- Website lives in `/website` subdirectory of the existing repo, separate `package.json` from the Swift package — no new repo
-- Chronicle design system ported from the macOS app, not redesigned for web; light mode only, matches app's aesthetic
-- Vercel subdomain (`ps-transcribe.vercel.app`) only in v1.1; custom domain deferred
-- Download CTA points at GitHub Releases DMG — no pricing page, no commerce, no email capture
+- v1.1 phases continued v1.0's numbering (first v1.1 phase was 11)
+- Marketing site lives in `/website` subdirectory of this repo (not a separate repo)
+- Chronicle design system ported to web, light-only — no web-specific redesign
+- Vercel subdomain fallback to `ps-transcribe-web.vercel.app` (canonical slug claimed); custom domain deferred to v1.2
+- No public changelog — decided after building and reverting a page in phase 15
+- Build-time sidebar codegen from MDX `doc` exports (drift-by-construction in phase 14)
 
 ### Pending Todos
 
-- [ ] Model update strategy: Add automatic speech model version checking so users get newer FluidAudio ASR models without waiting for an app release. Current approach ties model updates to Sparkle app updates, which works but delays model improvements.
-- [ ] OWNER placeholder replacement in `SUFeedURL` and `release-dmg.yml` (carried from v1.0)
+- [ ] Model update strategy: automatic speech-model version checking so users get newer FluidAudio ASR models without waiting for a Sparkle app release.
+- [ ] OWNER placeholder replacement in `SUFeedURL` and `release-dmg.yml` (carried from v1.0).
+- [ ] Custom domain for marketing site (v1.2 candidate).
+- [ ] Nyquist validation sweep across v1.0 phases 1, 2, 3, 8, 10.
+- [ ] `requirements_completed` frontmatter on future SUMMARY.md files (process improvement).
 
 ### Blockers/Concerns
 
-None blocking v1.1 scaffolding. Phase 11 is independent of the macOS app codebase — no Swift-side dependencies.
+None. Project is between milestones with no in-flight work.
 
 ## Session Continuity
 
-Last session: 2026-04-25T00:00:00.000Z
-Stopped at: Milestone v1.1 scope-complete; phase 15 reverted (changelog out of scope)
+Last session: 2026-04-27T00:00:00.000Z
+Stopped at: v1.1 milestone close-out — archives written, PROJECT/STATE updated, tag pending
 Resume file: --
