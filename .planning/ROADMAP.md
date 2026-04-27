@@ -33,7 +33,12 @@
   3. `TranscriptLogger` exposes `startPlainSession` and `finalizePlain` methods with correct actor isolation
   4. `LibraryStore` is initialized at `PSTranscribeApp` scope and injected into `ContentView` with no behavioral regression in the existing session library
   5. `anySessionActive: Bool` flag exists at app scope and is set/cleared correctly by the existing meeting session flow
-**Plans**: TBD
+**Plans:** 4 plans (3 waves)
+
+- [ ] 16-01-PLAN.md — Models.swift enums (SessionType.dictation, DictationOutputMode, DictationHotkeyMode), six switch-site updates, ROADMAP correction, Codable tests (Wave 1)
+- [ ] 16-02-PLAN.md — Six v1.2 AppSettings keys with didSet UserDefaults mirroring + persistence tests (Wave 2)
+- [ ] 16-03-PLAN.md — New DictationLogger actor (plain markdown, no YAML frontmatter, millisecond-suffix filenames) + behavior tests (Wave 2)
+- [ ] 16-04-PLAN.md — LibraryStore lift to PSTranscribeApp + new SessionCoordinator with computed anySessionActive + ContentView injection + manual smoke test (Wave 2; autonomous: false)
 
 #### Phase 17: Model Auto-Update
 
@@ -80,7 +85,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 16. Foundation | 0/0 | Not started | - |
+| 16. Foundation | 0/4 | Planning complete | - |
 | 17. Model Auto-Update | 0/0 | Not started | - |
 | 18. Hotkey Dictation + Plain-Folder Output | 0/0 | Not started | - |
 | 19. Integration & Hardening | 0/0 | Not started | - |
