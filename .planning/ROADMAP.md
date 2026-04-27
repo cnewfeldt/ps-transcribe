@@ -15,7 +15,7 @@
 
 ### Phases
 
-- [ ] **Phase 16: Foundation** — Internal scaffolding: lift `LibraryStore`, add `SessionCoordinator` with computed `anySessionActive`, add `SessionType.dictation` + `DictationOutputMode` + `DictationHotkeyMode` enums, add v1.2 `AppSettings` keys, add new `DictationLogger` actor (plain markdown writer, no YAML frontmatter). No user-visible change.
+- [x] **Phase 16: Foundation** — Internal scaffolding: lift `LibraryStore`, add `SessionCoordinator` with computed `anySessionActive`, add `SessionType.dictation` + `DictationOutputMode` + `DictationHotkeyMode` enums, add v1.2 `AppSettings` keys, add new `DictationLogger` actor (plain markdown writer, no YAML frontmatter). No user-visible change. (completed 2026-04-27)
 - [ ] **Phase 17: Model Auto-Update** — `ModelUpdateService` (manifest fetch, version compare, staging download, SHA-256 verify, atomic rename, rollback), `TranscriptionEngine.reloadModels()` hot-swap, Settings > Model section with version display + update badge + "Check for Updates" button + cancellable progress.
 - [ ] **Phase 18: Hotkey Dictation + Plain-Folder Output** — `DictationHotkeyController` (KeyboardShortcuts/`RegisterEventHotKey`, no permissions needed), `DictationCoordinator`, `DictationWindowController` + `DictationHUD` NSPanel, clipboard write with privacy markers, NSOpenPanel folder picker, `DictationLogger` plain-markdown writer, hotkey recorder UI, dictation settings section.
 - [ ] **Phase 19: Integration & Hardening** — End-to-end validation: mutual exclusion between meeting recording / dictation / model-update apply, model rollback path simulation, privacy-mode HUD verification, SettingsView UX audit (three-folder-picker coherence), full QA checklist.
@@ -33,12 +33,12 @@
   3. `TranscriptLogger` exposes `startPlainSession` and `finalizePlain` methods with correct actor isolation
   4. `LibraryStore` is initialized at `PSTranscribeApp` scope and injected into `ContentView` with no behavioral regression in the existing session library
   5. `anySessionActive: Bool` flag exists at app scope and is set/cleared correctly by the existing meeting session flow
-**Plans:** 4 plans (3 waves)
+**Plans:** 4/4 plans complete
 
-- [ ] 16-01-PLAN.md — Models.swift enums (SessionType.dictation, DictationOutputMode, DictationHotkeyMode), six switch-site updates, ROADMAP correction, Codable tests (Wave 1)
-- [ ] 16-02-PLAN.md — Six v1.2 AppSettings keys with didSet UserDefaults mirroring + persistence tests (Wave 2)
-- [ ] 16-03-PLAN.md — New DictationLogger actor (plain markdown, no YAML frontmatter, millisecond-suffix filenames) + behavior tests (Wave 2)
-- [ ] 16-04-PLAN.md — LibraryStore lift to PSTranscribeApp + new SessionCoordinator with computed anySessionActive + ContentView injection + manual smoke test (Wave 2; autonomous: false)
+- [x] 16-01-PLAN.md — Models.swift enums (SessionType.dictation, DictationOutputMode, DictationHotkeyMode), six switch-site updates, ROADMAP correction, Codable tests (Wave 1)
+- [x] 16-02-PLAN.md — Six v1.2 AppSettings keys with didSet UserDefaults mirroring + persistence tests (Wave 2)
+- [x] 16-03-PLAN.md — New DictationLogger actor (plain markdown, no YAML frontmatter, millisecond-suffix filenames) + behavior tests (Wave 2)
+- [x] 16-04-PLAN.md — LibraryStore lift to PSTranscribeApp + new SessionCoordinator with computed anySessionActive + ContentView injection + manual smoke test (Wave 2; autonomous: false)
 
 #### Phase 17: Model Auto-Update
 
@@ -85,7 +85,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 16. Foundation | 0/4 | Planning complete | - |
+| 16. Foundation | 4/4 | Complete    | 2026-04-27 |
 | 17. Model Auto-Update | 0/0 | Not started | - |
 | 18. Hotkey Dictation + Plain-Folder Output | 0/0 | Not started | - |
 | 19. Integration & Hardening | 0/0 | Not started | - |
