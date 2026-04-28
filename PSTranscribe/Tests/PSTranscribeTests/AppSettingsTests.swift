@@ -13,6 +13,7 @@ struct AppSettingsTests {
         "clipboardRestoreDelay",
         "installedModelVersion",
         "modelLastCheckedDate",
+        "modelAutoUpdateEnabled",
     ]
 
     fileprivate static func clearV12Keys() {
@@ -64,6 +65,13 @@ struct AppSettingsTests {
             defer { AppSettingsTests.clearV12Keys() }
             let s = AppSettings()
             #expect(s.modelLastCheckedDate == nil)
+        }
+
+        @Test @MainActor func modelAutoUpdateEnabled_defaultsTrue() {
+            AppSettingsTests.clearV12Keys()
+            defer { AppSettingsTests.clearV12Keys() }
+            let s = AppSettings()
+            #expect(s.modelAutoUpdateEnabled == true)
         }
     }
 
@@ -138,5 +146,24 @@ struct AppSettingsTests {
         #expect(UserDefaults.standard.object(forKey: "modelLastCheckedDate") == nil)
         let s2 = AppSettings()
         #expect(s2.modelLastCheckedDate == nil)
+    }
+
+    @Test @MainActor func roundTrip_modelAutoUpdateEnabledFalse() {
+        Self.clearV12Keys()
+        defer { Self.clearV12Keys() }
+        let s1 = AppSettings()
+        s1.modelAutoUpdateEnabled = false
+        let s2 = AppSettings()
+        #expect(s2.modelAutoUpdateEnabled == false)
+    }
+
+    @Test @MainActor func roundTrip_modelAutoUpdateEnabledRestoresTrue() {
+        Self.clearV12Keys()
+        defer { Self.clearV12Keys() }
+        let s1 = AppSettings()
+        s1.modelAutoUpdateEnabled = false
+        s1.modelAutoUpdateEnabled = true
+        let s2 = AppSettings()
+        #expect(s2.modelAutoUpdateEnabled == true)
     }
 }

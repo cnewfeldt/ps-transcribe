@@ -93,6 +93,15 @@ final class AppSettings {
         }
     }
 
+    // MARK: - v1.2 Model Auto-Update Settings (Phase 17, D-11)
+
+    /// User toggle for automatic model update checks. When false, both the launch auto-check
+    /// and the opportunistic check on Settings open are suppressed; the manual button still
+    /// works (D-12 / D-13). Default true. Phase 17 D-11. UserDefaults key `"modelAutoUpdateEnabled"`.
+    var modelAutoUpdateEnabled: Bool {
+        didSet { UserDefaults.standard.set(modelAutoUpdateEnabled, forKey: "modelAutoUpdateEnabled") }
+    }
+
     init() {
         let defaults = UserDefaults.standard
         self.transcriptionLocale = defaults.string(forKey: "transcriptionLocale") ?? "en-US"
@@ -132,6 +141,14 @@ final class AppSettings {
         // v1.2 Model Update keys (Phase 16, D-04) -- declared only; Phase 17 wires consumption.
         self.installedModelVersion = defaults.string(forKey: "installedModelVersion") ?? ""
         self.modelLastCheckedDate = defaults.object(forKey: "modelLastCheckedDate") as? Date
+
+        // v1.2 modelAutoUpdateEnabled (Phase 17, D-11). Default true if key has never been set.
+        // bool(forKey:) returns false for missing keys, so we must check for key presence first.
+        if defaults.object(forKey: "modelAutoUpdateEnabled") == nil {
+            self.modelAutoUpdateEnabled = true
+        } else {
+            self.modelAutoUpdateEnabled = defaults.bool(forKey: "modelAutoUpdateEnabled")
+        }
     }
 
     /// Apply current screen-share visibility to all app windows.
