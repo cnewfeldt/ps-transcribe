@@ -1,11 +1,13 @@
 # Phase 18 Deferred Items
 
-Items discovered during execution that are out of scope for the current task.
+All Phase 18 deferred items resolved. See `18-09-SUMMARY.md` for details.
 
-## Pre-existing flaky test: `ClipboardRestoreTests.clipboardRestoresAfterDelay`
+## Resolved 2026-04-28 (Plan 18-09)
 
-- **Discovered during:** Plan 18-07 Task 1 verification (full `swift test` run after adding the Settings Dictation section).
-- **Symptom:** When the full test suite runs, `clipboardRestoresAfterDelay` intermittently fails with `(pb.string(forType: .string) → "hello") == "OLD"`. The suite passes in isolation (`swift test --filter ClipboardRestoreTests`).
-- **Cause:** Cross-suite pasteboard race. The test file's own comment acknowledges it: *".serialized is required because all 3 tests share NSPasteboard.general (system-global state). Without serialization the tests race: one test's `setString("USER_COPY")` lands while another is asleep waiting for its restore, and changeCount/string assertions fail unpredictably."* The `.serialized` trait orders tests **within** a suite, but `ClipboardRestoreTests`, `ClipboardPrivacyMarkersTests`, and `DictationCommitFlowTests` all touch `NSPasteboard.general` and run in parallel across suites.
-- **Why deferred:** Pre-existing. Plan 18-06 introduced the `PasteboardTestLock` actor mutex pattern; this suite was not yet migrated to use it. Migration is its own work item, unrelated to Plan 18-07's Settings UI scope.
-- **Suggested fix (future plan):** Wrap the three remaining `ClipboardRestoreTests` cases with `await PasteboardTestLock.shared.acquire { ... defer { release } }` per the Plan 18-06 SUMMARY pattern.
+Three flaky tests were resolved by Plan 18-09:
+
+1. `ClipboardRestoreTests.clipboardRestoresAfterDelay` — already migrated to `PasteboardTestLock` actor mutex by Plan 18-06; Plan 18-09 verified the lock is present in all 3 cases.
+2. `PlainFolderFallbackTests.plainFolderWriteFailureSilentlyFallsBackToClipboard` — verified to use `PasteboardTestLock` (migrated by Plan 18-06; Plan 18-09 confirmed).
+3. `DictationLoggerTests.rapidSessionsNoCollision` — Plan 18-09 added `.serialized` to the `@Suite("DictationLogger")` trait list, eliminating the parallel-clock millisecond-collision flake. Production filename-suffix resolution at `DictationLogger.swift:51` remains millisecond-precision (`yyyy-MM-dd HH-mm-ss-SSS`) — the fix was test-only.
+
+No outstanding deferred items remain for Phase 18.
