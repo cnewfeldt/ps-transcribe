@@ -1,6 +1,7 @@
 import SwiftUI
 import CoreAudio
 import Sparkle
+import KeyboardShortcuts
 
 private enum NotionConfigStatus {
     case notConfigured
@@ -62,6 +63,10 @@ struct SettingsView: View {
 
             Section("Speech Model") {
                 speechModelSectionContent
+            }
+
+            Section("Dictation") {
+                dictationSectionContent
             }
         }
         .formStyle(.grouped)
@@ -578,6 +583,74 @@ struct SettingsView: View {
         outFmt.dateStyle = .medium
         outFmt.timeZone = TimeZone(identifier: "UTC")
         return outFmt.string(from: date)
+    }
+
+    // MARK: - Dictation section content
+
+    @ViewBuilder
+    private var dictationSectionContent: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            // Hotkey recorder -- KeyboardShortcuts library handles persistence + clear-via-Delete-key.
+            HStack {
+                Text("Hotkey")
+                    .font(.system(size: 12))
+                Spacer()
+                KeyboardShortcuts.Recorder(for: .dictateGlobal)
+            }
+
+            // Hotkey behavior: toggle (default) vs press-and-hold.
+            Picker("Hotkey behavior", selection: $settings.dictationHotkeyMode) {
+                Text("Toggle (tap to start, tap to stop)").tag(DictationHotkeyMode.toggle)
+                Text("Hold (record while pressed)").tag(DictationHotkeyMode.pressAndHold)
+            }
+            .font(.system(size: 12))
+
+            Divider().padding(.vertical, 2)
+
+            // Output mode: clipboard / plainFolder / both.
+            Picker("Output", selection: $settings.dictationOutputMode) {
+                Text("Clipboard only").tag(DictationOutputMode.clipboard)
+                Text("Plain folder only").tag(DictationOutputMode.plainFolder)
+                Text("Both").tag(DictationOutputMode.both)
+            }
+            .font(.system(size: 12))
+
+            // Plain-folder picker. Greyed out when mode == .clipboard (no folder needed).
+            HStack(spacing: 8) {
+                Text("Folder")
+                    .font(.system(size: 12))
+                Text(settings.dictationFolderPath.isEmpty ? "Not set" : settings.dictationFolderPath)
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Button("Choose…") {
+                    chooseFolder(message: "Select dictation output folder") { path in
+                        settings.dictationFolderPath = path
+                    }
+                }
+                .font(.system(size: 12))
+            }
+            .disabled(settings.dictationOutputMode == .clipboard)
+            .opacity(settings.dictationOutputMode == .clipboard ? 0.5 : 1.0)
+
+            // Clipboard restore delay -- Stepper in 0.5s increments, 0..30s range.
+            HStack {
+                Text("Restore previous clipboard after")
+                    .font(.system(size: 12))
+                Spacer()
+                Stepper(value: $settings.clipboardRestoreDelay, in: 0...30, step: 0.5) {
+                    Text(String(format: "%.1fs", settings.clipboardRestoreDelay))
+                        .font(.system(.body, design: .monospaced))
+                }
+                .labelsHidden()
+            }
+
+            Text("Dictated text is excluded from clipboard-history apps (Alfred, Maccy, Pasta) via pasteboard markers.")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+        }
     }
 
     // MARK: - Folder picker
