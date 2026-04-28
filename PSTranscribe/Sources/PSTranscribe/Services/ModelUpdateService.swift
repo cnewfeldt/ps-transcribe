@@ -9,6 +9,7 @@
 ///   D-16 min_app_version gate produces .blocked(.minAppVersion(...)) state
 ///   D-17 String.compare(_:options:.numeric) for all version comparisons
 
+import CryptoKit
 import Foundation
 import Observation
 import os
@@ -41,11 +42,30 @@ final class ModelUpdateService {
     /// CFBundleShortVersionString from Bundle.main at init time (the production value).
     private let installedAppVersion: String
 
-    // MARK: - Plan 17-02 injection points (stubs; bodies land in Task 2)
+    // MARK: - Plan 17-02: download pipeline injection points
 
     /// Test-only override for the models root directory. Defaults to nil (real path used).
-    /// Tests set this to a temp directory to sandbox file I/O.
+    /// Unit tests set this to a temp directory to sandbox all file I/O.
     var modelsRootOverride: URL?
+
+    /// Per RESEARCH Pitfall #2: on-disk folder is `parakeet-tdt-0.6b-v3` (NOT `-coreml` suffixed).
+    /// FluidAudio's `Repo.folderName` strips the suffix at ModelNames.swift:139.
+    ///
+    /// Test-only override: unit tests set `modelsRootOverride` to a temp directory so staging
+    /// paths sandbox to ephemeral storage. Plan 17-03 also consumes this for swap-rollback tests.
+    private var modelsRoot: URL {
+        if let override = modelsRootOverride { return override }
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        return appSupport.appendingPathComponent("FluidAudio/Models")
+    }
+
+    private var modelDirectory: URL {
+        modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3")
+    }
+
+    private var stagingDirectory: URL {
+        modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3-staging")
+    }
 
     /// Test-injectable disk-space provider. Default: real URL.resourceValues lookup.
     /// Tests override via `service.diskSpaceProvider = { _ in 100 }` for low-disk simulation.
@@ -53,6 +73,9 @@ final class ModelUpdateService {
         let values = try url.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
         return Int64(values.volumeAvailableCapacityForImportantUsage ?? 0)
     }
+
+    /// Stored task handle so `cancelDownload()` can propagate cancellation.
+    private var downloadTask: Task<Void, Error>?
 
     init(settings: AppSettings? = nil,
          engine: TranscriptionEngine? = nil,
@@ -136,14 +159,199 @@ final class ModelUpdateService {
         }
     }
 
-    /// Plan 17-02 lands the body.
+    // MARK: - Download pipeline (Plan 17-02)
+
     func downloadAndApply() async {
-        log.debug("downloadAndApply not yet implemented (Plan 17-02)")
+        // Only proceed if state is .updateAvailable — capture the version + size for later restore.
+        guard case .updateAvailable(let targetVersion, let totalBytes, _) = updateState else {
+            log.debug("downloadAndApply called in state \(String(describing: self.updateState), privacy: .public) — ignoring")
+            return
+        }
+
+        // Re-fetch the manifest to get per-file details (state stores only version+size).
+        let manifest: ModelManifest
+        do {
+            manifest = try await fetchManifest()
+        } catch {
+            updateState = .failed(message: "Manifest re-fetch failed: \(error.localizedDescription)")
+            return
+        }
+        guard manifest.version == targetVersion else {
+            updateState = .failed(message: "Manifest version changed during download. Try again.")
+            return
+        }
+
+        // Disk-space preflight (MODEL-10 / Pitfall #14).
+        do {
+            try FileManager.default.createDirectory(at: modelsRoot, withIntermediateDirectories: true)
+            try checkDiskSpace(needed: totalBytes)
+        } catch let ModelUpdateError.insufficientDiskSpace(needed, available) {
+            updateState = .blocked(reason: .insufficientDiskSpace(needed: needed, available: available))
+            return
+        } catch {
+            updateState = .failed(message: error.localizedDescription)
+            return
+        }
+
+        // Wipe any pre-existing staging directory from a previous interrupted run.
+        try? wipeStaging()
+
+        do {
+            try FileManager.default.createDirectory(at: stagingDirectory, withIntermediateDirectories: true)
+        } catch {
+            updateState = .failed(message: "Could not create staging directory: \(error.localizedDescription)")
+            return
+        }
+
+        updateState = .downloading(progress: 0, completedBytes: 0, totalBytes: manifest.total_size_bytes)
+
+        // Spawn the download task so cancellation can target it independently.
+        downloadTask = Task { [weak self] in
+            try await self?.runDownload(manifest)
+        }
+
+        do {
+            try await downloadTask?.value
+            // All files downloaded and SHA-256 verified.
+            // Plan 17-03 takes over from .verifying to perform atomic swap + reload.
+            updateState = .verifying
+        } catch {
+            try? wipeStaging()
+            // Treat both Swift CancellationError and URLError.cancelled as user-initiated cancel.
+            // URLSession throws URLError(.cancelled) when its underlying task is cancelled via
+            // Task cancellation propagation (the URLSession task is cancelled from Swift Concurrency).
+            let isCancellation = error is CancellationError
+                || (error as? URLError)?.code == .cancelled
+                || downloadTask?.isCancelled == true
+            if isCancellation {
+                // Restore .updateAvailable so the user can retry.
+                let releasedAt = parseReleasedAt(manifest)
+                updateState = .updateAvailable(
+                    version: manifest.version,
+                    sizeBytes: manifest.total_size_bytes,
+                    releasedAt: releasedAt
+                )
+            } else {
+                updateState = .failed(message: error.localizedDescription)
+            }
+        }
+        downloadTask = nil
     }
 
-    /// Plan 17-02 lands the body.
     func cancelDownload() {
-        log.debug("cancelDownload not yet implemented (Plan 17-02)")
+        downloadTask?.cancel()
+        // State transition and staging cleanup happen inside downloadAndApply's catch block.
+    }
+
+    // MARK: - Private download helpers
+
+    private func runDownload(_ manifest: ModelManifest) async throws {
+        var totalCompleted: Int64 = 0
+        for file in manifest.files {
+            try Task.checkCancellation()
+
+            // T-17-02-05: reject path traversal names (containing ".." or starting with "/").
+            guard !file.name.contains(".."), !file.name.hasPrefix("/") else {
+                throw ModelUpdateError.httpError(url: file.url, statusCode: 0)
+            }
+
+            guard let url = URL(string: file.url) else {
+                throw ModelUpdateError.httpError(url: file.url, statusCode: 0)
+            }
+
+            let destination = stagingDirectory.appendingPathComponent(file.name)
+            try FileManager.default.createDirectory(
+                at: destination.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+
+            let completedBeforeThisFile = totalCompleted
+            try await downloadFile(
+                from: url,
+                to: destination,
+                expectedSize: file.size,
+                expectedSHA256: file.sha256,
+                onChunk: { [weak self] bytesThisFile in
+                    guard let self else { return }
+                    let running = completedBeforeThisFile + bytesThisFile
+                    self.updateState = .downloading(
+                        progress: Double(running) / Double(max(manifest.total_size_bytes, 1)),
+                        completedBytes: running,
+                        totalBytes: manifest.total_size_bytes
+                    )
+                }
+            )
+            totalCompleted += file.size
+        }
+    }
+
+    private func downloadFile(
+        from url: URL,
+        to destination: URL,
+        expectedSize: Int64,
+        expectedSHA256 hex: String,
+        onChunk: @MainActor @Sendable (Int64) -> Void
+    ) async throws {
+        let (bytes, response) = try await urlSession.bytes(for: URLRequest(url: url))
+        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            let code = (response as? HTTPURLResponse)?.statusCode ?? 0
+            throw ModelUpdateError.httpError(url: url.absoluteString, statusCode: code)
+        }
+
+        FileManager.default.createFile(atPath: destination.path, contents: nil)
+        let handle = try FileHandle(forWritingTo: destination)
+        defer { try? handle.close() }
+
+        var hasher = SHA256()
+        var bytesWritten: Int64 = 0
+        var buffer = Data()
+        buffer.reserveCapacity(64 * 1024)
+
+        for try await byte in bytes {
+            try Task.checkCancellation()
+            buffer.append(byte)
+            if buffer.count >= 64 * 1024 {
+                try handle.write(contentsOf: buffer)
+                hasher.update(data: buffer)
+                bytesWritten += Int64(buffer.count)
+                let snapshot = bytesWritten
+                await MainActor.run { onChunk(snapshot) }
+                buffer.removeAll(keepingCapacity: true)
+            }
+        }
+
+        // Flush remaining bytes.
+        if !buffer.isEmpty {
+            try handle.write(contentsOf: buffer)
+            hasher.update(data: buffer)
+            bytesWritten += Int64(buffer.count)
+            let snapshot = bytesWritten
+            await MainActor.run { onChunk(snapshot) }
+        }
+
+        let digest = hasher.finalize()
+        let actualHex = digest.map { String(format: "%02x", $0) }.joined()
+        guard actualHex.lowercased() == hex.lowercased() else {
+            throw ModelUpdateError.checksumMismatch(
+                file: destination.lastPathComponent,
+                expected: hex.lowercased(),
+                actual: actualHex.lowercased()
+            )
+        }
+    }
+
+    private func checkDiskSpace(needed: Int64) throws {
+        let available = try diskSpaceProvider(modelsRoot)
+        let required = needed * 2   // staging + production coexistence (CONTEXT.md Claude's-Discretion)
+        guard available >= required else {
+            throw ModelUpdateError.insufficientDiskSpace(needed: required, available: available)
+        }
+    }
+
+    private func wipeStaging() throws {
+        if FileManager.default.fileExists(atPath: stagingDirectory.path) {
+            try FileManager.default.removeItem(at: stagingDirectory)
+        }
     }
 
     // MARK: - Private helpers

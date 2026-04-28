@@ -428,16 +428,44 @@ struct ModelUpdateServiceTests {
             try? FileManager.default.removeItem(at: modelsRoot)
         }
 
-        // Use several small files so we have multiple iterations — gives cancellation time to land
-        let files: [(name: String, body: Data)] = (0..<5).map { i in
-            ("file\(i).bin", Data(repeating: UInt8(i), count: 512))
-        }
+        // Use two files. The responder blocks on a semaphore before returning the second file,
+        // giving the test a deterministic window to fire cancelDownload() mid-download.
+        let fileA = Data(repeating: 0xAA, count: 512)
+        let fileB = Data(repeating: 0xBB, count: 512)
+        let files: [(name: String, body: Data)] = [
+            ("fileA.bin", fileA),
+            ("fileB.bin", fileB)
+        ]
         let manifest = makeManifest(files: files)
-        installManifestAndFileResponder(manifest: manifest, fileBodies: files)
+
+        // Semaphore: starts at 0. Test signals it after calling cancelDownload().
+        // Responder waits on it before returning the second file, ensuring cancel always wins.
+        let blockSem = DispatchSemaphore(value: 0)
+        let manifestURL = "https://raw.githubusercontent.com/cnewfeldt/ps-transcribe-releases/main/model-manifest.json"
+        let encodedManifest = try JSONEncoder().encode(manifest)
+        var requestCount = 0
+        MockURLProtocol.responder = { request in
+            let urlStr = request.url!.absoluteString
+            if urlStr == manifestURL {
+                let response = HTTPURLResponse(url: request.url!, statusCode: 200,
+                                              httpVersion: "HTTP/1.1", headerFields: nil)!
+                return (response, encodedManifest)
+            } else if urlStr.contains("fileA.bin") {
+                let response = HTTPURLResponse(url: request.url!, statusCode: 200,
+                                              httpVersion: "HTTP/1.1", headerFields: nil)!
+                return (response, fileA)
+            } else {
+                // Block before returning fileB, giving the test time to call cancelDownload().
+                requestCount += 1
+                blockSem.wait()
+                let response = HTTPURLResponse(url: request.url!, statusCode: 200,
+                                              httpVersion: "HTTP/1.1", headerFields: nil)!
+                return (response, fileB)
+            }
+        }
 
         let settings = AppSettings()
         settings.installedModelVersion = "20260427"
-
         let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
         service.modelsRootOverride = modelsRoot
         service.updateState = .updateAvailable(
@@ -446,16 +474,23 @@ struct ModelUpdateServiceTests {
             releasedAt: nil
         )
 
-        // Spawn download and cancel on the next yield so cancellation lands early
-        let downloadTask = Task { await service.downloadAndApply() }
-        Task {
-            await Task.yield()
-            service.cancelDownload()
-        }
+        // Start download in a detached task (avoids blocking the @MainActor test body).
+        let downloadTask = Task.detached { await service.downloadAndApply() }
+
+        // Give the download task time to start and begin waiting on the semaphore
+        // (fileA completes quickly; fileB blocks on blockSem).
+        try await Task.sleep(for: .milliseconds(100))
+
+        // Cancel before unblocking the responder -- cancellation lands before fileB returns.
+        await service.cancelDownload()
+
+        // Unblock the responder so the URLSession thread doesn't deadlock.
+        blockSem.signal()
+
         await downloadTask.value
 
-        // After cancellation: state should be .idle or .updateAvailable (not .downloading/.verifying)
-        let state = service.updateState
+        // After cancellation: state should be .idle or .updateAvailable.
+        let state = await service.updateState
         switch state {
         case .idle, .updateAvailable:
             break // Expected
@@ -463,7 +498,7 @@ struct ModelUpdateServiceTests {
             Issue.record("Expected .idle or .updateAvailable after cancel, got \(state)")
         }
 
-        // Staging directory must NOT exist after cancellation (cleaned up within ~10ms)
+        // Staging directory must NOT exist after cancellation.
         let stagingDir = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3-staging")
         #expect(!FileManager.default.fileExists(atPath: stagingDir.path),
                 "Staging directory must be wiped after cancellation")
