@@ -74,6 +74,45 @@ final class TranscriptionEngine {
         self.transcriptStore = transcriptStore
     }
 
+    /// Hot-swap ASR + VAD models after the on-disk directory has been replaced atomically.
+    ///
+    /// MUST be called only when `isRunning == false`. The caller (`ModelUpdateService.applySwap`)
+    /// is responsible for the session-active guard via `SessionCoordinator.anySessionActive`
+    /// (CONTEXT.md D-18 / D-19).
+    ///
+    /// Mirrors `prepareModels()` with an explicit nil-out step so ARC drops the previous
+    /// `MLModel` handles before the new instances load. Per RESEARCH Pitfall #4, the
+    /// `AsrModels.downloadAndLoad` call is a no-op for the network when files already exist
+    /// on disk (`DownloadUtils.swift` allModelsExist short-circuit).
+    ///
+    /// After this method returns successfully:
+    ///   - `modelsReady == true`
+    ///   - `asrManager != nil`, `vadManager != nil`
+    ///   - `assetStatus == "Ready"`
+    func reloadModels() async throws {
+        // Nil out first so ARC drops the previous MLModel handles before new instances load.
+        asrManager = nil
+        vadManager = nil
+        modelsReady = false
+
+        assetStatus = "Reloading speech model..."
+        diagLog("[ENGINE-RELOAD] starting model hot-swap reload...")
+
+        let models = try await AsrModels.downloadAndLoad(version: .v3)
+        assetStatus = "Initializing speech engine..."
+        let asr = AsrManager(config: .default)
+        try await asr.loadModels(models)
+        self.asrManager = asr
+
+        assetStatus = "Loading voice activity detection..."
+        let vad = try await VadManager()
+        self.vadManager = vad
+
+        modelsReady = true
+        assetStatus = "Ready"
+        diagLog("[ENGINE-RELOAD] model hot-swap reload complete")
+    }
+
     /// Pre-download and load models at app startup so recording can start immediately.
     func prepareModels() async {
         guard !modelsReady, asrManager == nil else { return }
