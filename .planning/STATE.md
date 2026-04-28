@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: — Standalone Dictation + Model Auto-Update
 status: executing
-stopped_at: Phase 18 context gathered
-last_updated: "2026-04-28T05:59:41.639Z"
+stopped_at: Completed 18-01-PLAN.md
+last_updated: "2026-04-28T17:36:07.045Z"
 last_activity: 2026-04-28
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 9
-  completed_plans: 9
-  percent: 100
+  total_plans: 17
+  completed_plans: 10
+  percent: 59
 ---
 
 # Project State
@@ -21,7 +21,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-27)
 
 **Core value:** Users can record meetings and voice memos with accurate, private, on-device transcription. All processing stays on-device.
-**Current focus:** Phase 16 — foundation
+**Current focus:** Phase 18 — hotkey-dictation-plain-folder-output
 
 **Shipped milestones:**
 
@@ -34,9 +34,9 @@ See: .planning/PROJECT.md (updated 2026-04-27)
 
 ## Current Position
 
-Phase: 18
-Plan: Not started
-Status: Executing Phase 16
+Phase: 18 (hotkey-dictation-plain-folder-output) — EXECUTING
+Plan: 2 of 8
+Status: Ready to execute
 Last activity: 2026-04-28
 
 Progress: [          ] 0%
@@ -56,6 +56,7 @@ Progress: [          ] 0%
 | v1.0 — PS Transcribe | 8 active (5/6 abandoned) | 28 | 2026-04-14 |
 | v1.1 — Marketing Website | 4 (15 reverted) | 16 | 2026-04-25 |
 | v1.2 — Standalone Dictation + Model Auto-Update | 4 (in progress) | TBD | TBD |
+| Phase 18 P01 | 3min | 1 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,7 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent milestone-level d
 - Global hotkey mechanism: `sindresorhus/KeyboardShortcuts` via `RegisterEventHotKey` (no Accessibility or Input Monitoring permissions required; App Store compatible)
 - Dictation uses a separate `TranscriptionEngine` instance owned by `DictationCoordinator` (Option B from architecture research), not a forked state machine
 - **Manifest hosting strategy ADR is a research gate for Phase 17** — resolve before Phase 17 planning locks; SUMMARY.md recommends project-owned manifest on gh-pages for per-file SHA-256 + `min_app_version` support
+- [Phase 18]: Wave 0 RED test scaffolding pattern: 16 @Suite files with .disabled('Pending Plan 18-XX') traits. Body is placeholder; un-disabling wave replaces both trait AND body with real assertions against actual production symbols (forces compile-time binding to ship-state code, not Wave-0 mocks).
 
 ### Pending Todos
 
@@ -96,6 +98,6 @@ Deferred to a later milestone (see PROJECT.md "Future Candidate Goals"):
 
 ## Session Continuity
 
-Last session: 2026-04-28T05:59:41.636Z
-Stopped at: Phase 18 context gathered
-Resume file: .planning/phases/18-hotkey-dictation-plain-folder-output/18-CONTEXT.md
+Last session: 2026-04-28T17:36:07.043Z
+Stopped at: Completed 18-01-PLAN.md
+Resume file: None
