@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: — Standalone Dictation + Model Auto-Update
 status: executing
-stopped_at: Completed 18-05-PLAN.md
-last_updated: "2026-04-28T18:08:23.231Z"
+stopped_at: Completed 18-06-PLAN.md
+last_updated: "2026-04-28T18:27:19.647Z"
 last_activity: 2026-04-28
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 17
-  completed_plans: 14
-  percent: 82
+  completed_plans: 15
+  percent: 88
 ---
 
 # Project State
@@ -35,7 +35,7 @@ See: .planning/PROJECT.md (updated 2026-04-27)
 ## Current Position
 
 Phase: 18 (hotkey-dictation-plain-folder-output) — EXECUTING
-Plan: 6 of 8
+Plan: 7 of 8
 Status: Ready to execute
 Last activity: 2026-04-28
 
@@ -61,6 +61,7 @@ Progress: [████████░░] 76%
 | Phase 18 P03 | 2min | 1 tasks | 2 files |
 | Phase 18 P04 | 4min | 2 tasks | 4 files |
 | Phase 18 P5 | 3min | 2 tasks | 3 files |
+| Phase 18 P06 | 13min | 2 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,9 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent milestone-level d
 - [Phase 18]: [Phase 18-05]: HUD width clamps to min(420, screen.visibleFrame.width - 40) with 280pt floor (Open Question §4); bottom-center positioning math: vertically centered within bottom-quarter band of NSScreen.main.visibleFrame
 - [Phase 18]: [Phase 18-05]: DictationHUD is parameterized (state/elapsed/partialText/onStop), NOT @Observable-bound. Wave 4 supplies the binding closure to setContent() that reads coordinator state -- @Observable propagation handles re-renders. Keeps view side-effect-free and trivially previewable (5 #Preview blocks)
 - [Phase 18]: [Phase 18-05]: Test fix -- NSWindow.SharingType.none must be fully qualified in #expect because bare .none resolves to Optional.none (nil) due to Swift type-inference preference. Documented inline.
+- [Phase 18]: [Phase 18-06]: DictationCoordinator behavior complete -- begin/end/cancel/escape/hold-release/preWarm + helpers + DEBUG test surface. inlineTranscript: String? added to LibraryEntry (D-12, Codable backward-compat). LibraryEntryRow shows mic.fill for dictation entries (D-11).
+- [Phase 18]: [Phase 18-06]: PasteboardTestLock actor mutex pattern -- Swift Testing's .serialized trait orders tests within a suite, but multiple suites still run in parallel and share NSPasteboard.general. Cross-suite mutex via shared actor lock with continuation queue. All clipboard-touching Phase 18 tests acquire/release before/after pasteboard touches.
+- [Phase 18]: [Phase 18-06]: Output-mode branching as conditionals (if mode == .clipboard || mode == .both) rather than mode-specific subclasses. inlineTranscript = (finalFileURL == nil) ? assembled : nil -- single source of truth based on whether the on-disk file exists. D-15 silent fallback path lands in the inline branch.
 
 ### Pending Todos
 
@@ -114,6 +118,6 @@ Deferred to a later milestone (see PROJECT.md "Future Candidate Goals"):
 
 ## Session Continuity
 
-Last session: 2026-04-28T18:08:08.675Z
-Stopped at: Completed 18-05-PLAN.md
+Last session: 2026-04-28T18:27:19.645Z
+Stopped at: Completed 18-06-PLAN.md
 Resume file: None
