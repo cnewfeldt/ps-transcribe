@@ -87,6 +87,13 @@ struct LibraryEntry: Identifiable, Codable, Sendable {
     var isFinalized: Bool
     var firstLinePreview: String?
     var notionPageURL: String?  // set after successful Notion send
+    /// D-12 (Phase 18). When the dictation entry's `filePath` is the empty-string sentinel
+    /// (clipboard-only mode, OR D-15 silent fallback), the full transcript is persisted here
+    /// so it survives the clipboard restore window. nil for entries backed by an on-disk file
+    /// (the file is the source of truth) and for legacy meeting/voice-memo entries.
+    /// Codable note: Optional + missing key in JSON decodes as nil → backward compatible with
+    /// existing `library.json` written before Phase 18.
+    var inlineTranscript: String?
 
     var displayName: String {
         if let name, !name.isEmpty { return name }

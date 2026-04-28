@@ -156,9 +156,11 @@ struct LibraryEntryRow: View {
         case .callCapture:
             return "phone.fill"
         case .voiceMemo:
-            return "mic.fill"
+            return "waveform.circle.fill"
         case .dictation:
-            return "mic.circle.fill"
+            // D-11 (Phase 18): dictation entries render mic.fill so users can
+            // distinguish hotkey-triggered dictations from meetings + voice memos at a glance.
+            return "mic.fill"
         }
     }
 
