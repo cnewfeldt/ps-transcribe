@@ -138,6 +138,10 @@ final class ModelUpdateService {
             let manifest = try await fetchManifest()
             settings?.modelLastCheckedDate = Date()
 
+            // Phase 17 D-14: silent backfill for v1.0 → v1.2 upgraders.
+            // Runs AFTER manifest fetch, BEFORE version compare.
+            backfillInstalledVersionIfNeeded(manifest)
+
             // Step 3 — min_app_version gate (MODEL-09 / D-16 / D-17)
             if installedAppVersion.compare(manifest.min_app_version, options: .numeric) == .orderedAscending {
                 updateState = .blocked(reason: .minAppVersion(
@@ -515,6 +519,36 @@ final class ModelUpdateService {
     }
 
     // MARK: - Private helpers
+
+    /// D-14 first-run backfill for v1.0 → v1.2 upgraders.
+    /// Silently sets installedModelVersion if the user already has the manifest's files on disk.
+    /// Conjunctive conditions (any "no" reverts to normal flow):
+    ///   1. settings.installedModelVersion == ""
+    ///   2. Every manifest.files[*].name exists at modelDirectory.appendingPathComponent(name)
+    ///   3. The FIRST file's on-disk size matches manifest.files[0].size
+    /// No download, no UI, no SHA-256 hashing on launch.
+    private func backfillInstalledVersionIfNeeded(_ manifest: ModelManifest) {
+        guard settings?.installedModelVersion.isEmpty == true else { return }
+        guard !manifest.files.isEmpty else { return }
+
+        for file in manifest.files {
+            let path = modelDirectory.appendingPathComponent(file.name)
+            if !FileManager.default.fileExists(atPath: path.path) { return }
+        }
+        // Size match on first file (size-only check per D-14 to avoid 5-30s SHA scan)
+        let firstFile = manifest.files[0]
+        let firstPath = modelDirectory.appendingPathComponent(firstFile.name)
+        do {
+            let attrs = try FileManager.default.attributesOfItem(atPath: firstPath.path)
+            if let size = attrs[.size] as? Int64, size == firstFile.size {
+                settings?.installedModelVersion = manifest.version
+                log.debug("D-14 backfill: set installedModelVersion = \(manifest.version, privacy: .public)")
+            }
+        } catch {
+            // Don't crash on attribute read failure; just skip backfill.
+            log.debug("D-14 backfill: attribute read failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
 
     /// Parse `released_at` field; fall back to parsing `version` as yyyyMMdd; otherwise nil.
     /// Per RESEARCH Open Question #3.
