@@ -2,7 +2,7 @@
 
 **Phase:** 17-model-auto-update
 **Started:** 2026-04-27
-**Status:** in_review
+**Status:** code-complete; release smoke deferred
 
 ## Success Criteria (from ROADMAP.md Phase 17)
 
@@ -71,11 +71,28 @@ Record the result of the 9-state checklist (A through I). To be filled in by the
 
 ## Plan 17-05 Backfill Smoke Test
 
+**Unit-level verification (2026-04-27):** PASSED — `swift test --filter "backfill"` runs 5 tests in `ModelUpdateServiceTests` and all pass:
+- `backfillFiresWhenAllConditionsMet`
+- `backfillDoesNotFireWhenInstalledIsSet`
+- `backfillDoesNotFireOnSizeMismatch`
+- `backfillDoesNotFireOnMissingFile`
+- `backfillSurvivesAttributeReadFailure`
+
+**End-to-end smoke (deferred to release):** requires UserDefaults manipulation against the v1.2 build with the live manifest published. Steps below are the runbook for the release-tag verification:
 - [ ] On a copy of the v1.0 build, set `installedModelVersion = ""` in UserDefaults
 - [ ] Confirm model files exist on disk at `~/Library/Application Support/FluidAudio/Models/parakeet-tdt-0.6b-v3/`
 - [ ] Launch the v1.2 build (or run `checkForUpdate`)
 - [ ] After the manifest fetch, confirm `installedModelVersion` equals the manifest's version (D-14)
 - [ ] State should be `.upToDate(asOf:)` (NOT `.updateAvailable`)
+
+## Manifest Generation Script Smoke Test (Plan 17-05 Task 4 / B)
+
+**Verified 2026-04-27:** PASSED — `swift scripts/generate-model-manifest.swift --version=20260427 --min-app=1.2.0` produced a manifest with:
+- 23 files (≥ 5 expected)
+- `total_size_bytes`: 483,254,213 (~480-520 MB expected range)
+- First entry SHA256: `4238c4e81ecd0dc94bd7dfbb60f7e2cc824107c1ffe0387b8607b72833dba350` (64-char hex)
+- First entry name: `Decoder.mlmodelc/analytics/coremldata.bin` (proper leaf-file path)
+- `model_id`: `parakeet-tdt-0.6b-v3-coreml`
 
 ## RELEASE PREREQUISITE -- Manifest Publication
 
@@ -110,12 +127,13 @@ Record the result of the 9-state checklist (A through I). To be filled in by the
 
 ## Build & Test Verification
 
-- [ ] `cd PSTranscribe && swift build` exits 0 (post-Phase 17)
-- [ ] `cd PSTranscribe && swift test` exits 0 -- all default-suite tests pass
-- [ ] `cd PSTranscribe && swift test --filter TranscriptionEngineReloadModelsTests` exits 0 (integration suite, run separately)
-- [ ] `! git diff --name-only HEAD | grep -E 'Package\.(swift|resolved)$'` (Pitfall #15: FluidAudio package untouched)
-- [ ] `! grep -E 'setValue.*forHTTPHeaderField|User-Agent|queryItems' PSTranscribe/Sources/PSTranscribe/Services/ModelUpdateService.swift` (Pitfall #15: no telemetry)
+**Verified 2026-04-27 post-Plan-17-05:**
+- [x] `cd PSTranscribe && swift build` exits 0 — clean build
+- [x] `cd PSTranscribe && swift test` exits 0 — 114 tests in 17 suites pass
+- [ ] `cd PSTranscribe && swift test --filter TranscriptionEngineReloadModelsTests` exits 0 (integration suite, deferred — requires CoreML runtime in CI)
+- [x] `! git diff --name-only HEAD | grep -E 'Package\.(swift|resolved)$'` — PASS, no Package.swift changes
+- [x] `! grep -E 'setValue.*forHTTPHeaderField|User-Agent|queryItems' PSTranscribe/Sources/PSTranscribe/Services/ModelUpdateService.swift` — PASS, no telemetry
 
 ---
 
-*Phase 17 verification: pending executor sign-off after Plans 17-01..17-05 complete.*
+*Phase 17 verification: code-complete. Deterministic gates pass. End-to-end UI/UX smoke test deferred to release-tag verification once manifest is published per the RELEASE PREREQUISITE section above.*
