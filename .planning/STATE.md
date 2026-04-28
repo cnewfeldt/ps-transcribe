@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: — Standalone Dictation + Model Auto-Update
-status: executing
-stopped_at: Completed 18-07-PLAN.md
-last_updated: "2026-04-28T19:00:16.636Z"
+status: verifying
+stopped_at: Completed 18-08-PLAN.md
+last_updated: "2026-04-28T20:45:24.511Z"
 last_activity: 2026-04-28
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 17
-  completed_plans: 16
-  percent: 94
+  completed_plans: 17
+  percent: 100
 ---
 
 # Project State
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-04-27)
 
 Phase: 18 (hotkey-dictation-plain-folder-output) — EXECUTING
 Plan: 8 of 8
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-28
 
 Progress: [████████░░] 76%
@@ -63,6 +63,7 @@ Progress: [████████░░] 76%
 | Phase 18 P5 | 3min | 2 tasks | 3 files |
 | Phase 18 P06 | 13min | 2 tasks | 12 files |
 | Phase 18 P07 | 4min | 4 tasks | 5 files |
+| Phase 18 P08 | 5min | 4 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -101,6 +102,9 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent milestone-level d
 - [Phase 18]: [Phase 18-07]: Folder picker row uses .disabled() AND .opacity(0.5) when output mode is .clipboard, not just .disabled. macOS 26 leaves disabled controls fully opaque otherwise -- the dim is necessary for legible no-op state.
 - [Phase 18]: [Phase 18-07]: AppSettingsDictationPersistenceTests use per-test defer { UserDefaults.standard.removeObject(forKey:) } for cleanup rather than suite-level traits. Simplest correct mechanism; runs even on #expect failure inside @MainActor test bodies.
 - [Phase 18]: [Phase 18-07]: ClipboardRestoreTests cross-suite pasteboard race documented as deferred item rather than fixed in this plan. Pre-existing Plan 18-06 carry-over; Plan 18-07 scope is Settings UI + persistence tests, not Plan 18-06 surface. Suggested fix (migrate to PasteboardTestLock) recorded in deferred-items.md.
+- [Phase 18]: [Phase 18-08]: PSTranscribeApp.init wires GlobalHotkeyService + DictationCoordinator + DictationWindowController at app scope; hotkey callbacks routed by AppSettings.dictationHotkeyMode (toggle vs press-and-hold); Esc NSEvent global monitor installed; eager pre-warm via Task.detached(priority: .background) + 2s sleep + MainActor.run gated on hotkeyAssigned (WARNING #11 opt-out).
+- [Phase 18]: [Phase 18-08]: MenuBarExtra label uses ternary 'mic.fill' / 'book.closed' bound to dictationCoordinator.isActive + .symbolEffect(.pulse, isActive:) for the recording animation (DICT-03). ContentView .task subscribes to .dictationSessionEnded and invokes refreshLibrary() so sidebar updates without app restart.
+- [Phase 18]: [Phase 18-08]: Swift 6.2's region-based isolation checker rejected Task.detached { @MainActor in ... } for the eager pre-warm Task. Refactored to Task.detached(priority: .background) + MainActor.run for the hotkeyAssigned read followed by an inner Task { @MainActor in await preWarmModels() }. Equivalent semantics, compiles cleanly. Documented as Rule 3 deviation.
 
 ### Pending Todos
 
@@ -123,6 +127,6 @@ Deferred to a later milestone (see PROJECT.md "Future Candidate Goals"):
 
 ## Session Continuity
 
-Last session: 2026-04-28T19:00:00.802Z
-Stopped at: Completed 18-07-PLAN.md
+Last session: 2026-04-28T20:45:10.621Z
+Stopped at: Completed 18-08-PLAN.md
 Resume file: None

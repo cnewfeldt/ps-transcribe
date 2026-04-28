@@ -17,7 +17,7 @@
 
 - [x] **Phase 16: Foundation** — Internal scaffolding: lift `LibraryStore`, add `SessionCoordinator` with computed `anySessionActive`, add `SessionType.dictation` + `DictationOutputMode` + `DictationHotkeyMode` enums, add v1.2 `AppSettings` keys, add new `DictationLogger` actor (plain markdown writer, no YAML frontmatter). No user-visible change. (completed 2026-04-27)
 - [x] **Phase 17: Model Auto-Update** — `ModelUpdateService` (manifest fetch, version compare, staging download, SHA-256 verify, atomic rename, rollback), `TranscriptionEngine.reloadModels()` hot-swap, Settings > Model section with version display + update badge + "Check for Updates" button + cancellable progress. (completed 2026-04-28)
-- [ ] **Phase 18: Hotkey Dictation + Plain-Folder Output** — `DictationHotkeyController` (KeyboardShortcuts/`RegisterEventHotKey`, no permissions needed), `DictationCoordinator`, `DictationWindowController` + `DictationHUD` NSPanel, clipboard write with privacy markers, NSOpenPanel folder picker, `DictationLogger` plain-markdown writer, hotkey recorder UI, dictation settings section.
+- [x] **Phase 18: Hotkey Dictation + Plain-Folder Output** — `DictationHotkeyController` (KeyboardShortcuts/`RegisterEventHotKey`, no permissions needed), `DictationCoordinator`, `DictationWindowController` + `DictationHUD` NSPanel, clipboard write with privacy markers, NSOpenPanel folder picker, `DictationLogger` plain-markdown writer, hotkey recorder UI, dictation settings section. (completed 2026-04-28)
 - [ ] **Phase 19: Integration & Hardening** — End-to-end validation: mutual exclusion between meeting recording / dictation / model-update apply, model rollback path simulation, privacy-mode HUD verification, SettingsView UX audit (three-folder-picker coherence), full QA checklist.
 
 ### Phase Details
@@ -65,7 +65,7 @@
   3. User configures a plain OS folder in Settings > Dictation; after a dictation session, a clean markdown file (no YAML frontmatter) appears in that folder with a human-readable date-based filename; 10 rapid sessions produce 10 distinct files
   4. User presses Escape or a second hotkey tap during dictation to cancel; no text is written to clipboard and no file is written to the plain folder; sessions longer than 30 seconds prompt for confirmation before cancelling
   5. Attempting to start dictation while a meeting recording is active is a no-op (or shows a brief dismissible notice); there is never more than one active recording session at a time
-**Plans:** 7/8 plans executed
+**Plans:** 8/8 plans complete
 - [x] 18-01-PLAN.md — Wave 0 RED test scaffolding (16 test files, Nyquist gate) (Wave 0)
 - [x] 18-02-PLAN.md — KeyboardShortcuts dependency + GlobalHotkeyService (Cmd+Shift+D registration) (Wave 1)
 - [x] 18-03-PLAN.md — DictationLogger.discardSession() + hasActiveSession (D-08 atomic cancel support) (Wave 1)
@@ -73,7 +73,7 @@
 - [x] 18-05-PLAN.md — DictationWindowController + DictationHUD (NSPanel + SwiftUI body, sharingType=.none) (Wave 3)
 - [x] 18-06-PLAN.md — Full begin/end/cancel flow (clipboard, library, auto-name, fallback) (Wave 4)
 - [x] 18-07-PLAN.md — Settings > Dictation section (hotkey recorder, mode picker, folder picker) (Wave 5)
-- [ ] 18-08-PLAN.md — App-scope wiring (MenuBarExtra pulse, Esc-key monitor, eager pre-warm) (Wave 6)
+- [x] 18-08-PLAN.md — App-scope wiring (MenuBarExtra pulse, Esc-key monitor, eager pre-warm) (Wave 6)
 **UI hint**: yes
 #### Phase 19: Integration & Hardening
 
@@ -94,7 +94,7 @@
 |-------|----------------|--------|-----------|
 | 16. Foundation | 4/4 | Complete    | 2026-04-27 |
 | 17. Model Auto-Update | 5/5 | Complete    | 2026-04-28 |
-| 18. Hotkey Dictation + Plain-Folder Output | 7/8 | In Progress|  |
+| 18. Hotkey Dictation + Plain-Folder Output | 8/8 | Complete   | 2026-04-28 |
 | 19. Integration & Hardening | 0/0 | Not started | - |
 
 ## Backlog

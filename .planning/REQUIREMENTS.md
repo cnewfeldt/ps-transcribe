@@ -14,7 +14,7 @@ Requirements for this milestone. Each maps to roadmap phases (mapping populated 
 
 - [x] **DICT-01**: User can trigger dictation from any app via a configurable global hotkey (default `Cmd+Shift+D`)
 - [x] **DICT-02**: User can choose between toggle and press-and-hold hotkey modes (default: toggle)
-- [ ] **DICT-03**: User sees a menu bar indicator while dictation is recording
+- [x] **DICT-03**: User sees a menu bar indicator while dictation is recording
 - [x] **DICT-04**: User sees a floating HUD with live partial transcription during dictation
 - [x] **DICT-05**: On dictation stop, final transcript text is written to the system clipboard
 - [x] **DICT-06**: Previous clipboard contents are restored after a configurable delay (default 3s)
@@ -85,7 +85,7 @@ Which phases cover which requirements.
 |-------------|-------|--------|
 | DICT-01 | Phase 18 | Complete |
 | DICT-02 | Phase 18 | Complete |
-| DICT-03 | Phase 18 | Pending |
+| DICT-03 | Phase 18 | Complete |
 | DICT-04 | Phase 18 | Complete |
 | DICT-05 | Phase 18 | Complete |
 | DICT-06 | Phase 18 | Complete |
