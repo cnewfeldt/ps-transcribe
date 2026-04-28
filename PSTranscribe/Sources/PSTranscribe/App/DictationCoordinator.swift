@@ -212,11 +212,33 @@ final class DictationCoordinator {
         await dictationEngine.stop()
         elapsedTimerTask?.cancel(); elapsedTimerTask = nil
 
-        let utterancesText = dictationStore.utterances.map { $0.text }
+        // Phase 18-09 Gap #1 fix — snapshot utterances so the append loop and the assembled
+        // string see the same data, and concurrent mutation during the await chain cannot
+        // reorder file writes (T-18-09-02).
+        let utterancesSnapshot = dictationStore.utterances
+        let utterancesText = utterancesSnapshot.map { $0.text }
         let volatile = dictationStore.volatileYouText.trimmingCharacters(in: .whitespacesAndNewlines)
         let assembled = (utterancesText + (volatile.isEmpty ? [] : [volatile]))
             .joined(separator: " ")
             .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Phase 18-09 Gap #1 fix — flush the dictation transcript to the plain-folder file
+        // BEFORE closing the session. The D-15 silent-fallback path leaves
+        // hasActiveSession == false (startSession threw, was caught at lines 163-168, no
+        // session opened); the guard ensures the failed-open file path NEVER receives
+        // transcript writes (preserves D-15 secrecy + T-18-06-06: os_log content stays
+        // free of transcript text).
+        if await dictationLogger.hasActiveSession {
+            for utterance in utterancesSnapshot {
+                await dictationLogger.append(text: utterance.text, timestamp: utterance.timestamp)
+            }
+            // Volatile remainder: the active engine's partial-but-not-yet-finalized text.
+            // The clipboard assembled string already includes it (line above); appending
+            // it as a final synthetic utterance keeps the file body and clipboard text aligned.
+            if !volatile.isEmpty {
+                await dictationLogger.append(text: volatile, timestamp: Date())
+            }
+        }
 
         let finalFileURL: URL? = await dictationLogger.endSession()
 

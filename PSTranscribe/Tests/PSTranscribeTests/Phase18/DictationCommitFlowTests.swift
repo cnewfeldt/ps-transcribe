@@ -75,6 +75,51 @@ struct DictationCommitFlowTests {
         #expect(contents.count == 1)
     }
 
+    /// Gap #1 regression — plain-folder file BODY must contain the spoken transcript,
+    /// not just the header. Pre-fix: the file contained only `# Dictation -- ...\n\n`
+    /// because endDictation never called dictationLogger.append. Post-fix: the seeded
+    /// utterance text appears in the body.
+    @Test @MainActor func plainFolderFileBodyContainsTranscript() async throws {
+        await PasteboardTestLock.shared.acquire()
+        defer { Task { await PasteboardTestLock.shared.release() } }
+        defer { NSPasteboard.general.clearContents() }
+        let folder = tmpFolder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let (dict, _) = makeCoordinator(folder: folder, mode: .plainFolder)
+
+        // Open the logger session (matches the existing plainFolderOnlyModeWritesNoClipboard scaffold).
+        try await dict.dictationLogger.startSession(folderPath: folder.path)
+
+        // Seed dictationStore.utterances with a known phrase so the new append loop has
+        // something to write. TranscriptStore.append(_:) is public (Models/TranscriptStore.swift:14).
+        let now = Date()
+        dict.dictationStore.append(Utterance(text: "hello body content", speaker: .you, timestamp: now))
+
+        dict._test_setState(.listening)
+        dict._test_setSessionStartTime(now)
+        dict._test_setElapsed(5)
+
+        await dict.endDictation()
+        try? await Task.sleep(for: .milliseconds(50))
+
+        // The on-disk file should be the only file in the folder.
+        let contents = (try? FileManager.default.contentsOfDirectory(atPath: folder.path)) ?? []
+        #expect(contents.count == 1, "plainFolder mode must produce exactly one .md file")
+        guard let filename = contents.first else { return }
+        let url = folder.appendingPathComponent(filename)
+
+        // CRITICAL ASSERTION (Gap #1): the file body must contain the spoken transcript,
+        // not just the `# Dictation -- yyyy-MM-dd HH:mm` header.
+        let body = try String(contentsOf: url, encoding: .utf8)
+        #expect(body.contains("hello body content"),
+                "Plain-folder file body must contain the spoken transcript text. Found body:\n\(body)")
+        // Defense-in-depth: the file should still carry the millisecond-offset speaker header
+        // from DictationLogger.append (lines 78-89) — confirms the append path actually ran.
+        #expect(body.contains("**You** ("), "Plain-folder body must contain the **You** speaker header from append()")
+        // D-02 invariant preserved (no YAML frontmatter ever).
+        #expect(!body.contains("---"), "Plain-folder file must never contain YAML frontmatter delimiter")
+    }
+
     @Test @MainActor func libraryEntryCreatedForEachOutputMode() async {
         await PasteboardTestLock.shared.acquire()
         defer { Task { await PasteboardTestLock.shared.release() } }
