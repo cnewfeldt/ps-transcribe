@@ -26,11 +26,11 @@ Requirements for this milestone. Each maps to roadmap phases (mapping populated 
 
 ### Dictation -- Plain-Folder Output
 
-- [ ] **FOLDER-01**: User can configure a plain OS folder as a dictation output destination via a folder picker in Settings
+- [x] **FOLDER-01**: User can configure a plain OS folder as a dictation output destination via a folder picker in Settings
 - [x] **FOLDER-02**: Dictation transcripts written to the plain folder are clean markdown with no YAML frontmatter
 - [x] **FOLDER-03**: Plain-folder filenames follow a human-readable date convention (e.g., `2026-04-27 14-32 Dictation.md`) and avoid collisions for sessions seconds apart
 - [x] **FOLDER-04**: User can choose dictation output mode: clipboard only, plain folder only, or both
-- [ ] **FOLDER-05**: Plain-folder path persists across app restarts (UserDefaults)
+- [x] **FOLDER-05**: Plain-folder path persists across app restarts (UserDefaults)
 
 ### Model Auto-Update
 
@@ -94,11 +94,11 @@ Which phases cover which requirements.
 | DICT-09 | Phase 18 | Complete |
 | DICT-10 | Phase 18 | Pending |
 | DICT-11 | Phase 18 | Complete |
-| FOLDER-01 | Phase 18 | Pending |
+| FOLDER-01 | Phase 18 | Complete |
 | FOLDER-02 | Phase 18 | Complete |
 | FOLDER-03 | Phase 18 | Complete |
 | FOLDER-04 | Phase 18 | Complete |
-| FOLDER-05 | Phase 18 | Pending |
+| FOLDER-05 | Phase 18 | Complete |
 | MODEL-01 | Phase 17 | Pending |
 | MODEL-02 | Phase 17 | Pending |
 | MODEL-03 | Phase 17 | Pending |

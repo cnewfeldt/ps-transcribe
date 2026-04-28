@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: — Standalone Dictation + Model Auto-Update
 status: executing
-stopped_at: Completed 18-06-PLAN.md
-last_updated: "2026-04-28T18:27:19.647Z"
+stopped_at: Completed 18-07-PLAN.md
+last_updated: "2026-04-28T19:00:16.636Z"
 last_activity: 2026-04-28
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 17
-  completed_plans: 15
-  percent: 88
+  completed_plans: 16
+  percent: 94
 ---
 
 # Project State
@@ -35,7 +35,7 @@ See: .planning/PROJECT.md (updated 2026-04-27)
 ## Current Position
 
 Phase: 18 (hotkey-dictation-plain-folder-output) — EXECUTING
-Plan: 7 of 8
+Plan: 8 of 8
 Status: Ready to execute
 Last activity: 2026-04-28
 
@@ -62,6 +62,7 @@ Progress: [████████░░] 76%
 | Phase 18 P04 | 4min | 2 tasks | 4 files |
 | Phase 18 P5 | 3min | 2 tasks | 3 files |
 | Phase 18 P06 | 13min | 2 tasks | 12 files |
+| Phase 18 P07 | 4min | 4 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,10 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent milestone-level d
 - [Phase 18]: [Phase 18-06]: DictationCoordinator behavior complete -- begin/end/cancel/escape/hold-release/preWarm + helpers + DEBUG test surface. inlineTranscript: String? added to LibraryEntry (D-12, Codable backward-compat). LibraryEntryRow shows mic.fill for dictation entries (D-11).
 - [Phase 18]: [Phase 18-06]: PasteboardTestLock actor mutex pattern -- Swift Testing's .serialized trait orders tests within a suite, but multiple suites still run in parallel and share NSPasteboard.general. Cross-suite mutex via shared actor lock with continuation queue. All clipboard-touching Phase 18 tests acquire/release before/after pasteboard touches.
 - [Phase 18]: [Phase 18-06]: Output-mode branching as conditionals (if mode == .clipboard || mode == .both) rather than mode-specific subclasses. inlineTranscript = (finalFileURL == nil) ? assembled : nil -- single source of truth based on whether the on-disk file exists. D-15 silent fallback path lands in the inline branch.
+- [Phase 18]: [Phase 18-07]: Settings > Dictation section uses Recorder(for:) initializer (no label arg) inside HStack with custom 12pt Text label, not the Recorder("Hotkey", name:) form. Both forms exist in v2.4.0; bare-init keeps typography consistent with adjacent rows.
+- [Phase 18]: [Phase 18-07]: Folder picker row uses .disabled() AND .opacity(0.5) when output mode is .clipboard, not just .disabled. macOS 26 leaves disabled controls fully opaque otherwise -- the dim is necessary for legible no-op state.
+- [Phase 18]: [Phase 18-07]: AppSettingsDictationPersistenceTests use per-test defer { UserDefaults.standard.removeObject(forKey:) } for cleanup rather than suite-level traits. Simplest correct mechanism; runs even on #expect failure inside @MainActor test bodies.
+- [Phase 18]: [Phase 18-07]: ClipboardRestoreTests cross-suite pasteboard race documented as deferred item rather than fixed in this plan. Pre-existing Plan 18-06 carry-over; Plan 18-07 scope is Settings UI + persistence tests, not Plan 18-06 surface. Suggested fix (migrate to PasteboardTestLock) recorded in deferred-items.md.
 
 ### Pending Todos
 
@@ -118,6 +123,6 @@ Deferred to a later milestone (see PROJECT.md "Future Candidate Goals"):
 
 ## Session Continuity
 
-Last session: 2026-04-28T18:27:19.645Z
-Stopped at: Completed 18-06-PLAN.md
+Last session: 2026-04-28T19:00:00.802Z
+Stopped at: Completed 18-07-PLAN.md
 Resume file: None
