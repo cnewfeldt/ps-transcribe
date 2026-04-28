@@ -1,5 +1,6 @@
 import Testing
 import Foundation
+import AppKit
 @testable import PSTranscribe
 
 /// `.serialized` because several tests rely on Task.sleep timing for cancelRevertTask
@@ -56,6 +57,11 @@ struct DictationCoordinatorStateTests {
     }
 
     @Test @MainActor func toggleSecondTapStops() async {
+        // endDictation writes to NSPasteboard.general; serialize against other
+        // pasteboard-touching tests (ClipboardRestoreTests, DictationCommitFlowTests).
+        await PasteboardTestLock.shared.acquire()
+        defer { Task { await PasteboardTestLock.shared.release() } }
+        defer { NSPasteboard.general.clearContents() }
         let dict = makeCoordinator()
         dict._test_setState(.listening); dict._test_setSessionStartTime(Date()); dict._test_setElapsed(5)
         dict.dictationStore.volatileYouText = "hello"
@@ -108,6 +114,11 @@ struct DictationCoordinatorStateTests {
     }
 
     @Test @MainActor func holdReleaseAfterOneSecondCommits() async {
+        // handleHoldRelease >1s -> endDictation -> NSPasteboard.general write;
+        // serialize against other pasteboard-touching tests.
+        await PasteboardTestLock.shared.acquire()
+        defer { Task { await PasteboardTestLock.shared.release() } }
+        defer { NSPasteboard.general.clearContents() }
         let dict = makeCoordinator()
         dict._test_setState(.listening)
         dict._test_setSessionStartTime(Date().addingTimeInterval(-2.0))

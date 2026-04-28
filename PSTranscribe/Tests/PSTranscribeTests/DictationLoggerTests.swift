@@ -2,7 +2,7 @@ import Testing
 import Foundation
 @testable import PSTranscribe
 
-@Suite("DictationLogger")
+@Suite("DictationLogger", .serialized)
 struct DictationLoggerTests {
 
     private func tempDir() throws -> URL {
@@ -101,6 +101,14 @@ struct DictationLoggerTests {
         let loggerA = DictationLogger()
         let loggerB = DictationLogger()
         try await loggerA.startSession(folderPath: dir.path)
+        // Production filename suffix is millisecond-resolution (`yyyy-MM-dd HH-mm-ss-SSS`).
+        // Two back-to-back startSession calls on different actor instances can land in the
+        // same millisecond on a fast machine. The realistic Pitfall #9 case the production
+        // code defends against is two RAPID-but-distinct user-triggered sessions (the
+        // user cannot fire two hotkeys within sub-millisecond from a single
+        // @MainActor-serialized DictationCoordinator). Use a 2ms gap to ensure the test
+        // exercises the actual production guarantee instead of racing against itself.
+        try await Task.sleep(for: .milliseconds(2))
         try await loggerB.startSession(folderPath: dir.path)
         let urlA = await loggerA.endSession()
         let urlB = await loggerB.endSession()
