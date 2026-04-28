@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: — Standalone Dictation + Model Auto-Update
 status: executing
-stopped_at: Phase 16 context gathered
-last_updated: "2026-04-27T21:38:09.345Z"
+stopped_at: Phase 17 context gathered
+last_updated: "2026-04-28T03:36:21.873Z"
 last_activity: 2026-04-27
 progress:
   total_phases: 4
@@ -96,6 +96,6 @@ Deferred to a later milestone (see PROJECT.md "Future Candidate Goals"):
 
 ## Session Continuity
 
-Last session: 2026-04-27T19:36:48.970Z
-Stopped at: Phase 16 context gathered
-Resume file: .planning/phases/16-foundation/16-CONTEXT.md
+Last session: 2026-04-28T03:36:21.871Z
+Stopped at: Phase 17 context gathered
+Resume file: .planning/phases/17-model-auto-update/17-CONTEXT.md
