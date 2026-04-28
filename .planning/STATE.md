@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: — Standalone Dictation + Model Auto-Update
 status: executing
-stopped_at: Completed 18-03-PLAN.md
-last_updated: "2026-04-28T17:51:14.774Z"
+stopped_at: Completed 18-04-PLAN.md
+last_updated: "2026-04-28T18:00:28.267Z"
 last_activity: 2026-04-28
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 17
-  completed_plans: 12
-  percent: 71
+  completed_plans: 13
+  percent: 76
 ---
 
 # Project State
@@ -35,11 +35,11 @@ See: .planning/PROJECT.md (updated 2026-04-27)
 ## Current Position
 
 Phase: 18 (hotkey-dictation-plain-folder-output) — EXECUTING
-Plan: 4 of 8
+Plan: 5 of 8
 Status: Ready to execute
 Last activity: 2026-04-28
 
-Progress: [███████░░░] 65%
+Progress: [████████░░] 76%
 
 ## Performance Metrics
 
@@ -59,6 +59,7 @@ Progress: [███████░░░] 65%
 | Phase 18 P01 | 3min | 1 tasks | 16 files |
 | Phase 18 P02 | 3min | 2 tasks | 4 files |
 | Phase 18 P03 | 2min | 1 tasks | 2 files |
+| Phase 18 P04 | 4min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,9 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent milestone-level d
 - [Phase 18]: [Phase 18-02]: Removed Thread.isMainThread runtime assertions from onKeyDown/onKeyUp closure tests -- invoking from an @MainActor test body is trivially main-thread; genuine cross-thread Carbon-callback dispatch is verified by manual UAT only.
 - [Phase 18]: [Phase 18-03]: hasActiveSession is non-async computed property on DictationLogger actor (callers await); chose minimal-leak Bool over exposing currentFilePath: URL?. Resolves RESEARCH §3.
 - [Phase 18]: [Phase 18-03]: discardSession() is companion to endSession(): same close-and-clear shape, but unlinks file instead of returning URL. Bounded try? for already-closed-handle (mirrors endSession line 94) and missing-file race (NSFileNoSuchFileError); documented inline as policy not suppression.
+- [Phase 18]: [Phase 18-04]: DictationCoordinator skeleton lands as @Observable @MainActor final class with 6-state Equatable enum (idle, loadingModel, listening, cancellingPending(deadline:), copied, blockedSessionActive). isActive returns true for listening/cancellingPending/loadingModel; false for idle/copied/blockedSessionActive. Wave 2 ships TYPE only; Wave 4 (Plan 18-06) ships begin/end/cancel methods.
+- [Phase 18]: [Phase 18-04]: Internal session-state vars (sessionStartTime, elapsedTimerTask, cancelRevertTask, copiedDismissTask, savedPasteboardItems, postWriteChangeCount, restoreTask) declared at class level (NOT private) so Plan 18-06 can attach begin/end/cancel methods in the SAME file without widening visibility. Plan 18-06 will mark them private once the methods land.
+- [Phase 18]: [Phase 18-04]: SessionCoordinator.anySessionActive now ORs three branches: engine?.isRunning || modelUpdate?.isApplying || dictation?.isActive. DICT-11 mutual-exclusion gate is structurally complete; Plan 18-06's begin path will rely on the predicate for its early-return guard.
 
 ### Pending Todos
 
@@ -105,6 +109,6 @@ Deferred to a later milestone (see PROJECT.md "Future Candidate Goals"):
 
 ## Session Continuity
 
-Last session: 2026-04-28T17:51:14.772Z
-Stopped at: Completed 18-03-PLAN.md
+Last session: 2026-04-28T18:00:01.928Z
+Stopped at: Completed 18-04-PLAN.md
 Resume file: None
