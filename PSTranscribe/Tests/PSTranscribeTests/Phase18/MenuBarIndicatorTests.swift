@@ -5,17 +5,24 @@ import Foundation
 @Suite("MenuBarIndicatorTests")
 struct MenuBarIndicatorTests {
 
-    @Test(.disabled("Pending Plan 18-08 -- menu bar SF Symbol reflects isActive"))
-    @MainActor func menuBarSymbolIsMicFillWhenDictationActive() {
-        // Verified via property exposed for testing OR via grep on PSTranscribeApp.swift containing
-        // `dictationCoordinator.isActive ? "mic.fill" : "book.closed"` (test reads file as string).
-        #expect(Bool(true))
+    /// Path to PSTranscribeApp.swift relative to the test runner's CWD (the package root).
+    private let appSwiftPath = "Sources/PSTranscribe/App/PSTranscribeApp.swift"
+
+    @Test func menuBarSymbolIsMicFillWhenDictationActive() throws {
+        let source = try String(contentsOfFile: appSwiftPath, encoding: .utf8)
+        // The MenuBarExtra label must contain the conditional symbol selection bound to
+        // dictationCoordinator.isActive — DICT-03.
+        #expect(
+            source.contains(#"dictationCoordinator.isActive ? "mic.fill" : "book.closed""#),
+            "MenuBarExtra label must use mic.fill when dictation is active and book.closed otherwise"
+        )
     }
 
-    @Test(.disabled("Pending Plan 18-08 -- symbolEffect.pulse bound to isActive"))
-    @MainActor func symbolEffectPulseBoundToIsActive() {
-        // Source-level grep on PSTranscribeApp.swift contains
-        // `.symbolEffect(.pulse, isActive: dictationCoordinator.isActive)`
-        #expect(Bool(true))
+    @Test func symbolEffectPulseBoundToIsActive() throws {
+        let source = try String(contentsOfFile: appSwiftPath, encoding: .utf8)
+        #expect(
+            source.contains(".symbolEffect(.pulse, isActive: dictationCoordinator.isActive)"),
+            "MenuBarExtra label must apply .symbolEffect(.pulse, isActive:) bound to dictationCoordinator.isActive"
+        )
     }
 }
