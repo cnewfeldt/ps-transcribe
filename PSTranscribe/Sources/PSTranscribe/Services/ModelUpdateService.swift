@@ -74,6 +74,16 @@ final class ModelUpdateService {
         return Int64(values.volumeAvailableCapacityForImportantUsage ?? 0)
     }
 
+    // MARK: - Plan 17-03: apply-step injection points
+
+    /// Test-injectable reload handler. Default nil → real path via transcriptionEngine.reloadModels().
+    /// Tests set this to a closure that simulates success or failure without requiring real FluidAudio models.
+    var reloadHandler: (@MainActor () async throws -> Void)?
+
+    /// Test-injectable session-active gate. Default delegates to sessionCoordinator.anySessionActive.
+    /// Tests override to simulate apply-deferral on active session (D-19).
+    var anySessionActiveProvider: @MainActor () -> Bool = { false }
+
     /// Stored task handle so `cancelDownload()` can propagate cancellation.
     private var downloadTask: Task<Void, Error>?
 
@@ -89,6 +99,11 @@ final class ModelUpdateService {
         self.installedAppVersion = appVersion
             ?? (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String)
             ?? ""
+        // Wire the default anySessionActiveProvider to read from the coordinator.
+        // Tests can replace this closure to simulate apply-deferral without a real session.
+        self.anySessionActiveProvider = { [weak sessionCoordinator] in
+            sessionCoordinator?.anySessionActive ?? false
+        }
     }
 
     // MARK: - Public API
@@ -213,8 +228,9 @@ final class ModelUpdateService {
         do {
             try await downloadTask?.value
             // All files downloaded and SHA-256 verified.
-            // Plan 17-03 takes over from .verifying to perform atomic swap + reload.
+            // Transition through .verifying then hand off to applySwap for the atomic swap.
             updateState = .verifying
+            await applySwap(manifest)
         } catch {
             try? wipeStaging()
             // Treat both Swift CancellationError and URLError.cancelled as user-initiated cancel.
@@ -351,6 +367,141 @@ final class ModelUpdateService {
     private func wipeStaging() throws {
         if FileManager.default.fileExists(atPath: stagingDirectory.path) {
             try FileManager.default.removeItem(at: stagingDirectory)
+        }
+    }
+
+    // MARK: - Plan 17-03: Apply step (atomic swap + reload + persist + rollback)
+
+    /// Performs the apply step: waits for any active session to end, atomically swaps the
+    /// staging directory into production via FileManager.replaceItem, calls reloadModels()
+    /// for hot-swap, persists installedModelVersion, and rotates prior failed-staging dirs.
+    ///
+    /// On reload failure: rolls back by swapping the backup back to production, moves the
+    /// broken new model to a `*-failed-{ISO8601}` forensic directory (D-15), sets .failed.
+    ///
+    /// Per CONTEXT.md D-18 / D-19: isApplying is true ONLY during the swap+reload window
+    /// (after .verifying succeeds, before .applied). False at all other times.
+    func applySwap(_ manifest: ModelManifest) async {
+        // 1. Apply-deferral gate (D-19 / MODEL-07): wait until no session is active.
+        while anySessionActiveProvider() {
+            try? await Task.sleep(for: .milliseconds(500))
+        }
+
+        isApplying = true
+        defer { isApplying = false }
+        updateState = .applying
+
+        // 2. Rotate any prior failed-staging directory (D-15 — keep one cycle of forensics).
+        rotatePriorFailedStaging()
+
+        // 3. Atomic directory swap via moveItem (uses rename(2) on APFS — atomic per T-17-03-01).
+        //    Strategy: move production -> backup, move staging -> production.
+        //    On reload failure: move production (broken) -> failed dir, move backup -> production.
+        let timestamp = ISO8601DateFormatter().string(from: Date())
+            .replacingOccurrences(of: ":", with: "")
+        let backupURL = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3-backup-\(timestamp)")
+
+        // Move production to backup (preserves old model for rollback).
+        // If production does not exist yet (fresh install path), skip the backup move.
+        let productionExisted = FileManager.default.fileExists(atPath: modelDirectory.path)
+        if productionExisted {
+            do {
+                try FileManager.default.moveItem(at: modelDirectory, to: backupURL)
+            } catch {
+                log.error("Could not move production to backup: \(error.localizedDescription, privacy: .public)")
+                moveStagingToFailed(error: error)
+                updateState = .failed(message: "Swap failed (backup step): \(error.localizedDescription)")
+                return
+            }
+        }
+
+        // Move staging into production position.
+        do {
+            try FileManager.default.moveItem(at: stagingDirectory, to: modelDirectory)
+        } catch {
+            // Staging move failed — restore backup if it was created.
+            log.error("Could not move staging to production: \(error.localizedDescription, privacy: .public)")
+            if productionExisted {
+                try? FileManager.default.moveItem(at: backupURL, to: modelDirectory)
+            }
+            moveStagingToFailed(error: error)
+            updateState = .failed(message: "Swap failed (staging step): \(error.localizedDescription)")
+            return
+        }
+
+        // 4. Hot-swap models (CONTEXT.md D-18; RESEARCH reloadModels pattern).
+        do {
+            if let handler = reloadHandler {
+                try await handler()
+            } else {
+                try await transcriptionEngine?.reloadModels()
+            }
+        } catch {
+            // Reload failed — roll back the swap so the previous model is restored (T-17-03-02).
+            log.error("reloadModels failed after swap; rolling back: \(error.localizedDescription, privacy: .public)")
+            do {
+                try rollbackSwap(backupURL: backupURL, productionExisted: productionExisted)
+            } catch let rollbackError {
+                log.error("Rollback also failed: \(rollbackError.localizedDescription, privacy: .public)")
+            }
+            updateState = .failed(message: "Reload failed: \(error.localizedDescription)")
+            return
+        }
+
+        // 5. Cleanup the backup directory (best-effort; production is stable, backup is stale).
+        try? FileManager.default.removeItem(at: backupURL)
+
+        // 6. Persist new version (MODEL-05). Written LAST — only after reload succeeds (T-17-03-08).
+        settings?.installedModelVersion = manifest.version
+
+        // 7. Transition to .applied.
+        updateState = .applied(version: manifest.version)
+        log.info("Model update applied successfully: \(manifest.version, privacy: .public)")
+    }
+
+    /// Polls every 500ms until anySessionActiveProvider returns false.
+    /// Called by applySwap when a session is active at apply time (D-19).
+    private func waitForSessionEnd() async {
+        while anySessionActiveProvider() {
+            try? await Task.sleep(for: .milliseconds(500))
+        }
+    }
+
+    /// Removes any existing `parakeet-tdt-0.6b-v3-failed-*` directory under modelsRoot
+    /// so at most one forensic directory exists at any time (D-15 — one cycle of visibility).
+    private func rotatePriorFailedStaging() {
+        guard let entries = try? FileManager.default.contentsOfDirectory(
+            at: modelsRoot, includingPropertiesForKeys: nil) else { return }
+        for entry in entries where entry.lastPathComponent.hasPrefix("parakeet-tdt-0.6b-v3-failed-") {
+            try? FileManager.default.removeItem(at: entry)
+        }
+    }
+
+    /// After the swap succeeds but reloadModels fails, reverses the swap:
+    /// moves the broken new model from production to a `*-failed-{ISO}` forensic dir,
+    /// then moves the backup (prior good model) back to production.
+    /// If `productionExisted` is false (fresh install path), the backup does not exist —
+    /// in that case we just move the broken model to failed and leave production absent.
+    private func rollbackSwap(backupURL: URL, productionExisted: Bool) throws {
+        let timestamp = ISO8601DateFormatter().string(from: Date())
+            .replacingOccurrences(of: ":", with: "")
+        let failedDir = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3-failed-\(timestamp)")
+        // Move broken new model out of production into forensic dir
+        try FileManager.default.moveItem(at: modelDirectory, to: failedDir)
+        // Restore prior good model from backup (if one existed)
+        if productionExisted {
+            try FileManager.default.moveItem(at: backupURL, to: modelDirectory)
+        }
+    }
+
+    /// Moves the staging directory to a `*-failed-{ISO}` forensic path when the swap itself
+    /// fails (production is untouched in this case). Staging remains as the failed artifact.
+    private func moveStagingToFailed(error: Error) {
+        let timestamp = ISO8601DateFormatter().string(from: Date())
+            .replacingOccurrences(of: ":", with: "")
+        let failedDir = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3-failed-\(timestamp)")
+        if FileManager.default.fileExists(atPath: stagingDirectory.path) {
+            try? FileManager.default.moveItem(at: stagingDirectory, to: failedDir)
         }
     }
 

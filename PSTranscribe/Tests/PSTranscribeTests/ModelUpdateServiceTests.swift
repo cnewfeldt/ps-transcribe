@@ -340,6 +340,9 @@ struct ModelUpdateServiceTests {
 
         let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
         service.modelsRootOverride = modelsRoot
+        // Plan 17-03: inject no-op reload handler so applySwap proceeds without real FluidAudio models.
+        service.reloadHandler = { }
+        service.anySessionActiveProvider = { false }
         service.updateState = .updateAvailable(
             version: manifest.version,
             sizeBytes: manifest.total_size_bytes,
@@ -365,18 +368,18 @@ struct ModelUpdateServiceTests {
         await service.downloadAndApply()
         observeTask.cancel()
 
-        // After completion, state should be .verifying (Plan 17-03 takes over for swap)
-        if case .verifying = service.updateState {
-            // Expected
+        // After the full end-to-end flow (Plan 17-03 wired applySwap), state is .applied.
+        if case .applied(let ver) = service.updateState {
+            #expect(ver == manifest.version)
         } else {
-            Issue.record("Expected .verifying after successful download, got \(service.updateState)")
+            Issue.record("Expected .applied after successful download+apply, got \(service.updateState)")
         }
 
-        // Staging directory should exist and contain both files
-        let stagingDir = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3-staging")
-        #expect(FileManager.default.fileExists(atPath: stagingDir.path))
-        #expect(FileManager.default.fileExists(atPath: stagingDir.appendingPathComponent("fileA.bin").path))
-        #expect(FileManager.default.fileExists(atPath: stagingDir.appendingPathComponent("fileB.bin").path))
+        // Staging was moved into production -- production directory contains the downloaded files.
+        let productionDir = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3")
+        #expect(FileManager.default.fileExists(atPath: productionDir.path))
+        #expect(FileManager.default.fileExists(atPath: productionDir.appendingPathComponent("fileA.bin").path))
+        #expect(FileManager.default.fileExists(atPath: productionDir.appendingPathComponent("fileB.bin").path))
     }
 
     @Test @MainActor func downloadFileWritesToStagingPath() async throws {
@@ -402,6 +405,9 @@ struct ModelUpdateServiceTests {
 
         let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
         service.modelsRootOverride = modelsRoot
+        // Plan 17-03: inject no-op reload handler so applySwap proceeds without real FluidAudio models.
+        service.reloadHandler = { }
+        service.anySessionActiveProvider = { false }
         service.updateState = .updateAvailable(
             version: manifest.version,
             sizeBytes: manifest.total_size_bytes,
@@ -410,12 +416,13 @@ struct ModelUpdateServiceTests {
 
         await service.downloadAndApply()
 
-        let stagingDir = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3-staging")
-        // Each file should be at stagingDirectory.appendingPathComponent(manifest.files[i].name)
+        // After the full end-to-end flow, staging is moved into production.
+        // Files should be at productionDirectory.appendingPathComponent(manifest.files[i].name)
+        let productionDir = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3")
         for f in files {
-            let dest = stagingDir.appendingPathComponent(f.name)
+            let dest = productionDir.appendingPathComponent(f.name)
             #expect(FileManager.default.fileExists(atPath: dest.path),
-                    "Expected staging file at \(dest.path)")
+                    "Expected file at production path \(dest.path)")
         }
     }
 
@@ -742,9 +749,268 @@ struct ModelUpdateServiceTests {
         _ = etcPasswd
     }
 
-    // MARK: - Stub-pending tests for Plan 17-03
+    // MARK: - Plan 17-03 tests: applySwap, rollback, deferral, version persist
 
-    // Plan 17-03 (apply + reload + deferral):
-    //   @Test func persistsVersion() async { ... }
-    //   @Test func deferredApplyOnSession() async { ... }
+    // MARK: - Helpers for Plan 17-03 tests
+
+    /// Creates a temp production directory with a marker file named `markerName`.
+    fileprivate func makeProductionDir(root: URL, markerName: String) throws -> URL {
+        let productionDir = root.appendingPathComponent("parakeet-tdt-0.6b-v3")
+        try FileManager.default.createDirectory(at: productionDir, withIntermediateDirectories: true)
+        let marker = productionDir.appendingPathComponent(markerName)
+        FileManager.default.createFile(atPath: marker.path, contents: Data(markerName.utf8))
+        return productionDir
+    }
+
+    /// Creates a temp staging directory with a marker file named `markerName`.
+    fileprivate func makeStagingDir(root: URL, markerName: String) throws -> URL {
+        let stagingDir = root.appendingPathComponent("parakeet-tdt-0.6b-v3-staging")
+        try FileManager.default.createDirectory(at: stagingDir, withIntermediateDirectories: true)
+        let marker = stagingDir.appendingPathComponent(markerName)
+        FileManager.default.createFile(atPath: marker.path, contents: Data(markerName.utf8))
+        return stagingDir
+    }
+
+    /// Returns true if a file named `name` exists inside `dir`.
+    fileprivate func dirContains(_ dir: URL, file name: String) -> Bool {
+        FileManager.default.fileExists(atPath: dir.appendingPathComponent(name).path)
+    }
+
+    /// Finds any directory under `root` whose name contains `substring`.
+    fileprivate func findDir(under root: URL, containing substring: String) -> URL? {
+        guard let entries = try? FileManager.default.contentsOfDirectory(at: root,
+                                                                         includingPropertiesForKeys: nil) else { return nil }
+        return entries.first { $0.lastPathComponent.contains(substring) }
+    }
+
+    /// Sets service state to .verifying (bypass the download path for applySwap tests).
+    @MainActor fileprivate func setVerifying(_ service: ModelUpdateService, version: String = "20260601") {
+        service.updateState = .verifying
+    }
+
+    // MARK: - Plan 17-03 actual tests
+
+    /// After a successful apply (download stub + no-op reload), installedModelVersion == manifest.version.
+    @Test @MainActor func persistsVersion() async throws {
+        Self.clearV17Keys()
+        let modelsRoot = try makeTempModelsRoot()
+        defer {
+            Self.clearV17Keys()
+            MockURLProtocol.responder = nil
+            try? FileManager.default.removeItem(at: modelsRoot)
+        }
+
+        // Pre-create production and staging directories with marker content
+        _ = try makeProductionDir(root: modelsRoot, markerName: "OLD")
+        _ = try makeStagingDir(root: modelsRoot, markerName: "NEW")
+
+        let fileBody = Data(repeating: 0xAB, count: 256)
+        let files: [(name: String, body: Data)] = [("NEW", fileBody)]
+        let manifest = makeManifest(files: files, version: "20260601")
+        installManifestAndFileResponder(manifest: manifest, fileBodies: files)
+
+        let settings = AppSettings()
+        settings.installedModelVersion = "20260427"
+        let coordinator = SessionCoordinator()
+
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        service.modelsRootOverride = modelsRoot
+        // No-op reload handler -- no real FluidAudio required
+        service.reloadHandler = { }
+        // Session not active -- swap should proceed immediately
+        service.anySessionActiveProvider = { false }
+        service.updateState = .updateAvailable(
+            version: manifest.version,
+            sizeBytes: manifest.total_size_bytes,
+            releasedAt: nil
+        )
+        coordinator.modelUpdate = service
+
+        // Run the full downloadAndApply pipeline (network mock provides manifest + files)
+        await service.downloadAndApply()
+
+        // installedModelVersion must be updated to the new manifest version
+        #expect(settings.installedModelVersion == "20260601",
+                "installedModelVersion must be persisted after successful apply; got '\(settings.installedModelVersion)'")
+        // State should be .applied
+        if case .applied(let ver) = service.updateState {
+            #expect(ver == "20260601")
+        } else {
+            Issue.record("Expected .applied after successful apply, got \(service.updateState)")
+        }
+    }
+
+    /// Atomic swap: after a successful applySwap, the production directory contains the NEW
+    /// marker and the staging directory no longer exists.
+    @Test @MainActor func applySwapAtomicallyReplaces() async throws {
+        Self.clearV17Keys()
+        let modelsRoot = try makeTempModelsRoot()
+        defer {
+            Self.clearV17Keys()
+            try? FileManager.default.removeItem(at: modelsRoot)
+        }
+
+        _ = try makeProductionDir(root: modelsRoot, markerName: "OLD")
+        _ = try makeStagingDir(root: modelsRoot, markerName: "NEW")
+
+        let settings = AppSettings()
+        let service = ModelUpdateService(settings: settings, appVersion: "2.1.1")
+        service.modelsRootOverride = modelsRoot
+        service.reloadHandler = { }
+        service.anySessionActiveProvider = { false }
+        setVerifying(service)
+
+        let manifest = makeManifest(files: [("NEW", Data("NEW".utf8))], version: "20260601")
+        await service.applySwap(manifest)
+
+        let productionDir = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3")
+        let stagingDir = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3-staging")
+
+        // Production must now contain the NEW marker
+        #expect(dirContains(productionDir, file: "NEW"),
+                "Production directory must contain NEW marker after atomic swap")
+        // Production must NOT contain the OLD marker
+        #expect(!dirContains(productionDir, file: "OLD"),
+                "Production directory must NOT contain OLD marker after swap")
+        // Staging directory must be gone (was replaced into production)
+        #expect(!FileManager.default.fileExists(atPath: stagingDir.path),
+                "Staging directory must not exist after successful swap")
+    }
+
+    /// When the injected reloadHandler throws, the rollback path restores the production
+    /// directory to its original content, creates a *-failed-* forensics dir, and sets .failed.
+    @Test @MainActor func failedReloadRollsBack() async throws {
+        Self.clearV17Keys()
+        let modelsRoot = try makeTempModelsRoot()
+        defer {
+            Self.clearV17Keys()
+            try? FileManager.default.removeItem(at: modelsRoot)
+        }
+
+        _ = try makeProductionDir(root: modelsRoot, markerName: "OLD")
+        _ = try makeStagingDir(root: modelsRoot, markerName: "NEW")
+
+        let settings = AppSettings()
+        let service = ModelUpdateService(settings: settings, appVersion: "2.1.1")
+        service.modelsRootOverride = modelsRoot
+        service.reloadHandler = { throw NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "reload failed"]) }
+        service.anySessionActiveProvider = { false }
+        setVerifying(service)
+
+        let manifest = makeManifest(files: [("NEW", Data("NEW".utf8))], version: "20260601")
+        await service.applySwap(manifest)
+
+        let productionDir = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3")
+
+        // Production must be rolled back to OLD content
+        #expect(dirContains(productionDir, file: "OLD"),
+                "Production directory must be restored to OLD after reload failure")
+        #expect(!dirContains(productionDir, file: "NEW"),
+                "Production directory must NOT contain NEW after rollback")
+
+        // A *-failed-* forensic directory must exist
+        let failedDir = findDir(under: modelsRoot, containing: "-failed-")
+        #expect(failedDir != nil, "A *-failed-* forensic directory must exist after failed reload")
+
+        // State must be .failed
+        if case .failed = service.updateState {
+            // Expected
+        } else {
+            Issue.record("Expected .failed state after reload failure, got \(service.updateState)")
+        }
+
+        // installedModelVersion must NOT be updated
+        #expect(settings.installedModelVersion == "",
+                "installedModelVersion must not be written after rollback")
+    }
+
+    /// Before the swap, any pre-existing *-failed-* directory is removed (D-15 rotation).
+    /// After a successful apply, the prior failed dir is gone.
+    @Test @MainActor func priorFailedDirectoryRotated() async throws {
+        Self.clearV17Keys()
+        let modelsRoot = try makeTempModelsRoot()
+        defer {
+            Self.clearV17Keys()
+            try? FileManager.default.removeItem(at: modelsRoot)
+        }
+
+        // Pre-create a prior failed directory (simulating a previous failed update)
+        let priorFailedDir = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3-failed-20260101T000000Z")
+        try FileManager.default.createDirectory(at: priorFailedDir, withIntermediateDirectories: true)
+        FileManager.default.createFile(atPath: priorFailedDir.appendingPathComponent("oldstuff").path,
+                                       contents: Data("old".utf8))
+
+        _ = try makeProductionDir(root: modelsRoot, markerName: "OLD")
+        _ = try makeStagingDir(root: modelsRoot, markerName: "NEW")
+
+        let settings = AppSettings()
+        let service = ModelUpdateService(settings: settings, appVersion: "2.1.1")
+        service.modelsRootOverride = modelsRoot
+        service.reloadHandler = { }
+        service.anySessionActiveProvider = { false }
+        setVerifying(service)
+
+        let manifest = makeManifest(files: [("NEW", Data("NEW".utf8))], version: "20260601")
+        await service.applySwap(manifest)
+
+        // The prior *-failed-* dir must be gone
+        #expect(!FileManager.default.fileExists(atPath: priorFailedDir.path),
+                "Prior *-failed-* directory must be removed on successful update (D-15 rotation)")
+
+        // And the apply should have succeeded
+        if case .applied = service.updateState {
+            // Expected
+        } else {
+            Issue.record("Expected .applied state, got \(service.updateState)")
+        }
+    }
+
+    /// When anySessionActiveProvider returns true, the swap does NOT proceed immediately.
+    /// Production directory stays unchanged until provider returns false.
+    @Test @MainActor func applyDoesNotProceedWithSessionActive() async throws {
+        Self.clearV17Keys()
+        let modelsRoot = try makeTempModelsRoot()
+        defer {
+            Self.clearV17Keys()
+            try? FileManager.default.removeItem(at: modelsRoot)
+        }
+
+        _ = try makeProductionDir(root: modelsRoot, markerName: "OLD")
+        _ = try makeStagingDir(root: modelsRoot, markerName: "NEW")
+
+        let settings = AppSettings()
+        let service = ModelUpdateService(settings: settings, appVersion: "2.1.1")
+        service.modelsRootOverride = modelsRoot
+        service.reloadHandler = { }
+
+        // Session is active -- swap must not proceed
+        service.anySessionActiveProvider = { true }
+        setVerifying(service)
+
+        let manifest = makeManifest(files: [("NEW", Data("NEW".utf8))], version: "20260601")
+
+        // Start applySwap in a background task (it will block on waitForSessionEnd)
+        let swapTask = Task { await service.applySwap(manifest) }
+
+        // Give the task a moment to start polling
+        try await Task.sleep(for: .milliseconds(150))
+
+        let productionDir = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3")
+
+        // Production must still contain OLD -- swap has not happened yet
+        #expect(dirContains(productionDir, file: "OLD"),
+                "Production directory must be unchanged while session is active")
+        #expect(!dirContains(productionDir, file: "NEW"),
+                "NEW must not appear in production while session is active")
+
+        // Now allow the swap by flipping the provider to false
+        service.anySessionActiveProvider = { false }
+
+        // Wait for the swap task to complete
+        await swapTask.value
+
+        // Now production must contain NEW
+        #expect(dirContains(productionDir, file: "NEW"),
+                "Production directory must contain NEW after session ends and swap completes")
+    }
 }
