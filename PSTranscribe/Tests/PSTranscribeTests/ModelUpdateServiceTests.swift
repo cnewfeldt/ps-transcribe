@@ -1,5 +1,6 @@
 import Testing
 import Foundation
+import CryptoKit
 @testable import PSTranscribe
 
 @Suite("ModelUpdateService", .serialized)
@@ -232,14 +233,482 @@ struct ModelUpdateServiceTests {
         #expect(responderInvoked == true, "Forced check must bypass disabled flag")
     }
 
-    // MARK: - Stub-pending tests for Plans 17-02 / 17-03
+    // MARK: - Plan 17-02 tests: download pipeline, cancel, checksum, disk-space
 
-    // Plan 17-02 (download + cancel + disk-space):
-    //   @Test func downloadProgress() async { ... }
-    //   @Test func cancelCleanup() async { ... }
-    //   @Test func checksumMismatchRollsBack() async { ... }
-    //   @Test func insufficientDiskSpace() async { ... }
-    //
+    // MARK: - Helpers for Plan 17-02 tests
+
+    /// Computes the lowercase hex SHA-256 of a Data blob.
+    fileprivate func sha256Hex(_ data: Data) -> String {
+        let digest = SHA256.hash(data: data)
+        return digest.map { String(format: "%02x", $0) }.joined()
+    }
+
+    /// Builds a `ModelManifest` with N files of the given test bodies. Computes correct SHAs.
+    fileprivate func makeManifest(
+        files: [(name: String, body: Data)],
+        version: String = "20260601",
+        minAppVersion: String = "1.0.0"
+    ) -> ModelManifest {
+        let manifestFiles = files.map { f in
+            ModelManifest.ManifestFile(
+                name: f.name,
+                url: "https://huggingface.co/test/resolve/main/\(f.name)",
+                sha256: sha256Hex(f.body),
+                size: Int64(f.body.count)
+            )
+        }
+        let total = files.reduce(Int64(0)) { $0 + Int64($1.body.count) }
+        return ModelManifest(
+            model_id: "parakeet-tdt-0.6b-v3-coreml",
+            version: version,
+            min_app_version: minAppVersion,
+            total_size_bytes: total,
+            released_at: nil,
+            files: manifestFiles
+        )
+    }
+
+    /// Deletes the staging directory from ~/Library/Application Support/FluidAudio/Models/ tree.
+    fileprivate static func cleanupStagingDir(modelsRoot: URL? = nil) {
+        let root: URL
+        if let override = modelsRoot {
+            root = override
+        } else {
+            let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            root = appSupport.appendingPathComponent("FluidAudio/Models")
+        }
+        let staging = root.appendingPathComponent("parakeet-tdt-0.6b-v3-staging")
+        try? FileManager.default.removeItem(at: staging)
+    }
+
+    /// Creates a sandboxed temp models root directory for tests that do file I/O.
+    fileprivate func makeTempModelsRoot() throws -> URL {
+        let tmp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ModelUpdateServiceTests-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
+        return tmp
+    }
+
+    /// Installs a MockURLProtocol responder that:
+    /// - Returns the encoded manifest JSON for the manifest URL
+    /// - Returns the matching body Data for each file URL
+    fileprivate func installManifestAndFileResponder(manifest: ModelManifest, fileBodies: [(name: String, body: Data)]) {
+        let manifestURL = "https://raw.githubusercontent.com/cnewfeldt/ps-transcribe-releases/main/model-manifest.json"
+        let encodedManifest = try! JSONEncoder().encode(manifest)
+        let fileMap: [String: Data] = Dictionary(uniqueKeysWithValues: fileBodies.map { f in
+            ("https://huggingface.co/test/resolve/main/\(f.name)", f.body)
+        })
+
+        MockURLProtocol.responder = { request in
+            let urlStr = request.url!.absoluteString
+            if urlStr == manifestURL {
+                let response = HTTPURLResponse(url: request.url!, statusCode: 200,
+                                              httpVersion: "HTTP/1.1", headerFields: nil)!
+                return (response, encodedManifest)
+            } else if let body = fileMap[urlStr] {
+                let response = HTTPURLResponse(url: request.url!, statusCode: 200,
+                                              httpVersion: "HTTP/1.1", headerFields: nil)!
+                return (response, body)
+            } else {
+                throw URLError(.badURL)
+            }
+        }
+    }
+
+    // MARK: - Plan 17-02 actual tests
+
+    @Test @MainActor func downloadProgress() async throws {
+        Self.clearV17Keys()
+        let modelsRoot = try makeTempModelsRoot()
+        defer {
+            Self.clearV17Keys()
+            MockURLProtocol.responder = nil
+            try? FileManager.default.removeItem(at: modelsRoot)
+        }
+
+        let fileA = Data(repeating: 0xAA, count: 2048)
+        let fileB = Data(repeating: 0xBB, count: 2048)
+        let files: [(name: String, body: Data)] = [
+            ("fileA.bin", fileA),
+            ("fileB.bin", fileB)
+        ]
+        let manifest = makeManifest(files: files)
+
+        let settings = AppSettings()
+        settings.installedModelVersion = "20260427"
+        installManifestAndFileResponder(manifest: manifest, fileBodies: files)
+
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        service.modelsRootOverride = modelsRoot
+        service.updateState = .updateAvailable(
+            version: manifest.version,
+            sizeBytes: manifest.total_size_bytes,
+            releasedAt: nil
+        )
+
+        // Track states during download
+        var sawDownloadingWithProgress = false
+        var lastProgress = -1.0
+
+        // Observe state changes during download by polling in a concurrent task
+        let observeTask = Task {
+            for _ in 0..<200 {
+                await Task.yield()
+                let state = await service.updateState
+                if case .downloading(let progress, _, _) = state {
+                    if progress > 0 { sawDownloadingWithProgress = true }
+                    if progress >= lastProgress { lastProgress = progress }
+                }
+            }
+        }
+
+        await service.downloadAndApply()
+        observeTask.cancel()
+
+        // After completion, state should be .verifying (Plan 17-03 takes over for swap)
+        if case .verifying = service.updateState {
+            // Expected
+        } else {
+            Issue.record("Expected .verifying after successful download, got \(service.updateState)")
+        }
+
+        // Staging directory should exist and contain both files
+        let stagingDir = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3-staging")
+        #expect(FileManager.default.fileExists(atPath: stagingDir.path))
+        #expect(FileManager.default.fileExists(atPath: stagingDir.appendingPathComponent("fileA.bin").path))
+        #expect(FileManager.default.fileExists(atPath: stagingDir.appendingPathComponent("fileB.bin").path))
+    }
+
+    @Test @MainActor func downloadFileWritesToStagingPath() async throws {
+        Self.clearV17Keys()
+        let modelsRoot = try makeTempModelsRoot()
+        defer {
+            Self.clearV17Keys()
+            MockURLProtocol.responder = nil
+            try? FileManager.default.removeItem(at: modelsRoot)
+        }
+
+        let fileA = Data(repeating: 0x11, count: 1024)
+        let fileB = Data(repeating: 0x22, count: 1024)
+        let files: [(name: String, body: Data)] = [
+            ("model/weights.bin", fileA),
+            ("config.json", fileB)
+        ]
+        let manifest = makeManifest(files: files)
+
+        let settings = AppSettings()
+        settings.installedModelVersion = "20260427"
+        installManifestAndFileResponder(manifest: manifest, fileBodies: files)
+
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        service.modelsRootOverride = modelsRoot
+        service.updateState = .updateAvailable(
+            version: manifest.version,
+            sizeBytes: manifest.total_size_bytes,
+            releasedAt: nil
+        )
+
+        await service.downloadAndApply()
+
+        let stagingDir = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3-staging")
+        // Each file should be at stagingDirectory.appendingPathComponent(manifest.files[i].name)
+        for f in files {
+            let dest = stagingDir.appendingPathComponent(f.name)
+            #expect(FileManager.default.fileExists(atPath: dest.path),
+                    "Expected staging file at \(dest.path)")
+        }
+    }
+
+    @Test @MainActor func cancelCleanup() async throws {
+        Self.clearV17Keys()
+        let modelsRoot = try makeTempModelsRoot()
+        defer {
+            Self.clearV17Keys()
+            MockURLProtocol.responder = nil
+            try? FileManager.default.removeItem(at: modelsRoot)
+        }
+
+        // Use several small files so we have multiple iterations — gives cancellation time to land
+        let files: [(name: String, body: Data)] = (0..<5).map { i in
+            ("file\(i).bin", Data(repeating: UInt8(i), count: 512))
+        }
+        let manifest = makeManifest(files: files)
+        installManifestAndFileResponder(manifest: manifest, fileBodies: files)
+
+        let settings = AppSettings()
+        settings.installedModelVersion = "20260427"
+
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        service.modelsRootOverride = modelsRoot
+        service.updateState = .updateAvailable(
+            version: manifest.version,
+            sizeBytes: manifest.total_size_bytes,
+            releasedAt: nil
+        )
+
+        // Spawn download and cancel on the next yield so cancellation lands early
+        let downloadTask = Task { await service.downloadAndApply() }
+        Task {
+            await Task.yield()
+            service.cancelDownload()
+        }
+        await downloadTask.value
+
+        // After cancellation: state should be .idle or .updateAvailable (not .downloading/.verifying)
+        let state = service.updateState
+        switch state {
+        case .idle, .updateAvailable:
+            break // Expected
+        default:
+            Issue.record("Expected .idle or .updateAvailable after cancel, got \(state)")
+        }
+
+        // Staging directory must NOT exist after cancellation (cleaned up within ~10ms)
+        let stagingDir = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3-staging")
+        #expect(!FileManager.default.fileExists(atPath: stagingDir.path),
+                "Staging directory must be wiped after cancellation")
+    }
+
+    @Test @MainActor func checksumMismatchRollsBack() async throws {
+        Self.clearV17Keys()
+        let modelsRoot = try makeTempModelsRoot()
+        defer {
+            Self.clearV17Keys()
+            MockURLProtocol.responder = nil
+            try? FileManager.default.removeItem(at: modelsRoot)
+        }
+
+        let realBody = Data(repeating: 0xCC, count: 1024)
+        // Build manifest with a deliberately wrong SHA-256
+        let badManifestFiles = [
+            ModelManifest.ManifestFile(
+                name: "weights.bin",
+                url: "https://huggingface.co/test/resolve/main/weights.bin",
+                sha256: String(repeating: "a", count: 64), // wrong checksum
+                size: Int64(realBody.count)
+            )
+        ]
+        let manifest = ModelManifest(
+            model_id: "parakeet-tdt-0.6b-v3-coreml",
+            version: "20260601",
+            min_app_version: "1.0.0",
+            total_size_bytes: Int64(realBody.count),
+            released_at: nil,
+            files: badManifestFiles
+        )
+        let encodedManifest = try JSONEncoder().encode(manifest)
+        let manifestURL = "https://raw.githubusercontent.com/cnewfeldt/ps-transcribe-releases/main/model-manifest.json"
+
+        MockURLProtocol.responder = { request in
+            let urlStr = request.url!.absoluteString
+            if urlStr == manifestURL {
+                let response = HTTPURLResponse(url: request.url!, statusCode: 200,
+                                              httpVersion: "HTTP/1.1", headerFields: nil)!
+                return (response, encodedManifest)
+            } else if urlStr == "https://huggingface.co/test/resolve/main/weights.bin" {
+                let response = HTTPURLResponse(url: request.url!, statusCode: 200,
+                                              httpVersion: "HTTP/1.1", headerFields: nil)!
+                return (response, realBody) // Real body won't match the bad SHA
+            } else {
+                throw URLError(.badURL)
+            }
+        }
+
+        // Snapshot production model directory (should be untouched)
+        let productionDir = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3")
+        let productionExistedBefore = FileManager.default.fileExists(atPath: productionDir.path)
+
+        let settings = AppSettings()
+        settings.installedModelVersion = "20260427"
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        service.modelsRootOverride = modelsRoot
+        service.updateState = .updateAvailable(
+            version: manifest.version,
+            sizeBytes: manifest.total_size_bytes,
+            releasedAt: nil
+        )
+
+        await service.downloadAndApply()
+
+        // State must be .failed
+        if case .failed(let message) = service.updateState {
+            let lower = message.lowercased()
+            #expect(lower.contains("integrity") || lower.contains("checksum"),
+                    "Failure message should mention integrity or checksum: '\(message)'")
+        } else {
+            Issue.record("Expected .failed after checksum mismatch, got \(service.updateState)")
+        }
+
+        // Staging directory must NOT exist (rolled back)
+        let stagingDir = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3-staging")
+        #expect(!FileManager.default.fileExists(atPath: stagingDir.path),
+                "Staging directory must be wiped after checksum failure")
+
+        // Production directory untouched
+        let productionExistsAfter = FileManager.default.fileExists(atPath: productionDir.path)
+        #expect(productionExistedBefore == productionExistsAfter,
+                "Production model directory must not be modified")
+    }
+
+    @Test @MainActor func insufficientDiskSpace() async throws {
+        Self.clearV17Keys()
+        let modelsRoot = try makeTempModelsRoot()
+        defer {
+            Self.clearV17Keys()
+            MockURLProtocol.responder = nil
+            try? FileManager.default.removeItem(at: modelsRoot)
+        }
+
+        let fileBody = Data(repeating: 0xFF, count: 512)
+        let files: [(name: String, body: Data)] = [("model.bin", fileBody)]
+        let manifest = makeManifest(files: files)
+        installManifestAndFileResponder(manifest: manifest, fileBodies: files)
+
+        let settings = AppSettings()
+        settings.installedModelVersion = "20260427"
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        service.modelsRootOverride = modelsRoot
+        service.updateState = .updateAvailable(
+            version: manifest.version,
+            sizeBytes: manifest.total_size_bytes,
+            releasedAt: nil
+        )
+
+        // Override disk-space provider to simulate very limited free space (100 bytes)
+        service.diskSpaceProvider = { _ in 100 }
+
+        await service.downloadAndApply()
+
+        if case .blocked(.insufficientDiskSpace(let needed, let available)) = service.updateState {
+            #expect(needed > available, "needed (\(needed)) should exceed available (\(available))")
+        } else {
+            Issue.record("Expected .blocked(.insufficientDiskSpace(...)), got \(service.updateState)")
+        }
+    }
+
+    @Test @MainActor func progressIsMonotonic() async throws {
+        Self.clearV17Keys()
+        let modelsRoot = try makeTempModelsRoot()
+        defer {
+            Self.clearV17Keys()
+            MockURLProtocol.responder = nil
+            try? FileManager.default.removeItem(at: modelsRoot)
+        }
+
+        // Use files bigger than 64KB to get multiple chunk callbacks
+        let fileA = Data(repeating: 0xAA, count: 80 * 1024)
+        let fileB = Data(repeating: 0xBB, count: 80 * 1024)
+        let files: [(name: String, body: Data)] = [
+            ("fileA.bin", fileA),
+            ("fileB.bin", fileB)
+        ]
+        let manifest = makeManifest(files: files)
+        installManifestAndFileResponder(manifest: manifest, fileBodies: files)
+
+        let settings = AppSettings()
+        settings.installedModelVersion = "20260427"
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        service.modelsRootOverride = modelsRoot
+        service.updateState = .updateAvailable(
+            version: manifest.version,
+            sizeBytes: manifest.total_size_bytes,
+            releasedAt: nil
+        )
+
+        var progressHistory: [Double] = []
+
+        // Poll state during the download in a concurrent task
+        let monitorTask = Task { @MainActor in
+            for _ in 0..<1000 {
+                if case .downloading(let p, _, _) = service.updateState {
+                    progressHistory.append(p)
+                }
+                await Task.yield()
+            }
+        }
+
+        await service.downloadAndApply()
+        monitorTask.cancel()
+
+        // Verify monotonicity: each value >= previous
+        for i in 1..<progressHistory.count {
+            #expect(progressHistory[i] >= progressHistory[i - 1],
+                    "Progress must be non-decreasing: \(progressHistory[i - 1]) -> \(progressHistory[i]) at index \(i)")
+        }
+    }
+
+    @Test @MainActor func pathTraversalRejected() async throws {
+        Self.clearV17Keys()
+        let modelsRoot = try makeTempModelsRoot()
+        defer {
+            Self.clearV17Keys()
+            MockURLProtocol.responder = nil
+            try? FileManager.default.removeItem(at: modelsRoot)
+        }
+
+        // Manifest with a path-traversal filename
+        let realBody = Data(repeating: 0xDD, count: 256)
+        let maliciousFiles = [
+            ModelManifest.ManifestFile(
+                name: "../../../etc/passwd",
+                url: "https://huggingface.co/test/resolve/main/%2E%2E/evil.bin",
+                sha256: sha256Hex(realBody),
+                size: Int64(realBody.count)
+            )
+        ]
+        let manifest = ModelManifest(
+            model_id: "parakeet-tdt-0.6b-v3-coreml",
+            version: "20260601",
+            min_app_version: "1.0.0",
+            total_size_bytes: Int64(realBody.count),
+            released_at: nil,
+            files: maliciousFiles
+        )
+        let encodedManifest = try JSONEncoder().encode(manifest)
+        let manifestURL = "https://raw.githubusercontent.com/cnewfeldt/ps-transcribe-releases/main/model-manifest.json"
+
+        MockURLProtocol.responder = { request in
+            let response = HTTPURLResponse(url: request.url!, statusCode: 200,
+                                          httpVersion: "HTTP/1.1", headerFields: nil)!
+            return (response, encodedManifest)
+        }
+
+        let settings = AppSettings()
+        settings.installedModelVersion = "20260427"
+        _ = manifestURL // silence unused warning
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        service.modelsRootOverride = modelsRoot
+        service.updateState = .updateAvailable(
+            version: manifest.version,
+            sizeBytes: manifest.total_size_bytes,
+            releasedAt: nil
+        )
+
+        await service.downloadAndApply()
+
+        // Must NOT succeed -- path traversal must produce .failed state
+        if case .failed = service.updateState {
+            // Expected -- path traversal was rejected
+        } else if case .verifying = service.updateState {
+            Issue.record("Path traversal filename was accepted -- staging should not contain files outside staging root")
+        }
+
+        // The passwd file must NOT exist at the traversal target
+        let etcPasswd = URL(fileURLWithPath: "/etc/passwd")
+        // We can't actually modify /etc/passwd (no permission) -- just verify staging is clean
+        let stagingDir = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3-staging")
+        if FileManager.default.fileExists(atPath: stagingDir.path) {
+            // If staging exists, any file inside it must be within the staging subtree
+            let passwdInStaging = stagingDir.appendingPathComponent("../../../etc/passwd")
+            let resolvedPath = passwdInStaging.standardized.path
+            #expect(resolvedPath.hasPrefix(stagingDir.standardized.path),
+                    "Path traversal file must not escape staging directory")
+        }
+        _ = etcPasswd
+    }
+
+    // MARK: - Stub-pending tests for Plan 17-03
+
     // Plan 17-03 (apply + reload + deferral):
     //   @Test func persistsVersion() async { ... }
     //   @Test func deferredApplyOnSession() async { ... }

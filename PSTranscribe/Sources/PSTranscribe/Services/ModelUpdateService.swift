@@ -41,6 +41,19 @@ final class ModelUpdateService {
     /// CFBundleShortVersionString from Bundle.main at init time (the production value).
     private let installedAppVersion: String
 
+    // MARK: - Plan 17-02 injection points (stubs; bodies land in Task 2)
+
+    /// Test-only override for the models root directory. Defaults to nil (real path used).
+    /// Tests set this to a temp directory to sandbox file I/O.
+    var modelsRootOverride: URL?
+
+    /// Test-injectable disk-space provider. Default: real URL.resourceValues lookup.
+    /// Tests override via `service.diskSpaceProvider = { _ in 100 }` for low-disk simulation.
+    var diskSpaceProvider: @Sendable (URL) throws -> Int64 = { url in
+        let values = try url.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
+        return Int64(values.volumeAvailableCapacityForImportantUsage ?? 0)
+    }
+
     init(settings: AppSettings? = nil,
          engine: TranscriptionEngine? = nil,
          sessionCoordinator: SessionCoordinator? = nil,
