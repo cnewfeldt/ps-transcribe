@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: — Standalone Dictation + Model Auto-Update
 status: executing
-stopped_at: Completed 18-02-PLAN.md
-last_updated: "2026-04-28T17:44:48.873Z"
+stopped_at: Completed 18-03-PLAN.md
+last_updated: "2026-04-28T17:51:14.774Z"
 last_activity: 2026-04-28
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 17
-  completed_plans: 11
-  percent: 65
+  completed_plans: 12
+  percent: 71
 ---
 
 # Project State
@@ -35,7 +35,7 @@ See: .planning/PROJECT.md (updated 2026-04-27)
 ## Current Position
 
 Phase: 18 (hotkey-dictation-plain-folder-output) — EXECUTING
-Plan: 3 of 8
+Plan: 4 of 8
 Status: Ready to execute
 Last activity: 2026-04-28
 
@@ -58,6 +58,7 @@ Progress: [███████░░░] 65%
 | v1.2 — Standalone Dictation + Model Auto-Update | 4 (in progress) | TBD | TBD |
 | Phase 18 P01 | 3min | 1 tasks | 16 files |
 | Phase 18 P02 | 3min | 2 tasks | 4 files |
+| Phase 18 P03 | 2min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,8 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent milestone-level d
 - [Phase 18]: [Phase 18-02]: KeyboardShortcuts v2.4.0 Name initializer parameter label is default: (NOT initial: as RESEARCH.md anticipated). Verified directly in .build/checkouts/.../Name.swift:38.
 - [Phase 18]: [Phase 18-02]: GlobalHotkeyService is the @MainActor @Observable wrapper for KeyboardShortcuts; mirrors ModelUpdateService shape. Default Cmd+Shift+D is registered via KeyboardShortcuts.Name.dictateGlobal extension; library handles UserDefaults persistence under prefix KeyboardShortcuts_dictateGlobal.
 - [Phase 18]: [Phase 18-02]: Removed Thread.isMainThread runtime assertions from onKeyDown/onKeyUp closure tests -- invoking from an @MainActor test body is trivially main-thread; genuine cross-thread Carbon-callback dispatch is verified by manual UAT only.
+- [Phase 18]: [Phase 18-03]: hasActiveSession is non-async computed property on DictationLogger actor (callers await); chose minimal-leak Bool over exposing currentFilePath: URL?. Resolves RESEARCH §3.
+- [Phase 18]: [Phase 18-03]: discardSession() is companion to endSession(): same close-and-clear shape, but unlinks file instead of returning URL. Bounded try? for already-closed-handle (mirrors endSession line 94) and missing-file race (NSFileNoSuchFileError); documented inline as policy not suppression.
 
 ### Pending Todos
 
@@ -102,6 +105,6 @@ Deferred to a later milestone (see PROJECT.md "Future Candidate Goals"):
 
 ## Session Continuity
 
-Last session: 2026-04-28T17:44:48.870Z
-Stopped at: Completed 18-02-PLAN.md
+Last session: 2026-04-28T17:51:14.772Z
+Stopped at: Completed 18-03-PLAN.md
 Resume file: None
