@@ -8,13 +8,23 @@ struct PSTranscribeApp: App {
     @State private var settings: AppSettings
     @State private var libraryStore: LibraryStore               // Phase 16, D-12
     @State private var sessionCoordinator: SessionCoordinator   // Phase 16, D-07
+    @State private var modelUpdateService: ModelUpdateService   // Phase 17, D-18
     private let updaterController = AppUpdaterController()
     @State private var notionService = NotionService()
 
     init() {
-        _settings = State(initialValue: AppSettings())
-        _libraryStore = State(initialValue: LibraryStore())                   // Phase 16, D-12
-        _sessionCoordinator = State(initialValue: SessionCoordinator())       // Phase 16, D-07
+        let initialSettings = AppSettings()
+        let initialLibrary = LibraryStore()
+        let initialCoordinator = SessionCoordinator()
+        let initialModelUpdate = ModelUpdateService(
+            settings: initialSettings,
+            engine: nil,                            // late-bound in ContentView .task
+            sessionCoordinator: initialCoordinator
+        )
+        _settings = State(initialValue: initialSettings)
+        _libraryStore = State(initialValue: initialLibrary)
+        _sessionCoordinator = State(initialValue: initialCoordinator)
+        _modelUpdateService = State(initialValue: initialModelUpdate)
     }
 
     /// Opens a bundled license resource (e.g. "LICENSE" or "ThirdPartyLicenses")
@@ -41,7 +51,8 @@ struct PSTranscribeApp: App {
                 settings: settings,
                 notionService: notionService,
                 libraryStore: libraryStore,
-                sessionCoordinator: sessionCoordinator
+                sessionCoordinator: sessionCoordinator,
+                modelUpdateService: modelUpdateService
             )
                 .onAppear {
                     settings.applyScreenShareVisibility()
@@ -61,7 +72,12 @@ struct PSTranscribeApp: App {
             }
         }
         Settings {
-            SettingsView(settings: settings, updater: updaterController.updater, notionService: notionService)
+            SettingsView(
+                settings: settings,
+                updater: updaterController.updater,
+                notionService: notionService,
+                modelUpdateService: modelUpdateService
+            )
         }
         MenuBarExtra {
             Text("PS Transcribe")

@@ -22,6 +22,7 @@ struct ContentView: View {
     let notionService: NotionService
     let libraryStore: LibraryStore                       // Phase 16, D-12: injected from app scope
     let sessionCoordinator: SessionCoordinator           // Phase 16, D-07: injected from app scope
+    let modelUpdateService: ModelUpdateService           // Phase 17, D-18
     @State private var transcriptStore = TranscriptStore()
     @State private var transcriptionEngine: TranscriptionEngine?
     @State private var sessionStore = SessionStore()
@@ -299,8 +300,19 @@ struct ContentView: View {
             // Phase 16, D-05/D-06: late-bind engine to SessionCoordinator. The coordinator is
             // constructed at app scope before the engine exists, so we wire it here.
             sessionCoordinator.engine = transcriptionEngine
+            // Phase 17, D-18 / D-19: late-bind modelUpdate so SessionCoordinator's anySessionActive
+            // can aggregate the engine + modelUpdate sources. Bind the engine reference into the
+            // service so reloadModels() can be invoked after a successful swap.
+            sessionCoordinator.modelUpdate = modelUpdateService
+            modelUpdateService.bindTranscriptionEngine(transcriptionEngine)
             // Pre-download models at launch so recording can start immediately
             await transcriptionEngine?.prepareModels()
+            // Phase 17, D-10: auto-check ~10s after launch IF >24h since last check AND toggle enabled.
+            // Non-forced check; ModelUpdateService internally honors both gates.
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(10))
+                await modelUpdateService.checkForUpdate(force: false)
+            }
             // Scan for sessions left incomplete by a prior crash (STAB-01)
             let incomplete = await sessionStore.scanIncompleteCheckpoints()
             for checkpoint in incomplete {

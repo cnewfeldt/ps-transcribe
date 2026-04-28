@@ -106,6 +106,15 @@ final class ModelUpdateService {
         }
     }
 
+    // MARK: - Late-binding helpers (Plan 17-04)
+
+    /// Late-binds the transcription engine after ContentView constructs it.
+    /// Required because `transcriptionEngine` is `private weak var` and cannot be
+    /// assigned from outside the type. Called from ContentView's `.task` block.
+    func bindTranscriptionEngine(_ engine: TranscriptionEngine?) {
+        self.transcriptionEngine = engine
+    }
+
     // MARK: - Public API
 
     /// Fetch manifest, compare versions, set updateState. NEVER triggers download (MODEL-03).
