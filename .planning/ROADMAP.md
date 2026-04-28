@@ -16,7 +16,7 @@
 ### Phases
 
 - [x] **Phase 16: Foundation** — Internal scaffolding: lift `LibraryStore`, add `SessionCoordinator` with computed `anySessionActive`, add `SessionType.dictation` + `DictationOutputMode` + `DictationHotkeyMode` enums, add v1.2 `AppSettings` keys, add new `DictationLogger` actor (plain markdown writer, no YAML frontmatter). No user-visible change. (completed 2026-04-27)
-- [ ] **Phase 17: Model Auto-Update** — `ModelUpdateService` (manifest fetch, version compare, staging download, SHA-256 verify, atomic rename, rollback), `TranscriptionEngine.reloadModels()` hot-swap, Settings > Model section with version display + update badge + "Check for Updates" button + cancellable progress.
+- [x] **Phase 17: Model Auto-Update** — `ModelUpdateService` (manifest fetch, version compare, staging download, SHA-256 verify, atomic rename, rollback), `TranscriptionEngine.reloadModels()` hot-swap, Settings > Model section with version display + update badge + "Check for Updates" button + cancellable progress. (completed 2026-04-28)
 - [ ] **Phase 18: Hotkey Dictation + Plain-Folder Output** — `DictationHotkeyController` (KeyboardShortcuts/`RegisterEventHotKey`, no permissions needed), `DictationCoordinator`, `DictationWindowController` + `DictationHUD` NSPanel, clipboard write with privacy markers, NSOpenPanel folder picker, `DictationLogger` plain-markdown writer, hotkey recorder UI, dictation settings section.
 - [ ] **Phase 19: Integration & Hardening** — End-to-end validation: mutual exclusion between meeting recording / dictation / model-update apply, model rollback path simulation, privacy-mode HUD verification, SettingsView UX audit (three-folder-picker coherence), full QA checklist.
 
@@ -86,7 +86,7 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 16. Foundation | 4/4 | Complete    | 2026-04-27 |
-| 17. Model Auto-Update | 0/0 | Not started | - |
+| 17. Model Auto-Update | 5/5 | Complete    | 2026-04-28 |
 | 18. Hotkey Dictation + Plain-Folder Output | 0/0 | Not started | - |
 | 19. Integration & Hardening | 0/0 | Not started | - |
 
