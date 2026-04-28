@@ -99,6 +99,30 @@ actor DictationLogger {
         return saved
     }
 
+    /// True when a session is currently open (file handle live, file path set).
+    /// Provides a public surface so callers (e.g. `DictationCoordinator`) can
+    /// branch on lifecycle state without mirroring the actor's private members.
+    /// [Phase 18 RESEARCH.md Open Questions §3]
+    var hasActiveSession: Bool {
+        currentFilePath != nil
+    }
+
+    /// Cancel the active session: close the file handle and DELETE the file.
+    /// Idempotent -- calling after a closed session is a safe no-op.
+    /// Mirrors `endSession` but unlinks instead of returning the URL.
+    /// Used by Phase 18's `DictationCoordinator.cancelDictation()` so a cancelled
+    /// dictation leaves no orphan plain-folder file on disk.
+    /// [Phase 18 D-08: cancel cleanup is atomic]
+    func discardSession() {
+        try? fileHandle?.close()
+        fileHandle = nil
+        if let url = currentFilePath {
+            try? FileManager.default.removeItem(at: url)
+        }
+        currentFilePath = nil
+        sessionStartTime = nil
+    }
+
     // MARK: - Path validation (mirrors TranscriptLogger.validatedVaultPath, lines 40-50)
 
     /// Validates and canonicalizes a user-supplied folder path. Rejects paths containing
