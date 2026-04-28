@@ -5,45 +5,52 @@ import Foundation
 @Suite("AutoNameTests")
 struct AutoNameTests {
 
-    @Test(.disabled("Pending Plan 18-06 -- autoName from first 5 words"))
-    func first5WordsBecomeName() {
-        // autoNameFromTranscript("the quick brown fox jumps over the lazy dog") == "the quick brown fox jumps"
-        #expect(Bool(true))
+    @MainActor
+    private func makeCoordinator() -> DictationCoordinator {
+        let settings = AppSettings()
+        let coordinator = SessionCoordinator()
+        let library = LibraryStore()
+        return DictationCoordinator(settings: settings, sessionCoordinator: coordinator, libraryStore: library)
     }
 
-    @Test(.disabled("Pending Plan 18-06 -- empty transcript falls back to timestamp"))
-    func emptyTranscriptFallsBackToTimestamp() {
-        // autoNameFromTranscript("") starts with "Dictation "
-        #expect(Bool(true))
+    @Test @MainActor func first5WordsBecomeName() {
+        let dict = makeCoordinator()
+        #expect(dict.autoNameFromTranscript("the quick brown fox jumps over the lazy dog") == "the quick brown fox jumps")
     }
 
-    @Test(.disabled("Pending Plan 18-06 -- whitespace-only transcript falls back"))
-    func whitespaceOnlyFallsBackToTimestamp() {
-        // autoNameFromTranscript("   \n\t  ") starts with "Dictation "
-        #expect(Bool(true))
+    @Test @MainActor func emptyTranscriptFallsBackToTimestamp() {
+        let dict = makeCoordinator()
+        #expect(dict.autoNameFromTranscript("").hasPrefix("Dictation "))
     }
 
-    @Test(.disabled("Pending Plan 18-06 -- long single token truncated at 50 chars"))
-    func longSingleTokenTruncatedAt50() {
-        // autoNameFromTranscript(String(repeating: "x", count: 80)) ends with "...", length <= 51
-        #expect(Bool(true))
+    @Test @MainActor func whitespaceOnlyFallsBackToTimestamp() {
+        let dict = makeCoordinator()
+        #expect(dict.autoNameFromTranscript("   \n\t  ").hasPrefix("Dictation "))
     }
 
-    @Test(.disabled("Pending Plan 18-06 -- leading/trailing punctuation stripped"))
-    func leadingTrailingPunctuationStripped() {
-        // autoNameFromTranscript("...hello world...") == "hello world"
-        #expect(Bool(true))
+    @Test @MainActor func longSingleTokenTruncatedAt50() {
+        let dict = makeCoordinator()
+        let result = dict.autoNameFromTranscript(String(repeating: "x", count: 80))
+        #expect(result.hasSuffix("…"))
+        #expect(result.count <= 51)
     }
 
-    @Test(.disabled("Pending Plan 18-06 -- all-punctuation transcript falls back"))
-    func allPunctuationFallsBackToTimestamp() {
-        // autoNameFromTranscript("...,,,") starts with "Dictation "
-        #expect(Bool(true))
+    @Test @MainActor func leadingTrailingPunctuationStripped() {
+        let dict = makeCoordinator()
+        #expect(dict.autoNameFromTranscript("...hello world...") == "hello world")
     }
 
-    @Test(.disabled("Pending Plan 18-06 -- exactly 50 chars not truncated"))
-    func exactly50CharsNotTruncated() {
-        // 50-char input does NOT get "..." appended
-        #expect(Bool(true))
+    @Test @MainActor func allPunctuationFallsBackToTimestamp() {
+        let dict = makeCoordinator()
+        #expect(dict.autoNameFromTranscript("...,,,").hasPrefix("Dictation "))
+    }
+
+    @Test @MainActor func exactly50CharsNotTruncated() {
+        let dict = makeCoordinator()
+        let input = "aaaaaaaaaa bbbbbbbbbb cccccccccc dddddddddd eeeeee"
+        #expect(input.count == 50)
+        let result = dict.autoNameFromTranscript(input)
+        #expect(result == input)
+        #expect(!result.hasSuffix("…"))
     }
 }

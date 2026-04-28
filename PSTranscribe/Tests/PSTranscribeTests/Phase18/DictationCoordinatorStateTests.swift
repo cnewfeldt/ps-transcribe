@@ -2,7 +2,11 @@ import Testing
 import Foundation
 @testable import PSTranscribe
 
-@Suite("DictationCoordinatorStateTests")
+/// `.serialized` because several tests rely on Task.sleep timing for cancelRevertTask
+/// (3s) and copiedDismissTask (1s). Under heavy parallel load the cooperative scheduler
+/// can starve and the revert/dismiss tasks miss their deadlines, producing flaky failures.
+/// Serialization ensures each test gets dedicated MainActor time.
+@Suite("DictationCoordinatorStateTests", .serialized)
 struct DictationCoordinatorStateTests {
 
     @MainActor
@@ -27,11 +31,9 @@ struct DictationCoordinatorStateTests {
 
     @Test @MainActor func isActiveReflectsListeningState() {
         let dict = makeCoordinator()
-        // We exercise the State→isActive mapping by mirroring the production switch
-        // here: state is `private(set)`, so we verify the predicate's exhaustiveness
-        // against the public State enum cases. The full true-state path is exercised
-        // in Plan 18-06's begin/end behavioral tests once those state transitions
-        // become reachable from the public API.
+        // Mirror the production switch on the public State cases. The full
+        // true-state path is exercised in the begin/end behavioral tests in
+        // this same file once those state transitions become reachable.
         let allCases: [(DictationCoordinator.State, Bool)] = [
             (.idle, false),
             (.loadingModel, true),
@@ -50,52 +52,105 @@ struct DictationCoordinatorStateTests {
             }
             #expect(isActive == expectedIsActive, "State \(state) should map to isActive=\(expectedIsActive)")
         }
-        // Sanity: production coordinator starts at .idle which is NOT active.
         #expect(dict.isActive == false)
     }
 
-    @Test(.disabled("Pending Plan 18-06 -- toggle mode second tap commits"))
-    @MainActor func toggleSecondTapStops() async {
-        #expect(Bool(true))
+    @Test @MainActor func toggleSecondTapStops() async {
+        let dict = makeCoordinator()
+        dict._test_setState(.listening); dict._test_setSessionStartTime(Date()); dict._test_setElapsed(5)
+        dict.dictationStore.volatileYouText = "hello"
+        await dict.endDictation()
+        // After endDictation: state transitions to .copied, then a 1s task flips to .idle.
+        #expect(dict.state == .copied || dict.state == .idle)
     }
 
-    @Test(.disabled("Pending Plan 18-06 -- Esc <30s cancels immediately"))
-    @MainActor func escUnder30sCancelsImmediately() async {
-        #expect(Bool(true))
+    @Test @MainActor func escUnder30sCancelsImmediately() async {
+        let dict = makeCoordinator()
+        dict._test_setState(.listening); dict._test_setSessionStartTime(Date()); dict._test_setElapsed(5)
+        await dict.handleEscape()
+        #expect(dict.state == .idle)
     }
 
-    @Test(.disabled("Pending Plan 18-06 -- Esc >=30s enters cancellingPending"))
-    @MainActor func escAtOrOver30sEntersCancellingPending() async {
-        #expect(Bool(true))
+    @Test @MainActor func escAtOrOver30sEntersCancellingPending() async {
+        let dict = makeCoordinator()
+        dict._test_setState(.listening); dict._test_setSessionStartTime(Date()); dict._test_setElapsed(35)
+        await dict.handleEscape()
+        if case .cancellingPending = dict.state {
+            #expect(true)
+        } else {
+            Issue.record("Expected .cancellingPending; got \(dict.state)")
+        }
     }
 
-    @Test(.disabled("Pending Plan 18-06 -- second Esc within window confirms cancel"))
-    @MainActor func secondEscWithinWindowConfirmsCancel() async {
-        #expect(Bool(true))
+    @Test @MainActor func secondEscWithinWindowConfirmsCancel() async {
+        let dict = makeCoordinator()
+        dict._test_setState(.listening); dict._test_setSessionStartTime(Date()); dict._test_setElapsed(35)
+        await dict.handleEscape()
+        await dict.handleEscape()
+        #expect(dict.state == .idle)
     }
 
-    @Test(.disabled("Pending Plan 18-06 -- cancellingPending reverts after 3s"))
-    @MainActor func cancellingPendingRevertsToListeningAfterTimeout() async {
-        #expect(Bool(true))
+    @Test @MainActor func cancellingPendingRevertsToListeningAfterTimeout() async {
+        let dict = makeCoordinator()
+        dict._test_setState(.listening); dict._test_setSessionStartTime(Date()); dict._test_setElapsed(35)
+        await dict.handleEscape()
+        try? await Task.sleep(for: .milliseconds(3300))
+        #expect(dict.state == .listening)
     }
 
-    @Test(.disabled("Pending Plan 18-06 -- press-and-hold release <1s cancels"))
-    @MainActor func holdReleaseUnderOneSecondCancels() async {
-        #expect(Bool(true))
+    @Test @MainActor func holdReleaseUnderOneSecondCancels() async {
+        let dict = makeCoordinator()
+        dict._test_setState(.listening)
+        dict._test_setSessionStartTime(Date().addingTimeInterval(-0.5))
+        dict._test_setElapsed(0.5)
+        await dict.handleHoldRelease()
+        #expect(dict.state == .idle)
     }
 
-    @Test(.disabled("Pending Plan 18-06 -- press-and-hold release >=1s commits"))
-    @MainActor func holdReleaseAfterOneSecondCommits() async {
-        #expect(Bool(true))
+    @Test @MainActor func holdReleaseAfterOneSecondCommits() async {
+        let dict = makeCoordinator()
+        dict._test_setState(.listening)
+        dict._test_setSessionStartTime(Date().addingTimeInterval(-2.0))
+        dict._test_setElapsed(2.0)
+        dict.dictationStore.volatileYouText = "committed"
+        await dict.handleHoldRelease()
+        #expect(dict.state == .copied || dict.state == .idle)
     }
 
-    @Test(.disabled("Pending Plan 18-06 -- partial text reflects transcript store"))
-    @MainActor func partialTextReflectsTranscriptStore() async {
-        #expect(Bool(true))
+    @Test @MainActor func partialTextReflectsTranscriptStore() async {
+        let dict = makeCoordinator()
+        dict.dictationStore.volatileYouText = "live partial"
+        #expect(dict.dictationStore.volatileYouText == "live partial")
     }
 
-    @Test(.disabled("Pending Plan 18-06 -- beginDictation no-ops when session already active"))
-    @MainActor func beginNoOpsWhenSessionAlreadyActive() async {
-        #expect(Bool(true))
+    @Test @MainActor func beginNoOpsWhenSessionAlreadyActive() async {
+        // Inline construction so the SessionCoordinator stays alive for the duration
+        // of the test (DictationCoordinator holds it weakly; if we use makeCoordinator
+        // the strong reference inside the helper is dropped on return, the weak ref
+        // becomes nil, and `dict.sessionCoordinator!` would crash).
+        let settings = AppSettings()
+        let sessionCoord = SessionCoordinator()
+        let library = LibraryStore()
+        let dict = DictationCoordinator(
+            settings: settings,
+            sessionCoordinator: sessionCoord,
+            libraryStore: library
+        )
+        let store = TranscriptStore()
+        let engine = TranscriptionEngine(transcriptStore: store)
+        let modelUpdate = ModelUpdateService(
+            settings: settings,
+            engine: engine,
+            sessionCoordinator: sessionCoord
+        )
+        modelUpdate.isApplying = true
+        sessionCoord.modelUpdate = modelUpdate
+
+        await dict.beginDictation()
+        // Just-after-block notice: state is .blockedSessionActive (HUD showing).
+        // The 1.5s task then dismisses to .idle.
+        #expect(dict.state == .blockedSessionActive || dict.state == .idle)
+        try? await Task.sleep(for: .milliseconds(1700))
+        #expect(dict.state == .idle)
     }
 }

@@ -3,25 +3,62 @@ import Foundation
 import AppKit
 @testable import PSTranscribe
 
-@Suite("ClipboardRestoreTests")
+/// `.serialized` is required because all 3 tests share NSPasteboard.general (system-global state).
+/// Without serialization the tests race: one test's `setString("USER_COPY")` lands while another
+/// is asleep waiting for its restore, and changeCount/string assertions fail unpredictably.
+@Suite("ClipboardRestoreTests", .serialized)
 struct ClipboardRestoreTests {
 
-    @Test(.disabled("Pending Plan 18-06 -- clipboard restore after delay"))
-    @MainActor func clipboardRestoresAfterDelay() async {
-        // Save "OLD" -> endDictation writes "NEW" -> wait > restoreDelay -> pasteboard string == "OLD"
-        #expect(Bool(true))
+    @MainActor
+    private func makeCoordinator(restoreDelay: TimeInterval = 0.5) -> DictationCoordinator {
+        let settings = AppSettings()
+        settings.dictationOutputMode = .clipboard
+        settings.clipboardRestoreDelay = restoreDelay
+        let coordinator = SessionCoordinator()
+        let library = LibraryStore()
+        return DictationCoordinator(settings: settings, sessionCoordinator: coordinator, libraryStore: library)
     }
 
-    @Test(.disabled("Pending Plan 18-06 -- restore skipped when changeCount changed"))
-    @MainActor func clipboardRestoreSkippedWhenChangeCountChanged() async {
-        // Save "OLD" -> endDictation writes "NEW" -> user copies "USER" mid-window
-        // -> restore window passes -> pasteboard string == "USER" (NOT restored to OLD)
-        #expect(Bool(true))
+    @Test @MainActor func clipboardRestoresAfterDelay() async {
+        await PasteboardTestLock.shared.acquire()
+        defer { Task { await PasteboardTestLock.shared.release() } }
+        defer { NSPasteboard.general.clearContents() }
+        let pb = NSPasteboard.general
+        pb.clearContents(); pb.setString("OLD", forType: .string)
+        let dict = makeCoordinator(restoreDelay: 0.3)
+        dict._test_writeToClipboard("NEW")
+        #expect(pb.string(forType: .string) == "NEW")
+        dict._test_scheduleClipboardRestore(after: 0.3)
+        try? await Task.sleep(for: .milliseconds(500))
+        #expect(pb.string(forType: .string) == "OLD")
     }
 
-    @Test(.disabled("Pending Plan 18-06 -- restore window honors clipboardRestoreDelay setting"))
-    @MainActor func restoreDelayHonorsAppSettings() async {
-        // settings.clipboardRestoreDelay = 0.5 -> restore happens after 0.5s, not 3.0s
-        #expect(Bool(true))
+    @Test @MainActor func clipboardRestoreSkippedWhenChangeCountChanged() async {
+        await PasteboardTestLock.shared.acquire()
+        defer { Task { await PasteboardTestLock.shared.release() } }
+        defer { NSPasteboard.general.clearContents() }
+        let pb = NSPasteboard.general
+        pb.clearContents(); pb.setString("OLD", forType: .string)
+        let dict = makeCoordinator(restoreDelay: 0.5)
+        dict._test_writeToClipboard("DICTATION")
+        pb.clearContents(); pb.setString("USER_COPY", forType: .string)
+        dict._test_scheduleClipboardRestore(after: 0.3)
+        try? await Task.sleep(for: .milliseconds(500))
+        #expect(pb.string(forType: .string) == "USER_COPY")
+    }
+
+    @Test @MainActor func restoreDelayHonorsAppSettings() async {
+        await PasteboardTestLock.shared.acquire()
+        defer { Task { await PasteboardTestLock.shared.release() } }
+        defer { NSPasteboard.general.clearContents() }
+        let pb = NSPasteboard.general
+        pb.clearContents(); pb.setString("OLD", forType: .string)
+        let dict = makeCoordinator(restoreDelay: 0.2)
+        dict._test_writeToClipboard("NEW")
+        dict._test_scheduleClipboardRestore(after: 0.2)
+        try? await Task.sleep(for: .milliseconds(100))
+        #expect(pb.string(forType: .string) == "NEW")
+        try? await Task.sleep(for: .milliseconds(300))
+        #expect(pb.string(forType: .string) == "OLD")
     }
 }

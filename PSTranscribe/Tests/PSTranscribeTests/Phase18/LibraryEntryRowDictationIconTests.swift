@@ -11,23 +11,13 @@ struct LibraryEntryRowDictationIconTests {
 
     private let rowSourcePath = "Sources/PSTranscribe/Views/LibraryEntryRow.swift"
 
-    @Test(.disabled("Pending Plan 18-06 -- LibraryEntryRow has .dictation arm"))
-    func libraryEntryRowHandlesDictationCase() throws {
-        // After Wave 4: source contains a `case .dictation:` arm in the iconChip / statusBadge
-        // computed property that selects the SF Symbol for dictation entries.
-        // let source = try String(contentsOfFile: rowSourcePath, encoding: .utf8)
-        // #expect(source.contains("case .dictation:"), "LibraryEntryRow must handle SessionType.dictation")
-        _ = rowSourcePath
-        #expect(Bool(true))
+    @Test func libraryEntryRowHandlesDictationCase() throws {
+        let source = try String(contentsOfFile: rowSourcePath, encoding: .utf8)
+        #expect(source.contains("case .dictation:"), "LibraryEntryRow must handle SessionType.dictation (D-11)")
     }
 
-    @Test(.disabled("Pending Plan 18-06 -- LibraryEntryRow uses mic.fill SF Symbol for dictation"))
-    func libraryEntryRowUsesMicFillForDictation() throws {
-        // After Wave 4: source contains the literal "mic.fill" SF Symbol name within
-        // the LibraryEntryRow body so dictation rows render distinctly (D-11).
-        // let source = try String(contentsOfFile: rowSourcePath, encoding: .utf8)
-        // #expect(source.contains("mic.fill"), "LibraryEntryRow must reference mic.fill SF Symbol for dictation entries")
-        _ = rowSourcePath
-        #expect(Bool(true))
+    @Test func libraryEntryRowUsesMicFillForDictation() throws {
+        let source = try String(contentsOfFile: rowSourcePath, encoding: .utf8)
+        #expect(source.contains("mic.fill"), "LibraryEntryRow must reference mic.fill SF Symbol for dictation entries (D-11)")
     }
 }
