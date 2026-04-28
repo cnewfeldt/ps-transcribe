@@ -9,8 +9,12 @@ struct PSTranscribeApp: App {
     @State private var libraryStore: LibraryStore               // Phase 16, D-12
     @State private var sessionCoordinator: SessionCoordinator   // Phase 16, D-07
     @State private var modelUpdateService: ModelUpdateService   // Phase 17, D-18
+    @State private var globalHotkey: GlobalHotkeyService        // Phase 18
+    @State private var dictationCoordinator: DictationCoordinator  // Phase 18
+    @State private var dictationWindowController: DictationWindowController  // Phase 18
     private let updaterController = AppUpdaterController()
     @State private var notionService = NotionService()
+    @State private var escapeKeyMonitor: Any?
 
     init() {
         let initialSettings = AppSettings()
@@ -21,10 +25,88 @@ struct PSTranscribeApp: App {
             engine: nil,                            // late-bound in ContentView .task
             sessionCoordinator: initialCoordinator
         )
+        let initialHotkey = GlobalHotkeyService()
+        let initialDictation = DictationCoordinator(
+            settings: initialSettings,
+            sessionCoordinator: initialCoordinator,
+            libraryStore: initialLibrary
+        )
+        let initialWindowCtrl = DictationWindowController(rootView: AnyView(EmptyView()))
+        // Wire HUD body to the coordinator's live state.
+        initialDictation.attach(windowController: initialWindowCtrl)
+        initialDictation.hotkeyService = initialHotkey
+        // Phase 18 D-14: SessionCoordinator.dictation is the mutual-exclusion gate.
+        initialCoordinator.dictation = initialDictation
+
         _settings = State(initialValue: initialSettings)
         _libraryStore = State(initialValue: initialLibrary)
         _sessionCoordinator = State(initialValue: initialCoordinator)
         _modelUpdateService = State(initialValue: initialModelUpdate)
+        _globalHotkey = State(initialValue: initialHotkey)
+        _dictationCoordinator = State(initialValue: initialDictation)
+        _dictationWindowController = State(initialValue: initialWindowCtrl)
+
+        // Phase 18 — wire hotkey callbacks. We capture the dictation coordinator and
+        // settings; both are app-scoped so a strong capture is fine for the lifetime
+        // of the GlobalHotkeyService (which is itself app-scoped).
+        initialHotkey.onKeyDown = { [initialDictation, initialSettings] in
+            Task { @MainActor in
+                switch initialSettings.dictationHotkeyMode {
+                case .toggle:
+                    if initialDictation.isActive {
+                        await initialDictation.endDictation()
+                    } else {
+                        await initialDictation.beginDictation()
+                    }
+                case .pressAndHold:
+                    await initialDictation.beginDictation()
+                }
+            }
+        }
+        initialHotkey.onKeyUp = { [initialDictation, initialSettings] in
+            Task { @MainActor in
+                if case .pressAndHold = initialSettings.dictationHotkeyMode {
+                    await initialDictation.handleHoldRelease()
+                }
+                // toggle mode: ignore key-up entirely.
+            }
+        }
+
+        // Phase 18 — Escape-key global monitor. Fires regardless of which app is frontmost
+        // (the HUD is shown via .nonactivatingPanel so our app is never frontmost during
+        // dictation). Global monitors are observe-only (cannot consume events); Esc still
+        // propagates to the focused app, which in most apps is a no-op or popover dismiss.
+        let monitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [initialDictation] event in
+            // .keyCode 53 = Escape (kVK_Escape).
+            guard event.keyCode == 53 else { return }
+            Task { @MainActor in
+                if initialDictation.isActive {
+                    await initialDictation.handleEscape()
+                }
+            }
+        }
+        _escapeKeyMonitor = State(initialValue: monitor)
+
+        // Phase 18 D-13 — eager pre-warm at app launch with privacy-conscious opt-out.
+        // RESEARCH Open Question §2 RESOLVED: 2 s sleep gives the meeting engine's first
+        // prepareModels a head start before we touch the same model cache.
+        // CONTEXT <specifics> + WARNING #11: skip pre-warm if the user has explicitly
+        // cleared the hotkey via Recorder. D-13's "always pre-warm" applies to the default
+        // user; users who clear the hotkey have opted out by action.
+        let dictForPrewarm = initialDictation
+        let hotkeyForPrewarm = initialHotkey
+        Task.detached(priority: .background) {
+            try? await Task.sleep(for: .seconds(2))
+            await MainActor.run {
+                guard hotkeyForPrewarm.hotkeyAssigned else { return () }
+                Task { @MainActor in
+                    // User has a hotkey assigned — pay the ~500MB pre-warm cost so the
+                    // first hotkey press is instant. If pre-warm fails, beginDictation
+                    // falls through to D-16's "Loading model…" path.
+                    await dictForPrewarm.preWarmModels()
+                }
+            }
+        }
     }
 
     /// Opens a bundled license resource (e.g. "LICENSE" or "ThirdPartyLicenses")
@@ -88,8 +170,10 @@ struct PSTranscribeApp: App {
             }
             .keyboardShortcut("q")
         } label: {
-            Image(systemName: "book.closed")
+            // Phase 18 DICT-03: pulsing mic when dictation is active.
+            Image(systemName: dictationCoordinator.isActive ? "mic.fill" : "book.closed")
                 .symbolRenderingMode(.monochrome)
+                .symbolEffect(.pulse, isActive: dictationCoordinator.isActive)
         }
     }
 }
