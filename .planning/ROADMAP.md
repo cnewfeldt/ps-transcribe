@@ -65,9 +65,9 @@
   3. User configures a plain OS folder in Settings > Dictation; after a dictation session, a clean markdown file (no YAML frontmatter) appears in that folder with a human-readable date-based filename; 10 rapid sessions produce 10 distinct files
   4. User presses Escape or a second hotkey tap during dictation to cancel; no text is written to clipboard and no file is written to the plain folder; sessions longer than 30 seconds prompt for confirmation before cancelling
   5. Attempting to start dictation while a meeting recording is active is a no-op (or shows a brief dismissible notice); there is never more than one active recording session at a time
-**Plans:** 1/8 plans executed
+**Plans:** 2/8 plans executed
 - [x] 18-01-PLAN.md — Wave 0 RED test scaffolding (16 test files, Nyquist gate) (Wave 0)
-- [ ] 18-02-PLAN.md — KeyboardShortcuts dependency + GlobalHotkeyService (Cmd+Shift+D registration) (Wave 1)
+- [x] 18-02-PLAN.md — KeyboardShortcuts dependency + GlobalHotkeyService (Cmd+Shift+D registration) (Wave 1)
 - [ ] 18-03-PLAN.md — DictationLogger.discardSession() + hasActiveSession (D-08 atomic cancel support) (Wave 1)
 - [ ] 18-04-PLAN.md — DictationCoordinator skeleton + SessionCoordinator.dictation slot (DICT-11 mutual exclusion) (Wave 2)
 - [ ] 18-05-PLAN.md — DictationWindowController + DictationHUD (NSPanel + SwiftUI body, sharingType=.none) (Wave 3)
@@ -94,7 +94,7 @@
 |-------|----------------|--------|-----------|
 | 16. Foundation | 4/4 | Complete    | 2026-04-27 |
 | 17. Model Auto-Update | 5/5 | Complete    | 2026-04-28 |
-| 18. Hotkey Dictation + Plain-Folder Output | 1/8 | In Progress|  |
+| 18. Hotkey Dictation + Plain-Folder Output | 2/8 | In Progress|  |
 | 19. Integration & Hardening | 0/0 | Not started | - |
 
 ## Backlog
