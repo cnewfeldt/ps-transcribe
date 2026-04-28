@@ -58,4 +58,43 @@ struct SessionCoordinatorTests {
         coordinator.engine = engine  // late binding (mirrors ContentView's .task pattern)
         #expect(coordinator.anySessionActive == false)  // engine.isRunning still false
     }
+
+    // MARK: - Phase 17: ModelUpdateService integration (Plan 17-03)
+
+    /// anySessionActive must return true when modelUpdate.isApplying == true, even with no engine.
+    @Test @MainActor func trueWhenModelUpdateApplying() {
+        let coordinator = SessionCoordinator()
+        let settings = AppSettings()
+        let store = TranscriptStore()
+        let engine = TranscriptionEngine(transcriptStore: store)
+        let service = ModelUpdateService(settings: settings, engine: engine, sessionCoordinator: coordinator)
+        service.isApplying = true
+        coordinator.modelUpdate = service
+        #expect(coordinator.anySessionActive == true)
+    }
+
+    /// anySessionActive must return false when modelUpdate.isApplying == false and engine is idle.
+    @Test @MainActor func falseWhenModelUpdateNotApplying() {
+        let coordinator = SessionCoordinator()
+        let settings = AppSettings()
+        let store = TranscriptStore()
+        let engine = TranscriptionEngine(transcriptStore: store)
+        let service = ModelUpdateService(settings: settings, engine: engine, sessionCoordinator: coordinator)
+        service.isApplying = false
+        coordinator.modelUpdate = service
+        #expect(coordinator.anySessionActive == false)
+    }
+
+    /// modelUpdate must be held weakly: when the only strong reference is released,
+    /// coordinator.modelUpdate must become nil (no retain cycle through coordinator).
+    @Test @MainActor func modelUpdateHeldWeakly() {
+        let coordinator = SessionCoordinator()
+        do {
+            let service = ModelUpdateService()
+            coordinator.modelUpdate = service
+            #expect(coordinator.modelUpdate === service)
+        }
+        // service has gone out of scope and was the only strong reference
+        #expect(coordinator.modelUpdate == nil)
+    }
 }

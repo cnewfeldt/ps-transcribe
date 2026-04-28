@@ -20,20 +20,23 @@ final class SessionCoordinator {
     /// future phase wires a back-reference from engine to coordinator.
     weak var engine: TranscriptionEngine?
 
-    // Phase 17 (Model Auto-Update) will add:
-    //   weak var modelUpdate: ModelUpdateService?
+    /// Phase 17 (Model Auto-Update). Held weakly: ModelUpdateService is owned at app scope
+    /// (PSTranscribeApp) and wired here via direct assignment in Plan 17-04.
+    /// When isApplying == true, anySessionActive returns true so no concurrent session
+    /// can start during the atomic swap+reload window (CONTEXT.md D-18 / D-19).
+    weak var modelUpdate: ModelUpdateService?
+
     // Phase 18 (Hotkey Dictation) will add:
     //   weak var dictation: DictationCoordinator?
     //
-    // anySessionActive will then become:
-    //   (engine?.isRunning ?? false)
+    // anySessionActive will then also include:
     //   || (dictation?.isActive ?? false)
-    //   || (modelUpdate?.isApplying ?? false)
 
     /// Single source of truth for whether ANY app-scope session is active. Reads
-    /// each subsystem on demand. Phase 16: only the engine source is wired.
+    /// each subsystem on demand. Phase 17 adds the modelUpdate branch so a model
+    /// swap in progress is treated as an active session (prevents interleaving).
     var anySessionActive: Bool {
-        engine?.isRunning ?? false
+        (engine?.isRunning ?? false) || (modelUpdate?.isApplying ?? false)
     }
 
     init(engine: TranscriptionEngine? = nil) {
