@@ -12,6 +12,7 @@ struct SettingsView: View {
     @Bindable var settings: AppSettings
     var updater: SPUUpdater
     var notionService: NotionService
+    @Bindable var modelUpdateService: ModelUpdateService    // Phase 17, D-18
     @State private var inputDevices: [(id: AudioDeviceID, name: String)] = []
 
     // MARK: - Notion state
@@ -58,13 +59,20 @@ struct SettingsView: View {
                 ))
                 .font(.system(size: 12))
             }
+
+            Section("Speech Model") {
+                speechModelSectionContent
+            }
         }
         .formStyle(.grouped)
-        .frame(width: 450, height: 640)
+        .frame(width: 450, height: 720)
         .onAppear {
             inputDevices = MicCapture.availableInputDevices()
             notionDatabaseInput = settings.notionDatabaseID
             autoValidateNotionIfNeeded()
+            // Phase 17, D-10: opportunistic check on Settings open if >24h since last check.
+            // checkForUpdate respects modelAutoUpdateEnabled and the throttle internally.
+            Task { await modelUpdateService.checkForUpdate(force: false) }
         }
     }
 
@@ -406,6 +414,170 @@ struct SettingsView: View {
         }
         // Fallback: return as-is and let the API surface any error
         return input
+    }
+
+    // MARK: - Speech Model section content
+
+    @ViewBuilder
+    private var speechModelSectionContent: some View {
+        VStack(alignment: .leading, spacing: 10) {
+
+            // State-driven content
+            switch modelUpdateService.updateState {
+            case .idle, .upToDate:
+                upToDateRow
+            case .updateAvailable(let version, let sizeBytes, _):
+                updateAvailableRow(newVersion: version, sizeBytes: sizeBytes)
+            case .checking:
+                checkingRow
+            case .blocked(.minAppVersion(let required, _, let newModelVersion)):
+                minAppVersionBlockedRow(required: required, newModelVersion: newModelVersion)
+            case .blocked(.insufficientDiskSpace(let needed, let available)):
+                insufficientDiskRow(needed: needed, available: available)
+            case .downloading(let progress, let completed, let total):
+                downloadingRow(progress: progress, completed: completed, total: total)
+            case .verifying:
+                Text("Verifying download...").font(.system(size: 12))
+            case .applying:
+                Text("Installing model...").font(.system(size: 12))
+            case .applied(let version):
+                Text("✓ Updated to v\(version) · active").font(.system(size: 12)).foregroundStyle(.green)
+            case .failed(let message):
+                failedRow(message: message)
+            }
+
+            Divider().padding(.vertical, 2)
+
+            // Manual button (D-12) — always visible regardless of state
+            HStack {
+                Button("Check for Updates") {
+                    Task { await modelUpdateService.checkForUpdate(force: true) }
+                }
+                .disabled(isWorkingState(modelUpdateService.updateState))
+                Spacer()
+            }
+
+            // Auto-update toggle (D-11)
+            Toggle("Automatically check for new speech models", isOn: $settings.modelAutoUpdateEnabled)
+                .font(.system(size: 12))
+                .toggleStyle(.switch)
+        }
+    }
+
+    private func isWorkingState(_ state: ModelUpdateState) -> Bool {
+        switch state {
+        case .checking, .downloading, .verifying, .applying: return true
+        default: return false
+        }
+    }
+
+    @ViewBuilder
+    private var upToDateRow: some View {
+        let installed = settings.installedModelVersion.isEmpty ? "—" : settings.installedModelVersion
+        let dateSuffix = readableDate(forVersion: installed)
+        HStack(spacing: 6) {
+            Circle().fill(.green).frame(width: 8, height: 8)
+            Text(dateSuffix.isEmpty
+                 ? "Speech Model: v\(installed)"
+                 : "Speech Model: v\(installed) · \(dateSuffix)")
+                .font(.system(size: 12))
+        }
+    }
+
+    @ViewBuilder
+    private var checkingRow: some View {
+        HStack(spacing: 8) {
+            ProgressView().scaleEffect(0.7)
+            Text("Checking...").font(.system(size: 12)).foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private func updateAvailableRow(newVersion: String, sizeBytes: Int64) -> some View {
+        let installed = settings.installedModelVersion.isEmpty ? "—" : settings.installedModelVersion
+        let sizeMB = Int(round(Double(sizeBytes) / 1_048_576))
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Speech Model: v\(installed) → v\(newVersion)").font(.system(size: 12))
+            HStack(spacing: 8) {
+                Text("Update available · ~\(sizeMB) MB")
+                    .font(.system(size: 11))
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .background(Color.orange.opacity(0.15))
+                    .foregroundStyle(.orange)
+                    .clipShape(Capsule())
+                Button("Install Update") {
+                    Task { await modelUpdateService.downloadAndApply() }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func downloadingRow(progress: Double, completed: Int64, total: Int64) -> some View {
+        let completedMB = Int(round(Double(completed) / 1_048_576))
+        let totalMB = Int(round(Double(total) / 1_048_576))
+        VStack(alignment: .leading, spacing: 6) {
+            ProgressView(value: progress)
+            HStack {
+                Text("Installing... \(completedMB) / \(totalMB) MB").font(.system(size: 11)).foregroundStyle(.secondary)
+                Spacer()
+                Button("Cancel") { modelUpdateService.cancelDownload() }
+                    .font(.system(size: 11))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func minAppVersionBlockedRow(required: String, newModelVersion: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("New v\(newModelVersion) requires PS Transcribe ≥ \(required).")
+                .font(.system(size: 12))
+                .foregroundStyle(.orange)
+            Button("Check for App Update") {
+                updater.checkForUpdates()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func insufficientDiskRow(needed: Int64, available: Int64) -> some View {
+        let neededGB = Double(needed) / 1_073_741_824
+        let availableMB = Int(round(Double(available) / 1_048_576))
+        VStack(alignment: .leading, spacing: 6) {
+            Text(String(format: "Update available — needs ~%.1f GB free, %d MB available",
+                        neededGB, availableMB))
+                .font(.system(size: 12))
+                .foregroundStyle(.orange)
+            HStack {
+                Button("Free up space") {
+                    let appSupport = FileManager.default.urls(for: .applicationSupportDirectory,
+                                                              in: .userDomainMask)[0]
+                    NSWorkspace.shared.open(appSupport)
+                }
+                Spacer()
+                Button("Install Update") { /* disabled */ }.disabled(true)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func failedRow(message: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("⚠️ Update failed: \(message)").font(.system(size: 12)).foregroundStyle(.red)
+            Button("Retry") { Task { await modelUpdateService.checkForUpdate(force: true) } }
+        }
+    }
+
+    /// Best-effort: parse "20260427" as yyyyMMdd → "Apr 27, 2026". Returns "" on failure.
+    private func readableDate(forVersion version: String) -> String {
+        let inFmt = DateFormatter()
+        inFmt.dateFormat = "yyyyMMdd"
+        inFmt.timeZone = TimeZone(identifier: "UTC")
+        guard let date = inFmt.date(from: version) else { return "" }
+        let outFmt = DateFormatter()
+        outFmt.dateStyle = .medium
+        outFmt.timeZone = TimeZone(identifier: "UTC")
+        return outFmt.string(from: date)
     }
 
     // MARK: - Folder picker
