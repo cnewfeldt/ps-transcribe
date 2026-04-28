@@ -675,27 +675,31 @@ let session = URLSession(configuration: config)
 
 **If this table is empty:** It isn't — see above. Two MEDIUM-impact assumptions (A3, A5) need to be flagged for the planner's attention.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Manifest schema details (CRITICAL — affects plan 05).**
    - **What we know:** D-05 declares the wire schema with `files[].name` of `.mlpackage`. The actual on-disk artifacts are `.mlmodelc` directories with sub-files (Pitfall 1).
    - **What's unclear:** Is the planner authorized to refine D-05 to enumerate leaf files rather than directories? Or should plan 05 first surface this back to the user via a discuss-phase?
    - **Recommendation:** The planner should treat this as a refinement (not a contradiction) of D-05 since the locked decision is "manifest carries SHA-256 per file" and the actual file granularity is forced by the on-disk layout. Document this in plan 05's CONTEXT.md or research notes; do not re-open the discuss-phase. If the user dissents, plan 05 fails review and we cycle back.
+   - **RESOLVED:** Plan 17-01 enumerates leaf files inside `.mlmodelc` directories (Option A); `ManifestFile.name` accepts paths with slashes; Plan 17-05's `generate-model-manifest.swift` walks leaves.
 
 2. **Session-end notification mechanism.**
    - **What we know:** `SessionCoordinator.anySessionActive` is the truth. No `NotificationCenter` post is currently emitted on session end.
    - **What's unclear:** Should `ModelUpdateService` poll `anySessionActive` (simple), or should `SessionCoordinator` post a Notification when transitioning to false (cleaner)?
    - **Recommendation:** Polling at 500 ms is fine — the loop only runs while an update is pending and `anySessionActive` is true (rare, brief). Simpler than introducing a new Notification name.
+   - **RESOLVED:** Plan 17-03 uses 500ms polling via `waitForSessionEnd` (lower-friction than `NotificationCenter` since `TranscriptionEngine` does not currently post stop notifications).
 
 3. **`released_at` field in manifest (D-07 readable date).**
    - **What we know:** D-07 wants to display "v20260427 · Apr 27, 2026". The `version` is a date-shaped string, so the readable date can be parsed from it without an extra field.
    - **What's unclear:** Is the version always date-shaped, or could a future manifest use semantic versioning (`"3.1.0"`)?
    - **Recommendation:** Add an OPTIONAL `released_at` ISO8601 string to the manifest schema. If absent, attempt to parse `version` as `yyyyMMdd`. If neither yields a date, render version-only without a date suffix.
+   - **RESOLVED:** Plan 17-01's `ModelManifest` declares `released_at: String?` (Optional ISO8601); falls back to parsing `version` as `yyyyMMdd` when absent.
 
 4. **Test fixture for the manifest publication step.**
    - **What we know:** Plan 05 will author the first manifest and instruct the developer to push it to `cnewfeldt/ps-transcribe-releases:main`.
    - **What's unclear:** Where does the SHA-256 list come from? Each `.mlmodelc/coremldata.bin`, etc. needs a hex digest.
    - **Recommendation:** Plan 05 includes a developer-side script (Swift CLI invocation, `shasum -a 256`, or a small Swift script) that walks `~/Library/Application Support/FluidAudio/Models/parakeet-tdt-0.6b-v3/` and emits the manifest JSON. Treat as part of the release tooling. Land this as a `Scripts/` folder if it doesn't already exist.
+   - **RESOLVED:** Plan 17-05 ships `Scripts/generate-model-manifest.swift` that walks the on-disk model directory and emits SHA-256-stamped JSON via CryptoKit.
 
 ## Environment Availability
 
