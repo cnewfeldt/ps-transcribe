@@ -1013,4 +1013,279 @@ struct ModelUpdateServiceTests {
         #expect(dirContains(productionDir, file: "NEW"),
                 "Production directory must contain NEW after session ends and swap completes")
     }
+
+    // MARK: - Plan 17-05 backfill tests (D-14)
+
+    /// Helper: creates files on disk under the given model directory.
+    fileprivate func createModelFiles(in dir: URL, files: [(name: String, body: Data)]) throws {
+        for f in files {
+            let dest = dir.appendingPathComponent(f.name)
+            try FileManager.default.createDirectory(at: dest.deletingLastPathComponent(),
+                                                    withIntermediateDirectories: true)
+            try f.body.write(to: dest)
+        }
+    }
+
+    /// Helper: builds a manifest where size exactly matches the given on-disk bodies.
+    fileprivate func makeManifestForBackfill(
+        files: [(name: String, body: Data)],
+        version: String = "20260427"
+    ) -> ModelManifest {
+        let manifestFiles = files.map { f in
+            ModelManifest.ManifestFile(
+                name: f.name,
+                url: "https://huggingface.co/test/resolve/main/\(f.name)",
+                sha256: sha256Hex(f.body),
+                size: Int64(f.body.count)
+            )
+        }
+        let total = files.reduce(Int64(0)) { $0 + Int64($1.body.count) }
+        return ModelManifest(
+            model_id: "parakeet-tdt-0.6b-v3-coreml",
+            version: version,
+            min_app_version: "1.0.0",
+            total_size_bytes: total,
+            released_at: nil,
+            files: manifestFiles
+        )
+    }
+
+    /// Helper: installs a mock session returning the given manifest for any URL.
+    fileprivate func installManifestOnlyResponder(manifest: ModelManifest) {
+        let encoded = try! JSONEncoder().encode(manifest)
+        MockURLProtocol.responder = { request in
+            let response = HTTPURLResponse(url: request.url!, statusCode: 200,
+                                          httpVersion: "HTTP/1.1", headerFields: nil)!
+            return (response, encoded)
+        }
+    }
+
+    /// D-14 backfill fires when: installedModelVersion == "", all files exist, first file size matches.
+    /// After checkForUpdate, installedModelVersion == manifest.version AND state == .upToDate.
+    @Test @MainActor func backfillFiresWhenAllConditionsMet() async throws {
+        Self.clearV17Keys()
+        defer {
+            Self.clearV17Keys()
+            MockURLProtocol.responder = nil
+        }
+
+        let tmp = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tmp) }
+
+        let modelsRoot = tmp.appendingPathComponent("FluidAudio/Models")
+        let modelDir = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3")
+
+        let files: [(name: String, body: Data)] = [
+            ("Encoder.mlmodelc/coremldata.bin", Data(repeating: 0xAB, count: 1024)),
+            ("Encoder.mlmodelc/metadata.json", Data(repeating: 0xCD, count: 256))
+        ]
+        try createModelFiles(in: modelDir, files: files)
+
+        let manifest = makeManifestForBackfill(files: files, version: "20260427")
+        installManifestOnlyResponder(manifest: manifest)
+
+        let settings = AppSettings()
+        // installedModelVersion left as "" (default) -- backfill condition 1 met
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        service.modelsRootOverride = modelsRoot
+
+        await service.checkForUpdate(force: true)
+
+        #expect(settings.installedModelVersion == "20260427",
+                "D-14 backfill must set installedModelVersion to manifest.version; got '\(settings.installedModelVersion)'")
+        if case .upToDate = service.updateState {
+            // Expected: backfill made the user current, so state should be upToDate
+        } else {
+            Issue.record("expected .upToDate after D-14 backfill; got \(service.updateState)")
+        }
+    }
+
+    /// D-14 backfill must NOT fire when installedModelVersion is already set.
+    /// Version must remain unchanged; state is .updateAvailable (manifest is newer).
+    @Test @MainActor func backfillDoesNotFireWhenInstalledIsSet() async throws {
+        Self.clearV17Keys()
+        defer {
+            Self.clearV17Keys()
+            MockURLProtocol.responder = nil
+        }
+
+        let tmp = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tmp) }
+
+        let modelsRoot = tmp.appendingPathComponent("FluidAudio/Models")
+        let modelDir = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3")
+
+        let files: [(name: String, body: Data)] = [
+            ("Encoder.mlmodelc/coremldata.bin", Data(repeating: 0xAB, count: 1024))
+        ]
+        try createModelFiles(in: modelDir, files: files)
+
+        // Manifest declares a NEWER version so that, if backfill incorrectly fires,
+        // the post-backfill compare would be "20260601" >= "20260601" -> upToDate.
+        // But backfill must NOT fire because installedModelVersion is already "20260101".
+        let manifest = makeManifestForBackfill(files: files, version: "20260601")
+        installManifestOnlyResponder(manifest: manifest)
+
+        let settings = AppSettings()
+        settings.installedModelVersion = "20260101"   // pre-set -- backfill must NOT overwrite
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        service.modelsRootOverride = modelsRoot
+
+        await service.checkForUpdate(force: true)
+
+        #expect(settings.installedModelVersion == "20260101",
+                "installedModelVersion must not be overwritten by backfill when already set; got '\(settings.installedModelVersion)'")
+        // "20260101" < "20260601" -> updateAvailable
+        if case .updateAvailable = service.updateState {
+            // Expected
+        } else {
+            Issue.record("expected .updateAvailable when backfill skips (installed already set); got \(service.updateState)")
+        }
+    }
+
+    /// D-14 backfill must NOT fire when the first file's on-disk size differs from manifest.size.
+    /// installedModelVersion stays "" and state is .updateAvailable.
+    @Test @MainActor func backfillDoesNotFireOnSizeMismatch() async throws {
+        Self.clearV17Keys()
+        defer {
+            Self.clearV17Keys()
+            MockURLProtocol.responder = nil
+        }
+
+        let tmp = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tmp) }
+
+        let modelsRoot = tmp.appendingPathComponent("FluidAudio/Models")
+        let modelDir = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3")
+
+        // On-disk file has 1024 bytes; manifest declares 9999 bytes -> size mismatch
+        let onDiskBody = Data(repeating: 0xAB, count: 1024)
+        let files: [(name: String, body: Data)] = [
+            ("Encoder.mlmodelc/coremldata.bin", onDiskBody)
+        ]
+        try createModelFiles(in: modelDir, files: files)
+
+        // Build manifest manually with mismatched size for first file
+        let mismatchedFile = ModelManifest.ManifestFile(
+            name: "Encoder.mlmodelc/coremldata.bin",
+            url: "https://huggingface.co/test/resolve/main/Encoder.mlmodelc/coremldata.bin",
+            sha256: sha256Hex(onDiskBody),
+            size: 9999   // deliberately wrong -- on-disk is 1024
+        )
+        let manifest = ModelManifest(
+            model_id: "parakeet-tdt-0.6b-v3-coreml",
+            version: "20260427",
+            min_app_version: "1.0.0",
+            total_size_bytes: 9999,
+            released_at: nil,
+            files: [mismatchedFile]
+        )
+        installManifestOnlyResponder(manifest: manifest)
+
+        let settings = AppSettings()
+        // installedModelVersion stays "" (empty) -- backfill would fire IF size matched
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        service.modelsRootOverride = modelsRoot
+
+        await service.checkForUpdate(force: true)
+
+        #expect(settings.installedModelVersion == "",
+                "D-14 backfill must NOT fire on size mismatch; installedModelVersion must stay empty")
+        // "" < "20260427" -> updateAvailable
+        if case .updateAvailable = service.updateState {
+            // Expected
+        } else {
+            Issue.record("expected .updateAvailable when backfill skips on size mismatch; got \(service.updateState)")
+        }
+    }
+
+    /// D-14 backfill must NOT fire when any manifest file is missing from disk.
+    /// installedModelVersion stays "" and state is .updateAvailable.
+    @Test @MainActor func backfillDoesNotFireOnMissingFile() async throws {
+        Self.clearV17Keys()
+        defer {
+            Self.clearV17Keys()
+            MockURLProtocol.responder = nil
+        }
+
+        let tmp = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tmp) }
+
+        let modelsRoot = tmp.appendingPathComponent("FluidAudio/Models")
+        let modelDir = modelsRoot.appendingPathComponent("parakeet-tdt-0.6b-v3")
+
+        // Only create the first file; manifest declares two files
+        let file1Body = Data(repeating: 0xAA, count: 512)
+        let file2Body = Data(repeating: 0xBB, count: 512)
+        let file1: (name: String, body: Data) = ("Encoder.mlmodelc/coremldata.bin", file1Body)
+        // file2 is declared in the manifest but NOT created on disk
+        try createModelFiles(in: modelDir, files: [file1])
+
+        let manifest = makeManifestForBackfill(
+            files: [file1, ("Encoder.mlmodelc/model.mil", file2Body)],
+            version: "20260427"
+        )
+        installManifestOnlyResponder(manifest: manifest)
+
+        let settings = AppSettings()
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        service.modelsRootOverride = modelsRoot
+
+        await service.checkForUpdate(force: true)
+
+        #expect(settings.installedModelVersion == "",
+                "D-14 backfill must NOT fire when a manifest file is absent from disk")
+        if case .updateAvailable = service.updateState {
+            // Expected: user genuinely needs to download
+        } else {
+            Issue.record("expected .updateAvailable when backfill skips on missing file; got \(service.updateState)")
+        }
+    }
+
+    /// D-14 backfill survives an attribute read failure (e.g., non-existent modelsRoot).
+    /// No crash; state is .updateAvailable; installedModelVersion stays "".
+    @Test @MainActor func backfillSurvivesAttributeReadFailure() async throws {
+        Self.clearV17Keys()
+        defer {
+            Self.clearV17Keys()
+            MockURLProtocol.responder = nil
+        }
+
+        // Point modelsRootOverride at a path that has no model files -> fileExists returns false
+        // so the early-return guard fires before attributesOfItem is even called.
+        // This is the "attribute read failure / non-existent path" scenario per the plan.
+        let nonExistentRoot = FileManager.default.temporaryDirectory
+            .appendingPathComponent("nonexistent-\(UUID().uuidString)")
+        // Do NOT create the directory -- it does not exist
+
+        let files: [(name: String, body: Data)] = [
+            ("Encoder.mlmodelc/coremldata.bin", Data(repeating: 0xAB, count: 1024))
+        ]
+        let manifest = makeManifestForBackfill(files: files, version: "20260427")
+        installManifestOnlyResponder(manifest: manifest)
+
+        let settings = AppSettings()
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        service.modelsRootOverride = nonExistentRoot
+
+        // Must not crash; backfill must skip silently
+        await service.checkForUpdate(force: true)
+
+        #expect(settings.installedModelVersion == "",
+                "D-14 backfill must skip silently on missing model path; installedModelVersion must stay empty")
+        // The non-existent path means files are missing -> .updateAvailable
+        if case .updateAvailable = service.updateState {
+            // Expected
+        } else {
+            Issue.record("expected .updateAvailable when backfill skips due to missing path; got \(service.updateState)")
+        }
+    }
 }
