@@ -391,6 +391,17 @@ struct ContentView: View {
                 await transcriptLogger.flushIfNeeded()
             }
         }
+        .task {
+            // Phase 18 DICT-04 / DICT-07: when a dictation session ends, the
+            // DictationCoordinator posts .dictationSessionEnded. LibraryStore is
+            // shared and `@Observable`, so SwiftUI typically re-renders the sidebar
+            // automatically. This listener is belt-and-suspenders for any pieces of
+            // UI that read library entries through paths not directly observed.
+            for await _ in NotificationCenter.default.notifications(named: .dictationSessionEnded) {
+                _ = await libraryStore.entries
+                refreshLibrary()
+            }
+        }
         .onChange(of: sessionName) { _, newName in
             guard activeSessionType != nil else { return }
             nameDebounceTask?.cancel()
