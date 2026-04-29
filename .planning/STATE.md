@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: — Standalone Dictation + Model Auto-Update
-status: verifying
-stopped_at: Completed 18-08-PLAN.md
-last_updated: "2026-04-28T20:45:24.511Z"
-last_activity: 2026-04-28
+status: executing
+stopped_at: Phase 18.1 context gathered
+last_updated: "2026-04-29T17:33:01.104Z"
+last_activity: 2026-04-28 -- Phase 18 execution started
 progress:
-  total_phases: 4
+  total_phases: 5
   completed_phases: 3
-  total_plans: 17
-  completed_plans: 17
+  total_plans: 18
+  completed_plans: 18
   percent: 100
 ---
 
@@ -35,9 +35,9 @@ See: .planning/PROJECT.md (updated 2026-04-27)
 ## Current Position
 
 Phase: 18 (hotkey-dictation-plain-folder-output) — EXECUTING
-Plan: 8 of 8
-Status: Phase complete — ready for verification
-Last activity: 2026-04-28
+Plan: 1 of 9
+Status: Executing Phase 18
+Last activity: 2026-04-28 -- Phase 18 execution started
 
 Progress: [████████░░] 76%
 
@@ -66,6 +66,10 @@ Progress: [████████░░] 76%
 | Phase 18 P08 | 5min | 4 tasks | 5 files |
 
 ## Accumulated Context
+
+### Roadmap Evolution
+
+- Phase 18.1 inserted after Phase 18: Shared save destinations + Local File (URGENT) — Phase 18 paused mid-UAT after architectural feedback that dictation-private folder picker duplicates what shared destinations should own; Phase 18.1 introduces top-level Local File destination parallel to Notion/Obsidian and refactors dictation off `DictationOutputMode`. (2026-04-29)
 
 ### Decisions
 
@@ -127,6 +131,6 @@ Deferred to a later milestone (see PROJECT.md "Future Candidate Goals"):
 
 ## Session Continuity
 
-Last session: 2026-04-28T20:45:10.621Z
-Stopped at: Completed 18-08-PLAN.md
-Resume file: None
+Last session: 2026-04-29T17:33:01.101Z
+Stopped at: Phase 18.1 context gathered
+Resume file: .planning/phases/18.1-shared-save-destinations-local-file/18.1-CONTEXT.md
