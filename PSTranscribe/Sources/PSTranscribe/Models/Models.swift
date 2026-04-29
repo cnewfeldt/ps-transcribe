@@ -123,3 +123,47 @@ struct SessionRecord: Codable {
         self.timestamp = timestamp
     }
 }
+
+// MARK: - v1.2 SessionType destination mapping (Phase 18.1, D-03)
+
+extension SessionType {
+    /// Notion `"Session Type"` Select option value (D-13). Notion creates the option
+    /// automatically on first write if absent (NotionService schema-introspection skips
+    /// the property when the DB doesn't have it).
+    var notionValue: String {
+        switch self {
+        case .callCapture: return "Meeting"
+        case .voiceMemo:   return "Voice Memo"
+        case .dictation:   return "Dictation"
+        }
+    }
+
+    /// Obsidian YAML frontmatter `session-type:` value (D-08). Lowercase per common DataView usage.
+    var obsidianFrontmatterValue: String {
+        switch self {
+        case .callCapture: return "meeting"
+        case .voiceMemo:   return "memo"
+        case .dictation:   return "dictation"
+        }
+    }
+
+    /// Obsidian filename type-label (collision avoidance in single folder, D-07).
+    /// Filename pattern: `YYYY-MM-DD HH-mm-ss-SSS <Label> <auto-name>.md`.
+    var obsidianFilenameLabel: String {
+        switch self {
+        case .callCapture: return "Meeting"
+        case .voiceMemo:   return "Memo"
+        case .dictation:   return "Dictation"
+        }
+    }
+
+    /// Local File hardcoded subfolder name (D-04). User-chosen names are out of scope for v1.2.
+    /// Subfolders are created lazily on first write per content type (D-06).
+    var localFileSubfolder: String {
+        switch self {
+        case .callCapture: return "Meeting"
+        case .voiceMemo:   return "Memo"
+        case .dictation:   return "Dictation"
+        }
+    }
+}
