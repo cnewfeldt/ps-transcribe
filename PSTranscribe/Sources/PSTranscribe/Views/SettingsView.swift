@@ -37,6 +37,10 @@ struct SettingsView: View {
                 .font(.system(size: 12))
             }
 
+            Section("Local File") {
+                localFileSectionContent
+            }
+
             Section("Obsidian") {
                 obsidianSectionContent
             }
@@ -81,57 +85,105 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - Obsidian section content
+    // MARK: - Local File section content (D-04 / D-06)
 
-    /// Detected Obsidian vault for either configured folder path, if any.
-    private var detectedObsidianVault: (root: String, name: String)? {
-        if !settings.vaultMeetingsPath.isEmpty,
-           let v = obsidianVaultForPath(settings.vaultMeetingsPath) { return v }
-        if !settings.vaultVoicePath.isEmpty,
-           let v = obsidianVaultForPath(settings.vaultVoicePath) { return v }
-        return nil
+    @ViewBuilder
+    private var localFileSectionContent: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Toggle("Save to Local File", isOn: $settings.localFileEnabled)
+                .font(.system(size: 12))
+
+            Text("Saves Meetings, Memos, and Dictations to subfolders inside the chosen root folder on this Mac.")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+
+            Divider().padding(.vertical, 2)
+
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Root folder")
+                        .font(.system(size: 12, weight: .medium))
+                    Text(settings.localFileRoot.isEmpty ? "No folder selected" : settings.localFileRoot)
+                        .font(.system(size: 11))
+                        .foregroundStyle(settings.localFileRoot.isEmpty ? .tertiary : .secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+                Spacer()
+                Button(settings.localFileRoot.isEmpty ? "Choose..." : "Change...") {
+                    chooseFolder(message: "Choose the Local File root folder") { path in
+                        settings.localFileRoot = path
+                    }
+                }
+                .font(.system(size: 12))
+            }
+            .disabled(!settings.localFileEnabled)
+            .opacity(settings.localFileEnabled ? 1.0 : 0.5)
+        }
     }
 
-    private var hasAnyObsidianFolder: Bool {
-        !settings.vaultMeetingsPath.isEmpty || !settings.vaultVoicePath.isEmpty
+    // MARK: - Obsidian section content (D-07 / D-09 / D-10)
+
+    /// Vault detection for the single Obsidian folder. Replaces the v1.0 two-path shape.
+    private var detectedObsidianVault: (root: String, name: String)? {
+        guard !settings.obsidianFolderPath.isEmpty else { return nil }
+        return obsidianVaultForPath(settings.obsidianFolderPath)
+    }
+
+    private var hasObsidianFolder: Bool {
+        !settings.obsidianFolderPath.isEmpty
     }
 
     @ViewBuilder
     private var obsidianSectionContent: some View {
         VStack(alignment: .leading, spacing: 10) {
-            // Status line — mirrors the Notion "Connected to ..." row
+            Toggle("Save to Obsidian", isOn: $settings.obsidianEnabled)
+                .font(.system(size: 12))
+
             HStack(spacing: 6) {
                 Circle()
-                    .fill(hasAnyObsidianFolder ? (detectedObsidianVault != nil ? .green : .orange) : .gray)
+                    .fill(hasObsidianFolder ? (detectedObsidianVault != nil ? .green : .orange) : .gray)
                     .frame(width: 8, height: 8)
                 Text(obsidianStatusText)
                     .font(.system(size: 12))
                 Spacer()
             }
 
-            if !hasAnyObsidianFolder {
-                Text("Transcripts won't be saved until a folder is configured below.")
+            if !hasObsidianFolder {
+                Text("Transcripts won't be saved to Obsidian until a folder is configured below.")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
 
             Divider().padding(.vertical, 2)
 
-            obsidianFolderRow(
-                label: "Meetings folder",
-                path: settings.vaultMeetingsPath,
-                onChoose: { path in settings.vaultMeetingsPath = path },
-                onClear:  { settings.vaultMeetingsPath = "" },
-                chooseMessage: "Choose the folder for meeting transcripts"
-            )
-
-            obsidianFolderRow(
-                label: "Voice memos folder",
-                path: settings.vaultVoicePath,
-                onChoose: { path in settings.vaultVoicePath = path },
-                onClear:  { settings.vaultVoicePath = "" },
-                chooseMessage: "Choose the folder for voice memo transcripts"
-            )
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Folder")
+                        .font(.system(size: 12, weight: .medium))
+                    Text(settings.obsidianFolderPath.isEmpty ? "No folder selected" : settings.obsidianFolderPath)
+                        .font(.system(size: 11))
+                        .foregroundStyle(settings.obsidianFolderPath.isEmpty ? .tertiary : .secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+                Spacer()
+                if !settings.obsidianFolderPath.isEmpty {
+                    Button("Remove") {
+                        settings.obsidianFolderPath = ""
+                    }
+                    .font(.system(size: 11))
+                    .foregroundStyle(.red)
+                }
+                Button(settings.obsidianFolderPath.isEmpty ? "Choose..." : "Change...") {
+                    chooseFolder(message: "Choose the Obsidian folder for transcripts") { path in
+                        settings.obsidianFolderPath = path
+                    }
+                }
+                .font(.system(size: 12))
+            }
+            .disabled(!settings.obsidianEnabled)
+            .opacity(settings.obsidianEnabled ? 1.0 : 0.5)
         }
     }
 
@@ -139,45 +191,10 @@ struct SettingsView: View {
         if let vault = detectedObsidianVault {
             return "Connected to vault: \(vault.name)"
         }
-        if hasAnyObsidianFolder {
+        if hasObsidianFolder {
             return "Folder set, but not inside an Obsidian vault"
         }
         return "Not configured"
-    }
-
-    @ViewBuilder
-    private func obsidianFolderRow(
-        label: String,
-        path: String,
-        onChoose: @escaping (String) -> Void,
-        onClear: @escaping () -> Void,
-        chooseMessage: String
-    ) -> some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(label)
-                    .font(.system(size: 12, weight: .medium))
-                Text(path.isEmpty ? "No folder selected" : path)
-                    .font(.system(size: 11))
-                    .foregroundStyle(path.isEmpty ? .tertiary : .secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-            }
-
-            Spacer()
-
-            if !path.isEmpty {
-                Button("Remove") {
-                    onClear()
-                }
-                .font(.system(size: 11))
-                .foregroundStyle(.red)
-            }
-
-            Button(path.isEmpty ? "Choose..." : "Change...") {
-                chooseFolder(message: chooseMessage, onSelect: onChoose)
-            }
-        }
     }
 
     // MARK: - Notion section content
@@ -585,7 +602,7 @@ struct SettingsView: View {
         return outFmt.string(from: date)
     }
 
-    // MARK: - Dictation section content
+    // MARK: - Dictation section content (D-14: behavior-only after 18.1)
 
     @ViewBuilder
     private var dictationSectionContent: some View {
@@ -607,34 +624,6 @@ struct SettingsView: View {
 
             Divider().padding(.vertical, 2)
 
-            // Output mode: clipboard / plainFolder / both.
-            Picker("Output", selection: $settings.dictationOutputMode) {
-                Text("Clipboard only").tag(DictationOutputMode.clipboard)
-                Text("Plain folder only").tag(DictationOutputMode.plainFolder)
-                Text("Both").tag(DictationOutputMode.both)
-            }
-            .font(.system(size: 12))
-
-            // Plain-folder picker. Greyed out when mode == .clipboard (no folder needed).
-            HStack(spacing: 8) {
-                Text("Folder")
-                    .font(.system(size: 12))
-                Text(settings.dictationFolderPath.isEmpty ? "Not set" : settings.dictationFolderPath)
-                    .font(.system(.caption, design: .monospaced))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Button("Choose…") {
-                    chooseFolder(message: "Select dictation output folder") { path in
-                        settings.dictationFolderPath = path
-                    }
-                }
-                .font(.system(size: 12))
-            }
-            .disabled(settings.dictationOutputMode == .clipboard)
-            .opacity(settings.dictationOutputMode == .clipboard ? 0.5 : 1.0)
-
             // Clipboard restore delay -- Stepper in 0.5s increments, 0..30s range.
             HStack {
                 Text("Restore previous clipboard after")
@@ -647,7 +636,7 @@ struct SettingsView: View {
                 .labelsHidden()
             }
 
-            Text("Dictated text is excluded from clipboard-history apps (Alfred, Maccy, Pasta) via pasteboard markers.")
+            Text("Dictated text is always copied to the clipboard with privacy markers (excluded from Alfred, Maccy, Pasta history). Where the transcript is saved is configured under Local File / Obsidian / Notion above.")
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
         }
