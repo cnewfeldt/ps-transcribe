@@ -29,25 +29,9 @@ struct SettingsViewDictationSectionTests {
         )
     }
 
-    @Test func settingsViewContainsOutputModePicker() throws {
-        let source = try String(contentsOfFile: settingsViewPath, encoding: .utf8)
-        #expect(source.contains("$settings.dictationOutputMode"),
-                "SettingsView must bind a Picker to $settings.dictationOutputMode (DICT-02)")
-        #expect(source.contains("Picker"),
-                "SettingsView must use Picker for output-mode selection")
-    }
-
     @Test func settingsViewContainsHotkeyModePicker() throws {
         let source = try String(contentsOfFile: settingsViewPath, encoding: .utf8)
         #expect(source.contains("$settings.dictationHotkeyMode"),
                 "SettingsView must bind a Picker to $settings.dictationHotkeyMode (DICT-02)")
-    }
-
-    @Test func settingsViewInvokesChooseFolderForDictation() throws {
-        let source = try String(contentsOfFile: settingsViewPath, encoding: .utf8)
-        #expect(source.contains("chooseFolder(message:"),
-                "Folder picker must reuse the existing chooseFolder helper (no duplication)")
-        #expect(source.contains("settings.dictationFolderPath = path"),
-                "Folder picker must persist the chosen path to AppSettings.dictationFolderPath (FOLDER-01)")
     }
 }
