@@ -58,17 +58,6 @@ enum SessionType: String, Codable, Sendable {
     case dictation  // Phase 16, D-09
 }
 
-// MARK: - v1.2 Dictation Modes (Phase 16, D-10 / D-11)
-
-/// Where dictation transcripts are written when a hotkey-triggered dictation session ends.
-/// Default is `.clipboard` (D-08): plain folder is opt-in so no files appear on disk
-/// without explicit user action.
-enum DictationOutputMode: String, Codable, Sendable {
-    case clipboard
-    case plainFolder
-    case both
-}
-
 /// Hotkey activation model. `.toggle` (default) starts on first tap, stops on second.
 /// `.pressAndHold` records only while the hotkey is held down.
 enum DictationHotkeyMode: String, Codable, Sendable {

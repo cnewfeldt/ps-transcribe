@@ -15,14 +15,6 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(Int(inputDeviceID), forKey: "inputDeviceID") }
     }
 
-    var vaultMeetingsPath: String {
-        didSet { UserDefaults.standard.set(vaultMeetingsPath, forKey: "vaultMeetingsPath") }
-    }
-
-    var vaultVoicePath: String {
-        didSet { UserDefaults.standard.set(vaultVoicePath, forKey: "vaultVoicePath") }
-    }
-
     /// When true, all app windows are invisible to screen sharing / recording.
     var hideFromScreenShare: Bool {
         didSet {
@@ -48,19 +40,38 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(notionAutoSendEnabled, forKey: "notionAutoSendEnabled") }
     }
 
+    // MARK: - v1.2 Save Destinations (Phase 18.1, D-06 / D-10)
+
+    /// Local File destination toggle. Default `true` (D-06): meetings + voice memos work
+    /// out of the box without setup. UserDefaults key `"localFileEnabled"`.
+    var localFileEnabled: Bool {
+        didSet { UserDefaults.standard.set(localFileEnabled, forKey: "localFileEnabled") }
+    }
+
+    /// Root folder for the Local File destination. Hardcoded subfolders `Meeting/`,
+    /// `Memo/`, `Dictation/` are created lazily on first write per content type
+    /// (D-04 / D-06). Default expands to `~/Documents/PSTranscribe`. UserDefaults
+    /// key `"localFileRoot"`.
+    var localFileRoot: String {
+        didSet { UserDefaults.standard.set(localFileRoot, forKey: "localFileRoot") }
+    }
+
+    /// Obsidian destination toggle. Default `false` (D-10): Obsidian is opt-in --
+    /// not all users have a vault. UserDefaults key `"obsidianEnabled"`.
+    var obsidianEnabled: Bool {
+        didSet { UserDefaults.standard.set(obsidianEnabled, forKey: "obsidianEnabled") }
+    }
+
+    /// Single Obsidian folder for all content types. Replaces the v1.0
+    /// `vaultMeetingsPath` + `vaultVoicePath` pair (D-07 / D-10). Default `""`
+    /// (no folder picked yet). Content-type tagging happens via YAML
+    /// `session-type:` frontmatter (D-08), not via separate folders.
+    /// UserDefaults key `"obsidianFolderPath"`.
+    var obsidianFolderPath: String {
+        didSet { UserDefaults.standard.set(obsidianFolderPath, forKey: "obsidianFolderPath") }
+    }
+
     // MARK: - v1.2 Dictation Settings (Phase 16, D-03 / D-04)
-
-    /// Dictation output destination. Default `.clipboard` (D-08): plain folder is opt-in.
-    var dictationOutputMode: DictationOutputMode {
-        didSet { UserDefaults.standard.set(dictationOutputMode.rawValue, forKey: "dictationOutputMode") }
-    }
-
-    /// Plain-markdown output folder for hotkey dictation. Default `~/Documents/PS Transcribe Dictations`
-    /// (matches Phase 19 success criterion #4). Folder is created on first dictation save (Phase 18 owns creation),
-    /// not on app launch.
-    var dictationFolderPath: String {
-        didSet { UserDefaults.standard.set(dictationFolderPath, forKey: "dictationFolderPath") }
-    }
 
     /// Hotkey activation model. Default `.toggle` (research-locked).
     var dictationHotkeyMode: DictationHotkeyMode {
@@ -106,8 +117,6 @@ final class AppSettings {
         let defaults = UserDefaults.standard
         self.transcriptionLocale = defaults.string(forKey: "transcriptionLocale") ?? "en-US"
         self.inputDeviceID = AudioDeviceID(defaults.integer(forKey: "inputDeviceID"))
-        self.vaultMeetingsPath = defaults.string(forKey: "vaultMeetingsPath") ?? NSString("~/Documents/PSTranscribe/Meetings").expandingTildeInPath
-        self.vaultVoicePath = defaults.string(forKey: "vaultVoicePath") ?? NSString("~/Documents/PSTranscribe/Voice").expandingTildeInPath
         // Default to true (hidden) if key has never been set
         if defaults.object(forKey: "hideFromScreenShare") == nil {
             self.hideFromScreenShare = true
@@ -119,14 +128,23 @@ final class AppSettings {
         self.notionDatabaseID = defaults.string(forKey: "notionDatabaseID") ?? ""
         self.notionAutoSendEnabled = defaults.bool(forKey: "notionAutoSendEnabled")
 
+        // v1.2 Save Destinations (Phase 18.1, D-06 / D-10)
+        // No migration -- app not yet released to users (D-17 rip-and-replace).
+        if defaults.object(forKey: "localFileEnabled") == nil {
+            self.localFileEnabled = true  // D-06
+        } else {
+            self.localFileEnabled = defaults.bool(forKey: "localFileEnabled")
+        }
+        self.localFileRoot = defaults.string(forKey: "localFileRoot")
+            ?? NSString("~/Documents/PSTranscribe").expandingTildeInPath  // D-06
+        if defaults.object(forKey: "obsidianEnabled") == nil {
+            self.obsidianEnabled = false  // D-10
+        } else {
+            self.obsidianEnabled = defaults.bool(forKey: "obsidianEnabled")
+        }
+        self.obsidianFolderPath = defaults.string(forKey: "obsidianFolderPath") ?? ""  // D-10
+
         // v1.2 Dictation keys (Phase 16, D-04)
-        let dictationModeRaw = defaults.string(forKey: "dictationOutputMode")
-            ?? DictationOutputMode.clipboard.rawValue
-        self.dictationOutputMode = DictationOutputMode(rawValue: dictationModeRaw) ?? .clipboard
-
-        self.dictationFolderPath = defaults.string(forKey: "dictationFolderPath")
-            ?? NSString("~/Documents/PS Transcribe Dictations").expandingTildeInPath
-
         let hotkeyModeRaw = defaults.string(forKey: "dictationHotkeyMode")
             ?? DictationHotkeyMode.toggle.rawValue
         self.dictationHotkeyMode = DictationHotkeyMode(rawValue: hotkeyModeRaw) ?? .toggle
@@ -157,16 +175,6 @@ final class AppSettings {
         for window in NSApp.windows {
             window.sharingType = type
         }
-    }
-
-    var vaultMeetingsURL: URL? {
-        guard !vaultMeetingsPath.isEmpty else { return nil }
-        return URL(fileURLWithPath: vaultMeetingsPath)
-    }
-
-    var vaultVoiceURL: URL? {
-        guard !vaultVoicePath.isEmpty else { return nil }
-        return URL(fileURLWithPath: vaultVoicePath)
     }
 
     var locale: Locale {
