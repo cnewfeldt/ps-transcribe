@@ -12,24 +12,33 @@ struct PSTranscribeApp: App {
     @State private var globalHotkey: GlobalHotkeyService        // Phase 18
     @State private var dictationCoordinator: DictationCoordinator  // Phase 18
     @State private var dictationWindowController: DictationWindowController  // Phase 18
+    @State private var saveDestinations: SaveDestinations          // Phase 18.1, D-18
     private let updaterController = AppUpdaterController()
-    @State private var notionService = NotionService()
+    @State private var notionService: NotionService
     @State private var escapeKeyMonitor: Any?
 
     init() {
         let initialSettings = AppSettings()
         let initialLibrary = LibraryStore()
         let initialCoordinator = SessionCoordinator()
+        let initialNotion = NotionService()
         let initialModelUpdate = ModelUpdateService(
             settings: initialSettings,
             engine: nil,                            // late-bound in ContentView .task
             sessionCoordinator: initialCoordinator
         )
         let initialHotkey = GlobalHotkeyService()
+        // Phase 18.1 D-18: shared destination fan-out lives at app scope so every
+        // content producer (dictation, meeting/memo) routes through the same instance.
+        let initialSaveDestinations = SaveDestinations(
+            settings: initialSettings,
+            notionService: initialNotion
+        )
         let initialDictation = DictationCoordinator(
             settings: initialSettings,
             sessionCoordinator: initialCoordinator,
-            libraryStore: initialLibrary
+            libraryStore: initialLibrary,
+            saveDestinations: initialSaveDestinations
         )
         let initialWindowCtrl = DictationWindowController(rootView: AnyView(EmptyView()))
         // Wire HUD body to the coordinator's live state.
@@ -45,6 +54,8 @@ struct PSTranscribeApp: App {
         _globalHotkey = State(initialValue: initialHotkey)
         _dictationCoordinator = State(initialValue: initialDictation)
         _dictationWindowController = State(initialValue: initialWindowCtrl)
+        _saveDestinations = State(initialValue: initialSaveDestinations)
+        _notionService = State(initialValue: initialNotion)
 
         // Phase 18 — wire hotkey callbacks. We capture the dictation coordinator and
         // settings; both are app-scoped so a strong capture is fine for the lifetime
@@ -134,7 +145,8 @@ struct PSTranscribeApp: App {
                 notionService: notionService,
                 libraryStore: libraryStore,
                 sessionCoordinator: sessionCoordinator,
-                modelUpdateService: modelUpdateService
+                modelUpdateService: modelUpdateService,
+                saveDestinations: saveDestinations
             )
                 .onAppear {
                     settings.applyScreenShareVisibility()

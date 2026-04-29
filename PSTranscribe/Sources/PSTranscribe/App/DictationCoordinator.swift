@@ -67,6 +67,9 @@ final class DictationCoordinator {
     let dictationLogger: DictationLogger
     let dictationStore: TranscriptStore
     let dictationEngine: TranscriptionEngine
+    /// 18.1 D-18: shared destination fan-out (Local File, Obsidian, Notion).
+    /// Constructed at app scope and injected here; coordinator owns a strong ref.
+    let saveDestinations: SaveDestinations
     /// Hotkey service is wired by the app scope (Plan 18-08); coordinator stores
     /// the reference so Wave 4 can attach `onKeyDown`/`onKeyUp` callbacks.
     weak var hotkeyService: GlobalHotkeyService?
@@ -92,10 +95,12 @@ final class DictationCoordinator {
 
     init(settings: AppSettings,
          sessionCoordinator: SessionCoordinator,
-         libraryStore: LibraryStore) {
+         libraryStore: LibraryStore,
+         saveDestinations: SaveDestinations) {
         self.settings = settings
         self.sessionCoordinator = sessionCoordinator
         self.libraryStore = libraryStore
+        self.saveDestinations = saveDestinations
         self.dictationLogger = DictationLogger()
         self.dictationStore = TranscriptStore()
         self.dictationEngine = TranscriptionEngine(transcriptStore: dictationStore)
@@ -157,16 +162,10 @@ final class DictationCoordinator {
         partialText = ""
         elapsed = 0
 
-        let mode = settings.dictationOutputMode
-        if mode == .plainFolder || mode == .both {
-            do {
-                try await dictationLogger.startSession(folderPath: settings.dictationFolderPath)
-            } catch {
-                // D-15: silent fallback to clipboard-only. Log only the localized error
-                // description (NEVER the assembled transcript -- T-18-06-06).
-                dictCoordLog.error("Plain-folder open failed: \(error.localizedDescription, privacy: .public). Falling back to clipboard-only.")
-            }
-        }
+        // 18.1 D-18: dictation file persistence is now driven by SaveDestinations.
+        // beginDictationLocalFile opens a streaming session against localFileRoot/Dictation
+        // when localFileEnabled is true; logs + no-throws on failure (D-15 silent fallback).
+        await saveDestinations.beginDictationLocalFile(dictationLogger: dictationLogger)
 
         state = dictationEngine.modelsReady ? .listening : .loadingModel
         windowController?.show()
@@ -242,19 +241,37 @@ final class DictationCoordinator {
 
         let finalFileURL: URL? = await dictationLogger.endSession()
 
-        let mode = settings.dictationOutputMode
-        if mode == .clipboard || mode == .both {
-            writeToClipboardWithPrivacyMarkers(assembled)
-            scheduleClipboardRestore(after: settings.clipboardRestoreDelay)
-        }
+        // 18.1 D-15: clipboard write is unconditional and always-on. Order is critical
+        // (Pitfall #4): clipboard MUST be written BEFORE any await on saveDestinations.save
+        // so a slow Notion API call cannot block the user's paste UX.
+        writeToClipboardWithPrivacyMarkers(assembled)
+        scheduleClipboardRestore(after: settings.clipboardRestoreDelay)
 
-        // D-12: clipboard-only entries store the transcript inline so the user can
-        // recover it after the clipboard restore window expires. When `finalFileURL`
-        // is non-nil, the on-disk file is the source of truth and inlineTranscript
-        // stays nil. The D-15 silent-fallback path lands here too: plain-folder open
-        // failed -> finalFileURL == nil -> assembled is preserved inline so the user
-        // doesn't lose their transcript.
-        let inlineTranscriptToStore: String? = (finalFileURL == nil) ? assembled : nil
+        // 18.1 D-18: post-clipboard fan-out to Obsidian + Notion. Local File for
+        // dictation is owned by the streaming dictationLogger above (already on disk),
+        // so we toggle localFileEnabled off for this single call to prevent a second
+        // Local File copy.
+        let saveMetadata = SaveMetadata(
+            sessionType: .dictation,
+            title: autoNameFromTranscript(assembled),
+            startDate: sessionStartTime ?? Date(),
+            duration: elapsed,
+            sourceApp: "PSTranscribe",
+            speakers: [],
+            tags: []
+        )
+        let saveResult = await saveDictationToNonLocalDestinations(
+            content: assembled,
+            metadata: saveMetadata
+        )
+
+        // D-19 / D-12: source-of-truth for the library row's filePath.
+        // Priority: Local File (streamed via dictationLogger) > Obsidian (fan-out) > "" + inline transcript.
+        let primaryFilePath: String = finalFileURL?.path
+            ?? saveResult.obsidianFileURL?.path
+            ?? ""
+        let inlineTranscriptToStore: String? =
+            (finalFileURL == nil && saveResult.obsidianFileURL == nil) ? assembled : nil
 
         let preview = String(assembled.prefix(120))
         let entry = LibraryEntry(
@@ -263,11 +280,11 @@ final class DictationCoordinator {
             sessionType: .dictation,
             startDate: sessionStartTime ?? Date(),
             duration: elapsed,
-            filePath: finalFileURL?.path ?? "",
+            filePath: primaryFilePath,
             sourceApp: "PSTranscribe",
             isFinalized: true,
             firstLinePreview: preview.isEmpty ? nil : preview,
-            notionPageURL: nil,
+            notionPageURL: saveResult.notionPageURL?.absoluteString,
             inlineTranscript: inlineTranscriptToStore
         )
         await libraryStore.addEntry(entry)
@@ -357,6 +374,19 @@ final class DictationCoordinator {
         elapsed = 0
         partialText = ""
         dictationStore.clear()
+    }
+
+    /// 18.1 D-19 helper: fan out dictation content to Obsidian + Notion only.
+    /// The Local File destination for dictation is owned by the streaming `dictationLogger`,
+    /// which has already written the file before this call. We toggle `localFileEnabled`
+    /// off transiently so SaveDestinations does not write a SECOND Local File copy; the
+    /// `defer` restores the original value so other content producers (meeting/memo) are
+    /// unaffected.
+    private func saveDictationToNonLocalDestinations(content: String, metadata: SaveMetadata) async -> SaveResult {
+        let originalLocalFileEnabled = settings.localFileEnabled
+        settings.localFileEnabled = false
+        defer { settings.localFileEnabled = originalLocalFileEnabled }
+        return await saveDestinations.save(content: content, metadata: metadata)
     }
 
     /// D-14: 1.5s notice when hotkey fires during another active session.
