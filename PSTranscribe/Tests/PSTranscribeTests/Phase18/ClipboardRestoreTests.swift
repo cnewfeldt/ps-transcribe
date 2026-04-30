@@ -12,11 +12,17 @@ struct ClipboardRestoreTests {
     @MainActor
     private func makeCoordinator(restoreDelay: TimeInterval = 0.5) -> DictationCoordinator {
         let settings = AppSettings()
-        settings.dictationOutputMode = .clipboard
+        settings.localFileEnabled = false
         settings.clipboardRestoreDelay = restoreDelay
         let coordinator = SessionCoordinator()
         let library = LibraryStore()
-        return DictationCoordinator(settings: settings, sessionCoordinator: coordinator, libraryStore: library)
+        let saveDest = SaveDestinations(settings: settings, notionService: NotionService())
+        return DictationCoordinator(
+            settings: settings,
+            sessionCoordinator: coordinator,
+            libraryStore: library,
+            saveDestinations: saveDest
+        )
     }
 
     @Test @MainActor func clipboardRestoresAfterDelay() async {

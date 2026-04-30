@@ -9,10 +9,12 @@ struct SessionCoordinatorMutualExclusionTests {
     private func makeDictation(_ sessionCoord: SessionCoordinator) -> DictationCoordinator {
         let settings = AppSettings()
         let library = LibraryStore()
+        let saveDest = SaveDestinations(settings: settings, notionService: NotionService())
         return DictationCoordinator(
             settings: settings,
             sessionCoordinator: sessionCoord,
-            libraryStore: library
+            libraryStore: library,
+            saveDestinations: saveDest
         )
     }
 

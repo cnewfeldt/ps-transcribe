@@ -10,7 +10,13 @@ struct AutoNameTests {
         let settings = AppSettings()
         let coordinator = SessionCoordinator()
         let library = LibraryStore()
-        return DictationCoordinator(settings: settings, sessionCoordinator: coordinator, libraryStore: library)
+        let saveDest = SaveDestinations(settings: settings, notionService: NotionService())
+        return DictationCoordinator(
+            settings: settings,
+            sessionCoordinator: coordinator,
+            libraryStore: library,
+            saveDestinations: saveDest
+        )
     }
 
     @Test @MainActor func first5WordsBecomeName() {

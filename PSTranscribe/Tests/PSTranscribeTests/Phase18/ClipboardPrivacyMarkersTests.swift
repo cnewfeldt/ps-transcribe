@@ -10,10 +10,16 @@ struct ClipboardPrivacyMarkersTests {
     @MainActor
     private func makeCoordinator() -> DictationCoordinator {
         let settings = AppSettings()
-        settings.dictationOutputMode = .clipboard
+        settings.localFileEnabled = false
         let coordinator = SessionCoordinator()
         let library = LibraryStore()
-        return DictationCoordinator(settings: settings, sessionCoordinator: coordinator, libraryStore: library)
+        let saveDest = SaveDestinations(settings: settings, notionService: NotionService())
+        return DictationCoordinator(
+            settings: settings,
+            sessionCoordinator: coordinator,
+            libraryStore: library,
+            saveDestinations: saveDest
+        )
     }
 
     @Test @MainActor func transientTypeMarkerSetAfterClipboardWrite() async {

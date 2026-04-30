@@ -15,10 +15,12 @@ struct DictationCoordinatorStateTests {
         let settings = AppSettings()
         let coordinator = SessionCoordinator()
         let library = LibraryStore()
+        let saveDest = SaveDestinations(settings: settings, notionService: NotionService())
         return DictationCoordinator(
             settings: settings,
             sessionCoordinator: coordinator,
-            libraryStore: library
+            libraryStore: library,
+            saveDestinations: saveDest
         )
     }
 
@@ -142,10 +144,12 @@ struct DictationCoordinatorStateTests {
         let settings = AppSettings()
         let sessionCoord = SessionCoordinator()
         let library = LibraryStore()
+        let saveDest = SaveDestinations(settings: settings, notionService: NotionService())
         let dict = DictationCoordinator(
             settings: settings,
             sessionCoordinator: sessionCoord,
-            libraryStore: library
+            libraryStore: library,
+            saveDestinations: saveDest
         )
         let store = TranscriptStore()
         let engine = TranscriptionEngine(transcriptStore: store)
