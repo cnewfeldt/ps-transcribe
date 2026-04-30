@@ -75,6 +75,21 @@
 - [x] 18-07-PLAN.md — Settings > Dictation section (hotkey recorder, mode picker, folder picker) (Wave 5)
 - [x] 18-08-PLAN.md — App-scope wiring (MenuBarExtra pulse, Esc-key monitor, eager pre-warm) (Wave 6)
 **UI hint**: yes
+### Phase 18.1: Shared save destinations + Local File (INSERTED)
+
+**Goal**: Refactor save destinations into a top-level shared layer (Notion / Obsidian / Local File) so all content producers (meeting recording, voice memo, dictation) emit `(content, sessionType)` to a single `SaveDestinations` fan-out; retire `DictationOutputMode` and the dictation-private folder picker; add Local File destination peer to Notion / Obsidian; collapse Obsidian to a single folder + frontmatter tagging.
+**Requirements**: FOLDER-01 (reframed via Local File), FOLDER-02 (Local File `Dictation/` subfolder), FOLDER-03, FOLDER-05, DICT-05 (always-on clipboard), DICT-09 (privacy markers); FOLDER-04 REMOVED (replaced by always-on clipboard + destination fan-out)
+**Depends on:** Phase 18
+**Plans:** 6/6 plans complete
+
+Plans:
+- [x] 18.1-01-PLAN.md — AppSettings rip-and-replace (delete dictationOutputMode/dictationFolderPath/vaultMeetingsPath/vaultVoicePath; add localFileEnabled/localFileRoot/obsidianEnabled/obsidianFolderPath) + delete DictationOutputMode enum + persistence tests (Wave 1)
+- [x] 18.1-02-PLAN.md — SaveDestinations + LocalFileWriter + ObsidianWriter + SessionType destination-mapping extension + writer/fan-out tests (Wave 1)
+- [x] 18.1-03-PLAN.md — SettingsView restructure (Local File section, single-folder Obsidian, behavior-only Dictation) + SettingsView source-grep tests (Wave 2)
+- [x] 18.1-04-PLAN.md — DictationCoordinator refactor (always-on clipboard, SaveDestinations fan-out) + app-scope wiring + zero-destinations dictation test (Wave 2)
+- [x] 18.1-05-PLAN.md — ContentView meeting/memo refactor (Local File subfolder routing, D-20 zero-destinations guard, post-session SaveDestinations fan-out) + Notion session-type tests (Wave 2)
+- [x] 18.1-06-PLAN.md — Phase 18 sibling test migration sweep + full `swift test` green gate (Wave 3)
+
 #### Phase 19: Integration & Hardening
 
 **Goal**: All v1.2 features interact correctly under realistic edge cases and the app is ready to ship
@@ -95,6 +110,7 @@
 | 16. Foundation | 4/4 | Complete    | 2026-04-27 |
 | 17. Model Auto-Update | 5/5 | Complete    | 2026-04-28 |
 | 18. Hotkey Dictation + Plain-Folder Output | 8/8 | Complete   | 2026-04-28 |
+| 18.1 Shared save destinations + Local File | 6/6 | Complete    | 2026-04-30 |
 | 19. Integration & Hardening | 0/0 | Not started | - |
 
 ## Backlog

@@ -4,13 +4,13 @@ milestone: v1.2
 milestone_name: — Standalone Dictation + Model Auto-Update
 status: executing
 stopped_at: Phase 18.1 context gathered
-last_updated: "2026-04-29T17:33:01.104Z"
-last_activity: 2026-04-28 -- Phase 18 execution started
+last_updated: "2026-04-30T04:39:21.536Z"
+last_activity: 2026-04-30
 progress:
   total_phases: 5
-  completed_phases: 3
-  total_plans: 18
-  completed_plans: 18
+  completed_phases: 4
+  total_plans: 24
+  completed_plans: 24
   percent: 100
 ---
 
@@ -21,7 +21,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-27)
 
 **Core value:** Users can record meetings and voice memos with accurate, private, on-device transcription. All processing stays on-device.
-**Current focus:** Phase 18 — hotkey-dictation-plain-folder-output
+**Current focus:** Phase 18.1 — shared-save-destinations-local-file
 
 **Shipped milestones:**
 
@@ -34,10 +34,10 @@ See: .planning/PROJECT.md (updated 2026-04-27)
 
 ## Current Position
 
-Phase: 18 (hotkey-dictation-plain-folder-output) — EXECUTING
-Plan: 1 of 9
-Status: Executing Phase 18
-Last activity: 2026-04-28 -- Phase 18 execution started
+Phase: 19
+Plan: Not started
+Status: Executing Phase 18.1
+Last activity: 2026-04-30
 
 Progress: [████████░░] 76%
 
