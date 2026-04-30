@@ -434,6 +434,17 @@ struct ContentView: View {
                 transcriptionEngine?.restartMic(inputDeviceID: settings.inputDeviceID)
             }
         }
+        .onChange(of: saveDestinations.isAnyDestinationEnabled) { _, isEnabled in
+            // 18.1 gap-09 (UAT issue #3): when the user enables a destination after
+            // the D-20 guard fired, clear the inline error so the start buttons
+            // re-engage. Scope is exact-match against the D-20 constant -- mic
+            // permission, save failures, and model download failures must NOT be
+            // cleared by this path. See .planning/debug/18.1-uat-issue-3-stale-d20-error.md.
+            guard isEnabled,
+                  transcriptionEngine?.lastError == DestinationGuardErrors.noDestinationsConfigured
+            else { return }
+            transcriptionEngine?.lastError = nil
+        }
         .onChange(of: transcriptStore.utterances.count) {
             handleNewUtterance()
         }
@@ -824,8 +835,7 @@ struct ContentView: View {
         // with a unified message. Error surface unchanged: transcriptionEngine.lastError
         // is rendered inline in the control bar.
         guard saveDestinations.isAnyDestinationEnabled else {
-            transcriptionEngine?.lastError =
-                "No save destination configured. Enable Local File, Obsidian, or Notion in Settings."
+            transcriptionEngine?.lastError = DestinationGuardErrors.noDestinationsConfigured
             return
         }
 

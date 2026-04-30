@@ -4,6 +4,21 @@ import os
 
 private let saveDestLog = Logger(subsystem: "com.pstranscribe.app", category: "SaveDestinations")
 
+/// User-facing error messages produced by destination-state guards.
+///
+/// Centralized so producers (ContentView.startSession D-20 guard) and consumers
+/// (.onChange auto-clear in ContentView) reference a single source of truth and
+/// cannot drift. 18.1 gap-09 scopes the auto-clear to this exact message: only
+/// it is cleared when destinations re-enable -- unrelated errors (mic permission,
+/// save failures, model download failures) MUST be preserved.
+enum DestinationGuardErrors {
+    /// 18.1 D-20: surfaced when meeting/voice memo session-start runs with zero
+    /// destinations enabled. Long-form recordings need persistence; clipboard is
+    /// not a substitute. Mirrored exactly in ContentView's auto-clear .onChange.
+    static let noDestinationsConfigured =
+        "No save destination configured. Enable Local File, Obsidian, or Notion in Settings."
+}
+
 /// Metadata for a single piece of content being saved. Producers (DictationCoordinator,
 /// ContentView meeting/memo flow) pass this to `SaveDestinations.save(...)`.
 struct SaveMetadata: Sendable {
