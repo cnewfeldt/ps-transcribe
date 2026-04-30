@@ -1023,10 +1023,14 @@ struct ContentView: View {
                         tags: []
                     )
                     // Avoid duplicate Local File write -- TranscriptLogger already streamed it.
-                    let originalLocalFileEnabled = settings.localFileEnabled
-                    settings.localFileEnabled = false
-                    let saveResult = await saveDestinations.save(content: markdown, metadata: saveMeta)
-                    settings.localFileEnabled = originalLocalFileEnabled
+                    // (WR-01 / WR-02: pass `skipLocalFile: true` instead of transiently
+                    // toggling `settings.localFileEnabled`, which was observable to SwiftUI
+                    // and not `defer`-protected on early return.)
+                    let saveResult = await saveDestinations.save(
+                        content: markdown,
+                        metadata: saveMeta,
+                        skipLocalFile: true
+                    )
 
                     if let notionURL = saveResult.notionPageURL?.absoluteString,
                        entry.notionPageURL == nil {

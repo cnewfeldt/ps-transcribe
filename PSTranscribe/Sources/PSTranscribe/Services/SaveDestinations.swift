@@ -67,11 +67,17 @@ final class SaveDestinations {
     /// for their Local File write -- TranscriptLogger streams that file during the session
     /// (RESEARCH.md Pitfall #7); ContentView calls savePostSession(...) at session end so
     /// Obsidian/Notion writers run, but the meeting Local File path is already on disk.
+    ///
+    /// Pass `skipLocalFile: true` when the caller has already streamed the Local File
+    /// during the session (DictationLogger / TranscriptLogger) and a fan-out write would
+    /// produce a duplicate. This is preferred over transiently toggling
+    /// `settings.localFileEnabled`, which is observable to SwiftUI views and writes
+    /// UserDefaults twice per save (WR-01 / WR-02).
     /// Returns `SaveResult` populated per-destination.
-    func save(content: String, metadata: SaveMetadata) async -> SaveResult {
+    func save(content: String, metadata: SaveMetadata, skipLocalFile: Bool = false) async -> SaveResult {
         var result = SaveResult()
 
-        if settings.localFileEnabled {
+        if !skipLocalFile, settings.localFileEnabled {
             do {
                 let url = try await localFileWriter.write(
                     content: content,

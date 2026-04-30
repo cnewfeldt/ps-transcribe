@@ -378,15 +378,16 @@ final class DictationCoordinator {
 
     /// 18.1 D-19 helper: fan out dictation content to Obsidian + Notion only.
     /// The Local File destination for dictation is owned by the streaming `dictationLogger`,
-    /// which has already written the file before this call. We toggle `localFileEnabled`
-    /// off transiently so SaveDestinations does not write a SECOND Local File copy; the
-    /// `defer` restores the original value so other content producers (meeting/memo) are
-    /// unaffected.
+    /// which has already written the file before this call. We pass `skipLocalFile: true`
+    /// so SaveDestinations does not write a SECOND Local File copy. (WR-01: this replaces
+    /// a transient `settings.localFileEnabled` toggle which was observable to SwiftUI and
+    /// wrote UserDefaults twice per save.)
     private func saveDictationToNonLocalDestinations(content: String, metadata: SaveMetadata) async -> SaveResult {
-        let originalLocalFileEnabled = settings.localFileEnabled
-        settings.localFileEnabled = false
-        defer { settings.localFileEnabled = originalLocalFileEnabled }
-        return await saveDestinations.save(content: content, metadata: metadata)
+        return await saveDestinations.save(
+            content: content,
+            metadata: metadata,
+            skipLocalFile: true
+        )
     }
 
     /// D-14: 1.5s notice when hotkey fires during another active session.
