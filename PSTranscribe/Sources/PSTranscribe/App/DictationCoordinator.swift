@@ -242,8 +242,12 @@ final class DictationCoordinator {
         let finalFileURL: URL? = await dictationLogger.endSession()
 
         // 18.1 D-15: clipboard write is unconditional and always-on. Order is critical
-        // (Pitfall #4): clipboard MUST be written BEFORE any await on saveDestinations.save
-        // so a slow Notion API call cannot block the user's paste UX.
+        // (Pitfall #4): clipboard MUST be written BEFORE any *network* await
+        // (saveDestinations.save -> Notion API call), so a slow Notion request cannot
+        // block the user's paste UX. The dictationLogger flush above is local-disk I/O
+        // (microseconds in practice); if a future failure mode makes that flush block
+        // on a slow disk (network home, fsync stall), the clipboard write should be
+        // moved above the dictationLogger block.
         writeToClipboardWithPrivacyMarkers(assembled)
         scheduleClipboardRestore(after: settings.clipboardRestoreDelay)
 
