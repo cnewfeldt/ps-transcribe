@@ -183,4 +183,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-28 -- v1.2 Phase 17 (Model Auto-Update) complete. Manifest publication is the documented release-prerequisite gating end-to-end UI verification (see `phases/17-model-auto-update/17-VERIFICATION.md`). Phase 18 (Hotkey Dictation + Plain-Folder Output) unblocked.*
+*Last updated: 2026-04-30 -- v1.2 Phase 18.1 (Shared save destinations + Local File) complete. Save destinations are now top-level shared sections (Notion / Obsidian / Local File); every content producer routes through `SaveDestinations.save(content, metadata)`; `DictationOutputMode` retired; clipboard write is unconditional (D-15). 6/6 plans, 21/21 must-haves verified, 208 tests pass. Code review surfaced 4 warnings (transient `localFileEnabled` toggle pattern, substring `..` validation) carried as advisory follow-ups. Phase 19 (Integration & Hardening) unblocked.*
