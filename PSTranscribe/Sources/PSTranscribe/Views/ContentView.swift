@@ -23,6 +23,7 @@ struct ContentView: View {
     let libraryStore: LibraryStore                       // Phase 16, D-12: injected from app scope
     let sessionCoordinator: SessionCoordinator           // Phase 16, D-07: injected from app scope
     let modelUpdateService: ModelUpdateService           // Phase 17, D-18
+    let saveDestinations: SaveDestinations               // Phase 18.1, D-18 (shared destination fan-out)
     @State private var transcriptStore = TranscriptStore()
     @State private var transcriptionEngine: TranscriptionEngine?
     @State private var sessionStore = SessionStore()
@@ -88,7 +89,7 @@ struct ContentView: View {
     }
 
     private var isObsidianAvailable: Bool {
-        let hasVaultPath = !settings.vaultMeetingsPath.isEmpty || !settings.vaultVoicePath.isEmpty
+        let hasVaultPath = !settings.obsidianFolderPath.isEmpty
         let isInstalled = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "md.obsidian") != nil
         return hasVaultPath && isInstalled
     }
@@ -235,8 +236,8 @@ struct ContentView: View {
 
                 DetailsPane(
                     selectedEntry: libraryEntries.first(where: { $0.id == selectedEntryID }),
-                    meetingsFolderName: folderDisplayName(path: settings.vaultMeetingsPath, fallback: "Meetings"),
-                    voiceFolderName: folderDisplayName(path: settings.vaultVoicePath, fallback: "Voice"),
+                    meetingsFolderName: folderDisplayName(path: settings.localFileRoot, fallback: "Meetings"),
+                    voiceFolderName: folderDisplayName(path: settings.localFileRoot, fallback: "Voice"),
                     isObsidianAvailable: isObsidianAvailable,
                     obsidianURL: libraryEntries.first(where: { $0.id == selectedEntryID }).flatMap { obsidianURLForEntry($0) }
                 )
@@ -320,8 +321,12 @@ struct ContentView: View {
                     $0.filePath == checkpoint.transcriptPath
                 }
                 if !existsInLibrary {
+                    // 18.1 D-04: voice memos and meetings live in subfolders under localFileRoot.
+                    // Detect by subfolder name in the recovered transcript path.
                     let recoveredType: SessionType
-                    if checkpoint.transcriptPath.hasPrefix(settings.vaultVoicePath) {
+                    let voiceSubfolder = (settings.localFileRoot as NSString)
+                        .appendingPathComponent(SessionType.voiceMemo.localFileSubfolder)
+                    if checkpoint.transcriptPath.hasPrefix(voiceSubfolder) {
                         recoveredType = .voiceMemo
                     } else {
                         recoveredType = .callCapture
@@ -656,36 +661,6 @@ struct ContentView: View {
 
     // MARK: - Notion
 
-    /// Fire-and-forget auto-send on session finalization. Empty tags by design;
-    /// users add tags later via the manual "Resend to Notion" flow, which updates
-    /// the existing page in place.
-    private func autoSendToNotion(entry: LibraryEntry) async {
-        let logger = Logger(subsystem: "com.pstranscribe.app", category: "NotionAutoSend")
-        do {
-            let markdown = try String(contentsOfFile: entry.filePath, encoding: .utf8)
-            let speakers = notionService.extractSpeakers(markdown)
-            logger.info("Auto-sending to Notion: \(entry.displayName)")
-            let pageURL = try await notionService.sendTranscript(
-                databaseID: settings.notionDatabaseID,
-                title: entry.displayName,
-                date: entry.startDate,
-                duration: entry.duration,
-                sourceApp: entry.sourceApp,
-                sessionType: entry.sessionType == .callCapture ? "Call Capture" : "Voice Memo",
-                speakers: speakers,
-                tags: [],
-                transcriptMarkdown: markdown
-            )
-            await libraryStore.updateEntry(id: entry.id) { @Sendable e in
-                e.notionPageURL = pageURL.absoluteString
-            }
-            refreshLibrary()
-        } catch {
-            logger.error("Auto-send to Notion failed: \(error.localizedDescription)")
-            notionSendError = "Auto-send to Notion failed: \(error.localizedDescription)"
-        }
-    }
-
     private func sendToNotion(entry: LibraryEntry, tags: [String]) {
         isNotionSending = true
         notionSendError = nil
@@ -706,7 +681,7 @@ struct ContentView: View {
                         date: entry.startDate,
                         duration: entry.duration,
                         sourceApp: entry.sourceApp,
-                        sessionType: entry.sessionType == .callCapture ? "Call Capture" : "Voice Memo",
+                        sessionType: entry.sessionType.notionValue,
                         speakers: speakers,
                         tags: tags,
                         transcriptMarkdown: markdown
@@ -719,7 +694,7 @@ struct ContentView: View {
                         date: entry.startDate,
                         duration: entry.duration,
                         sourceApp: entry.sourceApp,
-                        sessionType: entry.sessionType == .callCapture ? "Call Capture" : "Voice Memo",
+                        sessionType: entry.sessionType.notionValue,
                         speakers: speakers,
                         tags: tags,
                         transcriptMarkdown: markdown
@@ -806,7 +781,7 @@ struct ContentView: View {
                         date: entry.startDate,
                         duration: entry.duration,
                         sourceApp: entry.sourceApp,
-                        sessionType: entry.sessionType == .callCapture ? "Call Capture" : "Voice Memo",
+                        sessionType: entry.sessionType.notionValue,
                         speakers: speakers,
                         tags: [],
                         transcriptMarkdown: newContent
@@ -844,7 +819,23 @@ struct ContentView: View {
         sessionName = ""
         savedConfirmation = false
 
-        // Determine output folder and app bundle ID based on session type
+        // 18.1 D-20: meeting/voice memo persistence is REQUIRED. Block at session-start
+        // when zero destinations are enabled. Mirrors today's missing-folder guard but
+        // with a unified message. Error surface unchanged: transcriptionEngine.lastError
+        // is rendered inline in the control bar.
+        guard saveDestinations.isAnyDestinationEnabled else {
+            transcriptionEngine?.lastError =
+                "No save destination configured. Enable Local File, Obsidian, or Notion in Settings."
+            return
+        }
+
+        // 18.1 D-04: Local File path is localFileRoot/{Meeting|Memo}/. TranscriptLogger
+        // continues to STREAM the file during the session (RESEARCH Pitfall #7);
+        // SaveDestinations.save() runs the Obsidian + Notion fan-out at session END.
+        // Meetings/memos always stream to localFileRoot/<subfolder> regardless of the
+        // localFileEnabled toggle -- consistent streaming-write semantics, and a safety
+        // net if the user disabled Local File but enabled Obsidian.
+
         let outputPath: String
         let sourceApp: String
         var appBundleID: String?
@@ -852,7 +843,8 @@ struct ContentView: View {
 
         switch type {
         case .callCapture:
-            outputPath = settings.vaultMeetingsPath
+            outputPath = (settings.localFileRoot as NSString)
+                .appendingPathComponent(SessionType.callCapture.localFileSubfolder)
             if let frontApp = NSWorkspace.shared.frontmostApplication,
                let bundleID = frontApp.bundleIdentifier,
                let appName = conferencingBundleIDs[bundleID] {
@@ -863,21 +855,11 @@ struct ContentView: View {
                 sourceApp = "Call"
             }
         case .voiceMemo:
-            outputPath = settings.vaultVoicePath
+            outputPath = (settings.localFileRoot as NSString)
+                .appendingPathComponent(SessionType.voiceMemo.localFileSubfolder)
             sourceApp = "Voice Memo"
         case .dictation:
-            // Dictation is owned by DictationCoordinator (Phase 18), not the meeting startSession flow.
-            // This arm exists for switch exhaustiveness only; should never be reached in Phase 16.
             transcriptionEngine?.lastError = "Internal error: startSession called with .dictation; use DictationCoordinator instead."
-            return
-        }
-
-        // Guard: without a configured Obsidian folder for this session type,
-        // we have nowhere to save. Surface an error and abort.
-        guard !outputPath.isEmpty else {
-            let label = type == .callCapture ? "Meetings" : "Voice memos"
-            transcriptionEngine?.lastError =
-                "Obsidian \(label) folder isn't set — configure it in Settings → Obsidian before recording."
             return
         }
 
@@ -1022,14 +1004,37 @@ struct ContentView: View {
                     }
                 }
 
-                // Auto-send to Notion with empty tags, if enabled + configured + not already sent.
-                // User can still use "Resend to Notion" to add tags afterward (updates in place).
-                if settings.notionAutoSendEnabled,
-                   isNotionConfigured,
-                   !capturedPath.isEmpty,
-                   let entry = await libraryStore.entries.first(where: { $0.id == entryID }),
-                   entry.notionPageURL == nil {
-                    await autoSendToNotion(entry: entry)
+                // 18.1 D-18: post-session fan-out to Obsidian + Notion. Local File for
+                // meetings is already streamed by TranscriptLogger during the session
+                // (RESEARCH Pitfall #7); SaveDestinations runs Obsidian + Notion only.
+                // The notionAutoSendEnabled / obsidianEnabled / *DatabaseID / *FolderPath
+                // flags inside SaveDestinations.save gate per-destination behavior.
+                if !capturedPath.isEmpty,
+                   let entry = await libraryStore.entries.first(where: { $0.id == entryID }) {
+                    let markdown = (try? String(contentsOfFile: capturedPath, encoding: .utf8)) ?? ""
+                    let speakers = notionService.extractSpeakers(markdown)
+                    let saveMeta = SaveMetadata(
+                        sessionType: entry.sessionType,
+                        title: entry.displayName,
+                        startDate: entry.startDate,
+                        duration: entry.duration,
+                        sourceApp: entry.sourceApp,
+                        speakers: speakers,
+                        tags: []
+                    )
+                    // Avoid duplicate Local File write -- TranscriptLogger already streamed it.
+                    let originalLocalFileEnabled = settings.localFileEnabled
+                    settings.localFileEnabled = false
+                    let saveResult = await saveDestinations.save(content: markdown, metadata: saveMeta)
+                    settings.localFileEnabled = originalLocalFileEnabled
+
+                    if let notionURL = saveResult.notionPageURL?.absoluteString,
+                       entry.notionPageURL == nil {
+                        await libraryStore.updateEntry(id: entry.id) { @Sendable e in
+                            e.notionPageURL = notionURL
+                        }
+                        refreshLibrary()
+                    }
                 }
             }
 
