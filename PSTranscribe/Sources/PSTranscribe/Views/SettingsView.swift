@@ -649,7 +649,9 @@ struct SettingsView: View {
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
-        panel.message = message
+        panel.title = message              // 18.1 gap-07: high-contrast title bar (UAT #1)
+        panel.prompt = "Choose"            // 18.1 gap-07: replaces system default "Open"
+        panel.message = message            // accessory description (existing)
 
         if panel.runModal() == .OK, let url = panel.url {
             onSelect(url.path)
