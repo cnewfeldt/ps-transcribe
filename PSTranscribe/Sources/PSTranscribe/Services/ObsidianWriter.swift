@@ -79,13 +79,20 @@ actor ObsidianWriter {
 
     private func validatedFolderPath(_ rawPath: String) throws -> URL {
         let expanded = NSString(string: rawPath).expandingTildeInPath
-        guard !expanded.isEmpty,
-              !expanded.contains("\0"),
-              !expanded.contains("..") else {
-            obsLog.error("Obsidian folder rejected: traversal/null pattern")
+        guard !expanded.isEmpty, !expanded.contains("\0") else {
+            obsLog.error("Obsidian folder rejected: empty or null pattern")
             throw ObsidianWriterError.folderPathInvalid(rawPath)
         }
-        return URL(fileURLWithPath: expanded).resolvingSymlinksInPath().standardized
+        // Reject `..` only when it appears as a discrete path component (real traversal),
+        // not as a substring inside a legitimate filename like `My..Project` (WR-03).
+        // We check pathComponents BEFORE standardization because `.standardized`
+        // collapses `..` segments away (e.g. /tmp/foo/../bar -> /tmp/bar).
+        let preStdURL = URL(fileURLWithPath: expanded)
+        if preStdURL.pathComponents.contains("..") {
+            obsLog.error("Obsidian folder rejected: traversal pattern in path components")
+            throw ObsidianWriterError.folderPathInvalid(rawPath)
+        }
+        return preStdURL.resolvingSymlinksInPath().standardized
     }
 
     private func sanitizedFilenameComponent(_ input: String) -> String {
