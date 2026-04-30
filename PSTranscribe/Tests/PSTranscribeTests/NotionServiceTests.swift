@@ -183,3 +183,65 @@ After divider
         #expect(tagsArr?.first?["name"] as? String == "engineering")
     }
 }
+
+@Suite("Phase 18.1 -- Notion session-type values (D-13)")
+struct NotionSessionTypeTests {
+
+    @Test("SessionType.notionValue maps to Notion-canonical labels")
+    func sessionTypeNotionValueMapping() {
+        #expect(SessionType.callCapture.notionValue == "Meeting")
+        #expect(SessionType.voiceMemo.notionValue == "Voice Memo")
+        #expect(SessionType.dictation.notionValue == "Dictation")
+    }
+
+    @Test("buildProperties writes \"Session Type\" Select with the Meeting value")
+    func buildPropertiesMeeting() {
+        let svc = NotionService()
+        let props = svc.buildProperties(
+            title: "x",
+            date: Date(),
+            duration: 60,
+            sourceApp: "Zoom",
+            sessionType: SessionType.callCapture.notionValue,
+            speakers: [],
+            tags: []
+        )
+        let st = props["Session Type"] as? [String: Any]
+        let sel = st?["select"] as? [String: Any]
+        #expect(sel?["name"] as? String == "Meeting")
+    }
+
+    @Test("buildProperties writes \"Session Type\" Select with the Voice Memo value")
+    func buildPropertiesVoiceMemo() {
+        let svc = NotionService()
+        let props = svc.buildProperties(
+            title: "x",
+            date: Date(),
+            duration: 60,
+            sourceApp: "Voice Memo",
+            sessionType: SessionType.voiceMemo.notionValue,
+            speakers: [],
+            tags: []
+        )
+        let st = props["Session Type"] as? [String: Any]
+        let sel = st?["select"] as? [String: Any]
+        #expect(sel?["name"] as? String == "Voice Memo")
+    }
+
+    @Test("buildProperties writes \"Session Type\" Select with the Dictation value (NEW per 18.1)")
+    func buildPropertiesDictation() {
+        let svc = NotionService()
+        let props = svc.buildProperties(
+            title: "x",
+            date: Date(),
+            duration: 60,
+            sourceApp: "PSTranscribe",
+            sessionType: SessionType.dictation.notionValue,
+            speakers: [],
+            tags: []
+        )
+        let st = props["Session Type"] as? [String: Any]
+        let sel = st?["select"] as? [String: Any]
+        #expect(sel?["name"] as? String == "Dictation")
+    }
+}
