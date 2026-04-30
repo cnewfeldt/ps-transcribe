@@ -27,12 +27,14 @@ actor LocalFileWriter {
     init() {}
 
     /// Single-shot post-session write. Used for:
-    ///   - Voice memos: ContentView session end (TranscriptLogger already streamed
-    ///     the file -- this writer is invoked only when migrating that flow off
-    ///     vaultVoicePath in Plan 05; in v18.1 the meeting/memo Local File path
-    ///     continues to be written by TranscriptLogger directly).
-    ///   - Dictation: post-session full transcript write. Delegates to a NEW
-    ///     DictationLogger session lifecycle (start/append/end) inside this method.
+    ///   - Dictation: post-session full transcript write (fallback when streaming via
+    ///     DictationLogger wasn't used or failed; the streaming path is the primary
+    ///     route in v18.1).
+    ///   - Future: voice-memo / meeting paths if they migrate off the streaming
+    ///     TranscriptLogger.
+    /// In v18.1, meetings and voice memos are streamed by TranscriptLogger and skip
+    /// this writer (callers pass `skipLocalFile: true` to `SaveDestinations.save` to
+    /// prevent a duplicate write).
     /// Returns the final on-disk URL.
     func write(content: String, metadata: SaveMetadata, rootPath: String) async throws -> URL {
         let directory = try validatedFolderPath(rootPath)
