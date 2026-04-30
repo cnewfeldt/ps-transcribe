@@ -116,16 +116,7 @@ final class DictationCoordinator {
     /// break the coordinator <-> windowController retain pair.
     func attach(windowController: DictationWindowController) {
         self.windowController = windowController
-        windowController.setContent(AnyView(
-            DictationHUD(
-                state: state,
-                elapsed: elapsed,
-                partialText: dictationStore.volatileYouText,
-                onStop: { [weak self] in
-                    Task { @MainActor in await self?.endDictation() }
-                }
-            )
-        ))
+        windowController.setContent(AnyView(DictationHUDBinding(coordinator: self)))
     }
 
     var windowController: DictationWindowController?
@@ -511,4 +502,37 @@ final class DictationCoordinator {
 
 extension Notification.Name {
     static let dictationSessionEnded = Notification.Name("com.pstranscribe.dictationSessionEnded")
+}
+
+// MARK: - HUD Binding (18.1 gap-08: live re-render fix)
+
+/// SwiftUI wrapper that reads `@Observable DictationCoordinator` properties
+/// inside its body, so SwiftUI's Observation framework subscribes to them and
+/// re-renders the HUD when state / elapsed / volatileYouText mutate.
+///
+/// Why this exists: the previous shape installed a one-shot `AnyView(DictationHUD(...))`
+/// snapshot in the window controller. Plain Swift values evaluated at install time
+/// were frozen into DictationHUD's `let` properties, breaking Observation tracking.
+/// User-visible symptom: HUD stayed at .idle (gray dot, "0:00", empty caption,
+/// hidden Stop button) for the entire app lifetime, even while the audio engine
+/// was actually running. See .planning/debug/18.1-uat-issue-2-dictation-no-recording.md.
+///
+/// DictationHUD remains parameterized (Phase 18 D-05) -- this wrapper is the
+/// thin Observation bridge between the @Observable coordinator and the
+/// snapshot-style HUD view.
+///
+/// Internal (not private) so `@testable import PSTranscribe` in
+/// DictationHUDLiveBindingTests can reference the type directly. (18.1 gap-08: internal for @testable import)
+struct DictationHUDBinding: View {
+    let coordinator: DictationCoordinator
+    var body: some View {
+        DictationHUD(
+            state: coordinator.state,
+            elapsed: coordinator.elapsed,
+            partialText: coordinator.dictationStore.volatileYouText,
+            onStop: { [weak coordinator] in
+                Task { @MainActor in await coordinator?.endDictation() }
+            }
+        )
+    }
 }
