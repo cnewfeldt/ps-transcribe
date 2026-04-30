@@ -57,7 +57,7 @@ final class SaveDestinations {
     /// blocks on this. Dictation does NOT block on this -- clipboard write fires
     /// unconditionally (D-15) and the library entry stores the inline transcript (D-19).
     var isAnyDestinationEnabled: Bool {
-        settings.localFileEnabled
+        (settings.localFileEnabled && !settings.localFileRoot.isEmpty)
             || (settings.obsidianEnabled && !settings.obsidianFolderPath.isEmpty)
             || (settings.notionAutoSendEnabled && !settings.notionDatabaseID.isEmpty)
     }
