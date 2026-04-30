@@ -1009,6 +1009,18 @@ struct ContentView: View {
                 // (RESEARCH Pitfall #7); SaveDestinations runs Obsidian + Notion only.
                 // The notionAutoSendEnabled / obsidianEnabled / *DatabaseID / *FolderPath
                 // flags inside SaveDestinations.save gate per-destination behavior.
+                //
+                // IN-03 (KNOWN LIMITATION): meetings differ from dictation here. The
+                // fan-out is gated on `!capturedPath.isEmpty` because meeting markdown
+                // is read from the streamed Local File on disk (line below) -- there is
+                // no in-memory transcript to fall back on. If a future user disables
+                // Local File but keeps Obsidian/Notion enabled, this branch is skipped
+                // entirely and the entry's filePath stays empty with no Obsidian fallback
+                // (unlike DictationCoordinator.endDictation, which uses an in-memory
+                // `assembled` string and falls back to saveResult.obsidianFileURL).
+                // The D-20 zero-destination guard prevents the all-disabled case; the
+                // "Local File off, Obsidian on" case is a documented gap pending a
+                // future refactor that decouples meeting fan-out from the streamed file.
                 if !capturedPath.isEmpty,
                    let entry = await libraryStore.entries.first(where: { $0.id == entryID }) {
                     let markdown = (try? String(contentsOfFile: capturedPath, encoding: .utf8)) ?? ""
