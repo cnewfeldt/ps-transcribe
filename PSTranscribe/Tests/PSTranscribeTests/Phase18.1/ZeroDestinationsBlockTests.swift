@@ -6,10 +6,13 @@ import Testing
 struct ZeroDestinationsBlockTests {
 
     private var contentViewSource: String {
+        // #filePath -> .../PSTranscribe/Tests/PSTranscribeTests/Phase18.1/ZeroDestinationsBlockTests.swift
+        // We need to climb to .../PSTranscribe/ then descend into Sources/.
         let url = URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()         // Phase18.1/
-            .deletingLastPathComponent()         // PSTranscribeTests/
-            .deletingLastPathComponent()         // Tests/
+            .deletingLastPathComponent()         // -> Phase18.1/
+            .deletingLastPathComponent()         // -> PSTranscribeTests/
+            .deletingLastPathComponent()         // -> Tests/
+            .deletingLastPathComponent()         // -> PSTranscribe/ (package root)
             .appendingPathComponent("Sources/PSTranscribe/Views/ContentView.swift")
         return (try? String(contentsOf: url)) ?? ""
     }

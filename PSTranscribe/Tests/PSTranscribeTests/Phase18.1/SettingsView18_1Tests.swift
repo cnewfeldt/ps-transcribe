@@ -6,10 +6,13 @@ import Testing
 struct SettingsView18_1Tests {
 
     private var settingsViewSource: String {
+        // #filePath -> .../PSTranscribe/Tests/PSTranscribeTests/Phase18.1/SettingsView18_1Tests.swift
+        // We need to climb to .../PSTranscribe/ then descend into Sources/.
         let url = URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()         // Phase18.1/
-            .deletingLastPathComponent()         // PSTranscribeTests/
-            .deletingLastPathComponent()         // Tests/
+            .deletingLastPathComponent()         // -> Phase18.1/
+            .deletingLastPathComponent()         // -> PSTranscribeTests/
+            .deletingLastPathComponent()         // -> Tests/
+            .deletingLastPathComponent()         // -> PSTranscribe/  (package root)
             .appendingPathComponent("Sources/PSTranscribe/Views/SettingsView.swift")
         return (try? String(contentsOf: url)) ?? ""
     }

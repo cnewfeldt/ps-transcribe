@@ -2,7 +2,7 @@ import Testing
 import Foundation
 @testable import PSTranscribe
 
-@Suite("SessionType + DictationOutputMode + DictationHotkeyMode Codable round-trips")
+@Suite("SessionType + DictationHotkeyMode Codable round-trips")
 struct SessionTypeCodableTests {
 
     private func roundTrip<T: Codable & Equatable>(_ value: T) throws -> T {
@@ -19,38 +19,9 @@ struct SessionTypeCodableTests {
         #expect(SessionType.dictation.rawValue == "dictation")
     }
 
-    @Suite("dictationOutputMode")
-    struct DictationOutputModeTests {
-        private func roundTrip<T: Codable & Equatable>(_ value: T) throws -> T {
-            let data = try JSONEncoder().encode(value)
-            return try JSONDecoder().decode(T.self, from: data)
-        }
-
-        @Test func clipboard() throws {
-            let decoded = try roundTrip(DictationOutputMode.clipboard)
-            #expect(decoded == .clipboard)
-            #expect(DictationOutputMode.clipboard.rawValue == "clipboard")
-        }
-
-        @Test func plainFolder() throws {
-            let decoded = try roundTrip(DictationOutputMode.plainFolder)
-            #expect(decoded == .plainFolder)
-            #expect(DictationOutputMode.plainFolder.rawValue == "plainFolder")
-        }
-
-        @Test func both() throws {
-            let decoded = try roundTrip(DictationOutputMode.both)
-            #expect(decoded == .both)
-            #expect(DictationOutputMode.both.rawValue == "both")
-        }
-
-        @Test func decodingUnknownRawValueFails() {
-            let bogus = Data("\"bogus\"".utf8)
-            #expect(throws: DecodingError.self) {
-                _ = try JSONDecoder().decode(DictationOutputMode.self, from: bogus)
-            }
-        }
-    }
+    // 18.1: DictationOutputMode enum was deleted in Plan 18.1-01 along with the
+    // settings.dictationOutputMode key. The Codable round-trip suite for that
+    // enum is no longer applicable (the enum no longer exists in the codebase).
 
     @Suite("dictationHotkeyMode")
     struct DictationHotkeyModeTests {

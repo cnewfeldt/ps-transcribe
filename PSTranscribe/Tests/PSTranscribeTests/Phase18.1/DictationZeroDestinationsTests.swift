@@ -43,7 +43,11 @@ struct DictationZeroDestinationsTests {
         )
         sessionCoord.dictation = coordinator
 
-        let assembled = "this is the dictation body"
+        // LibraryStore loads existing entries from disk on init. Snapshot the initial
+        // count so we can assert the new entry was added without depending on a clean library.
+        let entriesBefore = await library.entries.count
+
+        let assembled = "this is the dictation body \(UUID().uuidString)"
         coordinator._test_setState(.listening)
         coordinator._test_setSessionStartTime(Date())
         coordinator._test_setElapsed(5)
@@ -57,11 +61,19 @@ struct DictationZeroDestinationsTests {
         #expect(pbString == assembled, "DICT-05: clipboard write is unconditional even with zero destinations")
 
         // 2. Library entry has inlineTranscript and empty filePath (D-19).
+        // LibraryStore.addEntry inserts at index 0 (newest first), so the new entry
+        // is at entries[0].
         let entries = await library.entries
-        #expect(entries.count == 1)
-        guard let stored = entries.first else { return }
+        #expect(entries.count == entriesBefore + 1, "exactly one new library entry added")
+        guard let stored = entries.first(where: { $0.inlineTranscript == assembled }) else {
+            Issue.record("could not locate the new dictation entry by inlineTranscript match")
+            return
+        }
         #expect(stored.inlineTranscript == assembled, "D-19: inline transcript stored when no file written")
         #expect(stored.filePath == "", "D-19: no file path when all destinations disabled")
+
+        // Cleanup the test entry so we don't accumulate state on disk.
+        await library.removeEntry(id: stored.id)
 
         // 3. Privacy markers were applied (DICT-09).
         let pbItems = NSPasteboard.general.pasteboardItems ?? []

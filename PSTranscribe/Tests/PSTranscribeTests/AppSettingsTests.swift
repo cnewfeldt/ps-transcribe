@@ -6,9 +6,10 @@ import Foundation
 struct AppSettingsTests {
 
     // List of v1.2 UserDefaults keys this suite touches. Cleared before/after each test.
+    // 18.1 (Plan 01): dictationOutputMode + dictationFolderPath were deleted; their
+    // round-trip persistence is now covered by AppSettingsDestinationPersistenceTests
+    // for the new shared destination keys (localFileEnabled / localFileRoot / etc.).
     private static let v12Keys = [
-        "dictationOutputMode",
-        "dictationFolderPath",
         "dictationHotkeyMode",
         "clipboardRestoreDelay",
         "installedModelVersion",
@@ -24,21 +25,6 @@ struct AppSettingsTests {
 
     @Suite("defaults", .serialized)
     struct Defaults {
-        @Test @MainActor func dictationOutputMode() {
-            AppSettingsTests.clearV12Keys()
-            defer { AppSettingsTests.clearV12Keys() }
-            let s = AppSettings()
-            #expect(s.dictationOutputMode == .clipboard)
-        }
-
-        @Test @MainActor func dictationFolderPath() {
-            AppSettingsTests.clearV12Keys()
-            defer { AppSettingsTests.clearV12Keys() }
-            let s = AppSettings()
-            #expect(s.dictationFolderPath.hasSuffix("Documents/PS Transcribe Dictations"))
-            #expect(!s.dictationFolderPath.contains("~"))  // tilde must be expanded
-        }
-
         @Test @MainActor func dictationHotkeyMode() {
             AppSettingsTests.clearV12Keys()
             defer { AppSettingsTests.clearV12Keys() }
@@ -76,25 +62,6 @@ struct AppSettingsTests {
     }
 
     // MARK: - Round-trips
-
-    @Test @MainActor func roundTrip_dictationOutputMode() {
-        Self.clearV12Keys()
-        defer { Self.clearV12Keys() }
-        let s1 = AppSettings()
-        s1.dictationOutputMode = .both
-        let s2 = AppSettings()
-        #expect(s2.dictationOutputMode == .both)
-    }
-
-    @Test @MainActor func roundTrip_dictationFolderPath() {
-        Self.clearV12Keys()
-        defer { Self.clearV12Keys() }
-        let path = "/tmp/dictation-test-\(UUID().uuidString)"
-        let s1 = AppSettings()
-        s1.dictationFolderPath = path
-        let s2 = AppSettings()
-        #expect(s2.dictationFolderPath == path)
-    }
 
     @Test @MainActor func roundTrip_dictationHotkeyMode() {
         Self.clearV12Keys()
