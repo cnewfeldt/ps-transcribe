@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: — Standalone Dictation + Model Auto-Update + Dark Mode Parity
 status: completed
-stopped_at: Phase 20 context gathered
-last_updated: "2026-05-01T07:07:41.768Z"
+stopped_at: Phase 21 context gathered
+last_updated: "2026-05-01T07:54:02.306Z"
 last_activity: 2026-05-01 -- Phase 20 marked complete
 progress:
   total_phases: 6
@@ -134,6 +134,6 @@ Deferred to a later milestone (see PROJECT.md "Future Candidate Goals"):
 
 ## Session Continuity
 
-Last session: 2026-04-30T00:00:00.000Z
-Stopped at: Phase 20 context gathered
-Resume file: .planning/phases/20-dark-mode-parity/20-CONTEXT.md
+Last session: 2026-05-01T07:54:02.300Z
+Stopped at: Phase 21 context gathered
+Resume file: .planning/phases/21-appearance-override/21-CONTEXT.md
