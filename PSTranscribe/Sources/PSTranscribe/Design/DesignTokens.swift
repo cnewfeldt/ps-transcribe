@@ -114,6 +114,59 @@ extension Color {
     ) // ready / synced
 }
 
+// MARK: - Warning / error chips + overlay + glass rule (adaptive)
+//
+// Wave 2 additions per Plan 20-02 truths. Each token's light side is byte-for-byte
+// identical to the inline literal it replaces (light-mode pixel-stability gate).
+// Dark sides follow D-09 license: warm amber/red tints harmonized with paper.dark.
+// overlayDim and glassRule bake opacity INTO the token def — call-sites use them
+// directly with NO `.opacity(...)` modifier.
+
+extension Color {
+    /// Background for warning chips (e.g. SettingsView Notion-mismatch warning).
+    /// Light side preserved as `.orange.opacity(0.15)` literal (NOT a hex equivalent)
+    /// so the resolved color stays bit-identical to today even if system `.orange`
+    /// shifts in a future macOS update.
+    static let warningTint = Color(
+        light: Color.orange.opacity(0.15),
+        dark:  Color(red: 0x3D/255, green: 0x2E/255, blue: 0x1A/255).opacity(0.6)
+    ) // light: orange@0.15 / dark: warm amber #3D2E1A@0.6
+
+    /// Foreground/text on warning chips. Light side inlines ink.light (#1A1A17)
+    /// rather than referencing Color.ink to avoid a token-of-token chain THROUGH
+    /// the adaptive helper (which would complicate dynamic resolution).
+    static let warningInk = Color(
+        light: Color(red: 0x1A/255, green: 0x1A/255, blue: 0x17/255), // = ink.light
+        dark:  Color(red: 0xE8/255, green: 0xC4/255, blue: 0x80/255)
+    ) // light: ink / dark: warm amber-cream
+
+    /// Background for error chips (e.g. NotionTagSheet error banner).
+    static let errorTint = Color(
+        light: Color.red.opacity(0.1),
+        dark:  Color(red: 0x3D/255, green: 0x1A/255, blue: 0x1A/255).opacity(0.6)
+    ) // light: red@0.1 / dark: warm dark-red #3D1A1A@0.6
+
+    /// Modal/sheet dim-backdrop overlay. Opacity baked in — call-site uses
+    /// `Color.overlayDim` with NO `.opacity(...)` modifier. Both modes darken
+    /// TOWARD black; dark mode uses slightly higher alpha so the perceived
+    /// contrast stays equivalent against the warm-dark paper surface.
+    static let overlayDim = Color(
+        light: Color.black.opacity(0.4),
+        dark:  Color.black.opacity(0.5)
+    ) // light: black@0.4 / dark: black@0.5 — dim semantics preserved across modes
+
+    /// Subtle hairline border on dark-glass surfaces (e.g. ControlBar inactive
+    /// branch). Both sides identical white@0.06 because the underlying glass
+    /// surface (bg1 = #2E2B29) is warm-dark in BOTH modes per D-04 — the
+    /// border treatment must stay light-on-dark always. Do NOT swap to
+    /// `Color.rule` here (would flip white↔black across modes — visible drift).
+    /// Opacity baked in — call-site uses `Color.glassRule` with NO `.opacity(...)` modifier.
+    static let glassRule = Color(
+        light: Color.white.opacity(0.06),
+        dark:  Color.white.opacity(0.06)
+    ) // light: white@0.06 / dark: white@0.06 — light-on-glass regardless of mode
+}
+
 // MARK: - Legacy palette (kept until call-sites migrate to Chronicle tokens — Wave 2)
 //
 // Promoted from TranscriptView.swift:207-228. Light side = dark side = current
