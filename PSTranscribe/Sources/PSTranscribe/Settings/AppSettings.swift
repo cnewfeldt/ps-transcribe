@@ -2,6 +2,32 @@ import AppKit
 import Foundation
 import Observation
 import CoreAudio
+import SwiftUI
+
+/// User-controlled appearance preference (Phase 21, D-08).
+///
+/// `.system` is the default and resolves to `nil` so `.preferredColorScheme(nil)`
+/// is a SwiftUI no-op — preserving Phase 20's system-following behavior byte-for-byte.
+/// `.light` and `.dark` force the chosen scheme app-wide via the modifier applied at
+/// each Scene root in `PSTranscribeApp.body` (D-05) and via `NSAppearance(named:)`
+/// on the Dictation HUD's NSPanel (D-07).
+enum AppearancePreference: String, CaseIterable, Identifiable, Sendable {
+    case system
+    case light
+    case dark
+
+    var id: String { rawValue }
+
+    /// SwiftUI bridge: `.system` returns `nil` (no override), the others map to
+    /// their `ColorScheme` peers.
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: return nil
+        case .light:  return .light
+        case .dark:   return .dark
+        }
+    }
+}
 
 @Observable
 @MainActor
@@ -84,6 +110,16 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(clipboardRestoreDelay, forKey: "clipboardRestoreDelay") }
     }
 
+    // MARK: - v1.2 Appearance Override (Phase 21, D-08 / D-09)
+
+    /// User-controlled app-wide appearance preference. `.system` (default) preserves
+    /// Phase 20's system-following behavior. `.light` / `.dark` force the chosen scheme
+    /// at every SwiftUI scene root and on the Dictation HUD's NSPanel.
+    /// UserDefaults key `"appearancePreference"`.
+    var appearancePreference: AppearancePreference {
+        didSet { UserDefaults.standard.set(appearancePreference.rawValue, forKey: "appearancePreference") }
+    }
+
     // MARK: - v1.2 Model Auto-Update Settings (Phase 16, D-04)
 
     /// SHA / version identifier of the currently installed FluidAudio model. Empty until first
@@ -155,6 +191,11 @@ final class AppSettings {
         } else {
             self.clipboardRestoreDelay = defaults.double(forKey: "clipboardRestoreDelay")
         }
+
+        // v1.2 Appearance Override (Phase 21, D-08 / D-09)
+        let appearanceRaw = defaults.string(forKey: "appearancePreference")
+            ?? AppearancePreference.system.rawValue
+        self.appearancePreference = AppearancePreference(rawValue: appearanceRaw) ?? .system
 
         // v1.2 Model Update keys (Phase 16, D-04) -- declared only; Phase 17 wires consumption.
         self.installedModelVersion = defaults.string(forKey: "installedModelVersion") ?? ""
