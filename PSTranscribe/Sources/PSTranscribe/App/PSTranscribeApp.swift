@@ -232,9 +232,15 @@ private func observeAppearance(
         // `onChange` handles every subsequent mutation.
         _ = settings.appearancePreference
     } onChange: {
-        // `onChange` is non-isolated; hop back to MainActor before mutating
-        // AppKit windows or recursing.
-        Task { @MainActor in
+        // AppSettings is @MainActor-isolated, so its property setter -- and the
+        // onChange closure scheduled from that setter -- already executes on
+        // MainActor. We use MainActor.assumeIsolated to satisfy the static
+        // isolation checker without an async Task hop. The hop is what created
+        // the WR-01 coalescing window: between onChange firing and the next
+        // withObservationTracking call, any mutations were dropped. Re-arming
+        // synchronously here closes that window so back-to-back picker mashes
+        // (System -> Light -> Dark) don't lose intermediate states.
+        MainActor.assumeIsolated {
             controller.applyAppearance(settings.appearancePreference)
             observeAppearance(controller: controller, settings: settings)
         }
@@ -260,7 +266,11 @@ private func observeChronicleTitlebar(settings: AppSettings) {
     withObservationTracking {
         _ = settings.appearancePreference
     } onChange: {
-        Task { @MainActor in
+        // Same isolation rationale as `observeAppearance` above: AppSettings is
+        // @MainActor-isolated, onChange runs synchronously from the setter, and
+        // re-arming inside MainActor.assumeIsolated avoids the WR-01 coalescing
+        // window that an async Task hop would introduce.
+        MainActor.assumeIsolated {
             for window in NSApp.windows {
                 AppDelegate.applyChronicleTitlebar(to: window)
             }
