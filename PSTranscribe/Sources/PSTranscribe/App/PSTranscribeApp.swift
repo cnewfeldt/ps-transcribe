@@ -221,6 +221,14 @@ struct PSTranscribeApp: App {
 /// fires once per mutation; we re-call ourselves to re-register and capture the
 /// next change. Loop is bounded by the lifetime of the controller + settings,
 /// both of which are app-scoped (live for the whole process).
+///
+/// Isolation: `AppSettings` is `@MainActor`-isolated, so its property setter --
+/// and the `onChange` closure scheduled synchronously from that setter -- run
+/// on MainActor in practice. The static checker does not see this transitively,
+/// so we use `MainActor.assumeIsolated` inside `onChange` to satisfy it without
+/// an async hop. (An earlier revision used `Task { @MainActor in ... }`; that
+/// hop introduced a coalescing window where rapid mutations could be dropped --
+/// see WR-01.)
 @MainActor
 private func observeAppearance(
     controller: DictationWindowController,
@@ -259,8 +267,10 @@ private func observeAppearance(
 /// the SPEC §2 "every surface receives the override" invariant.
 ///
 /// Mirrors `observeAppearance(controller:settings:)` (the HUD bridge): same
-/// re-arming pattern, same MainActor hop, same lifetime bound (settings is
-/// app-scoped, so the loop terminates with the process).
+/// re-arming pattern, same MainActor isolation rationale (re-arm via
+/// `MainActor.assumeIsolated`, not an async Task hop, so WR-01 coalescing
+/// doesn't recur here), same lifetime bound (settings is app-scoped, so the
+/// loop terminates with the process).
 @MainActor
 private func observeChronicleTitlebar(settings: AppSettings) {
     withObservationTracking {
