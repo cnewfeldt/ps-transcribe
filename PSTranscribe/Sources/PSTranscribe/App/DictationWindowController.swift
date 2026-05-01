@@ -101,6 +101,22 @@ final class DictationWindowController: NSWindowController {
         host.rootView = rootView
     }
 
+    /// Apply the user's appearance preference to the panel (Phase 21, D-07).
+    ///
+    /// `NSAppearance` is the AppKit-native equivalent of SwiftUI's
+    /// `.preferredColorScheme` for AppKit-owned panels: assigning
+    /// `panel.appearance` flips both the chrome and the `NSVisualEffectView`'s
+    /// `.hudWindow` material rendering. Setting `nil` clears the override and the
+    /// panel inherits `NSApp.effectiveAppearance`.
+    func applyAppearance(_ preference: AppearancePreference) {
+        guard let panel = window else { return }
+        switch preference {
+        case .system: panel.appearance = nil
+        case .light:  panel.appearance = NSAppearance(named: .aqua)
+        case .dark:   panel.appearance = NSAppearance(named: .darkAqua)
+        }
+    }
+
     /// Position vertically centered within the bottom quarter of the active screen (D-04).
     /// Clamps panel width if screen is narrower than `defaultWidth + 2*edgeMargin`
     /// (Open Question §4). Width floor is `minWidth` so the HUD stays legible.

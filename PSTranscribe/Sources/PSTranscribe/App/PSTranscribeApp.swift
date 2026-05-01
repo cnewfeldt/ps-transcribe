@@ -43,6 +43,15 @@ struct PSTranscribeApp: App {
         let initialWindowCtrl = DictationWindowController(rootView: AnyView(EmptyView()))
         // Wire HUD body to the coordinator's live state.
         initialDictation.attach(windowController: initialWindowCtrl)
+        // Phase 21 D-07: keep the Dictation HUD's NSPanel appearance in sync with the
+        // user's appearance preference. The HUD lives outside the SwiftUI scene graph,
+        // so the .preferredColorScheme calls at the Scene roots in `body` don't reach
+        // it. We bridge via NSAppearance, which is the AppKit-native equivalent and
+        // also drives `.hudWindow` material rendering. Initial application is
+        // synchronous; subsequent changes are observed via `withObservationTracking`,
+        // which re-arms after each fire (the @Observable pattern).
+        initialWindowCtrl.applyAppearance(initialSettings.appearancePreference)
+        observeAppearance(controller: initialWindowCtrl, settings: initialSettings)
         initialDictation.hotkeyService = initialHotkey
         // Phase 18 D-14: SessionCoordinator.dictation is the mutual-exclusion gate.
         initialCoordinator.dictation = initialDictation
@@ -191,6 +200,33 @@ struct PSTranscribeApp: App {
             Image(systemName: dictationCoordinator.isActive ? "mic.fill" : "book.closed")
                 .symbolRenderingMode(.monochrome)
                 .symbolEffect(.pulse, isActive: dictationCoordinator.isActive)
+        }
+    }
+}
+
+/// Phase 21 D-07: re-arming `withObservationTracking` loop that mirrors
+/// `AppSettings.appearancePreference` onto the Dictation HUD's NSPanel via
+/// `NSAppearance`. The `@Observable` macro emits a registration whenever the
+/// tracked block reads `settings.appearancePreference`; the `onChange` closure
+/// fires once per mutation; we re-call ourselves to re-register and capture the
+/// next change. Loop is bounded by the lifetime of the controller + settings,
+/// both of which are app-scoped (live for the whole process).
+@MainActor
+private func observeAppearance(
+    controller: DictationWindowController,
+    settings: AppSettings
+) {
+    withObservationTracking {
+        // Read the property to register the dependency. We don't apply it here;
+        // the synchronous initial application is the caller's responsibility, and
+        // `onChange` handles every subsequent mutation.
+        _ = settings.appearancePreference
+    } onChange: {
+        // `onChange` is non-isolated; hop back to MainActor before mutating
+        // AppKit windows or recursing.
+        Task { @MainActor in
+            controller.applyAppearance(settings.appearancePreference)
+            observeAppearance(controller: controller, settings: settings)
         }
     }
 }
