@@ -133,7 +133,7 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 21-01-PLAN.md — Add AppearancePreference enum + appearancePreference property to AppSettings.swift (Wave 1, autonomous)
+- [x] 21-01-PLAN.md — Add AppearancePreference enum + appearancePreference property to AppSettings.swift (Wave 1, autonomous) — 2026-05-01
 - [ ] 21-02-PLAN.md — Three .preferredColorScheme call-sites in PSTranscribeApp.body + NSPanel.appearance observation in DictationWindowController + Section("Appearance") Picker at top of SettingsView (Wave 2, autonomous)
 - [ ] 21-03-PLAN.md — Manual UAT (live-toggle, persistence, fresh-install, default-state visual parity, D-07 HUD verification) + relaxed D-06 grep-gate audit + 21-VERIFICATION.md (Wave 3, autonomous: false)
 
@@ -147,7 +147,7 @@ Plans:
 | 18.1 Shared save destinations + Local File | 9/9 | Complete    | 2026-04-30 |
 | 19. Integration & Hardening | 0/0 | Not started | - |
 | 20. Dark mode parity | 2/3 | In Progress | - |
-| 21. User-controlled appearance preference | 0/3 | Planned     | - |
+| 21. User-controlled appearance preference | 1/3 | In Progress | - |
 
 ## Backlog
 
