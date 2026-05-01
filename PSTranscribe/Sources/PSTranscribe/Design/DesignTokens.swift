@@ -1,4 +1,24 @@
 import SwiftUI
+import AppKit
+
+// MARK: - Adaptive Color helper
+//
+// Bridges two SwiftUI Color literals into a single dynamic Color that
+// resolves per the active NSAppearance. On extraction failure, falls
+// back to the `light` value to preserve light-mode pixel stability
+// (the Phase 20 hard constraint).
+
+extension Color {
+    init(light: Color, dark: Color) {
+        let lightNS = NSColor(light)
+        let darkNS = NSColor(dark)
+        let dynamic = NSColor(name: nil) { appearance in
+            let isDark = appearance.bestMatch(from: [.darkAqua, .vibrantDark]) != nil
+            return isDark ? darkNS : lightNS
+        }
+        self = Color(nsColor: dynamic)
+    }
+}
 
 // MARK: - Colors
 
