@@ -5,13 +5,13 @@
 - **v1.0 — PS Transcribe** (2026-04-02 → 2026-04-14): Full rebrand from Tome, security/stability hardening, session library + recording naming, three-state mic button + model onboarding, Notion integration, Obsidian deep-link, defect cleanup. 8 active phases, 45 requirements, 28 plans. Archived: [`milestones/v1.0-ROADMAP.md`](milestones/v1.0-ROADMAP.md) · Requirements: [`milestones/v1.0-REQUIREMENTS.md`](milestones/v1.0-REQUIREMENTS.md) · Tag: `v1.0`.
 - **v1.1 — Marketing Website** (2026-04-21 → 2026-04-25): Next.js + Vercel scaffold, Chronicle design system port, landing page, MDX docs section (6 pages). Phase 15 (Changelog) reverted — public release notes out of scope. 4 phases, 22 requirements, 16 plans. Production: `ps-transcribe-web.vercel.app`. Archived: [`milestones/v1.1-ROADMAP.md`](milestones/v1.1-ROADMAP.md) · Requirements: [`milestones/v1.1-REQUIREMENTS.md`](milestones/v1.1-REQUIREMENTS.md) · Tag: `v1.1`.
 
-## Current Milestone: v1.2 — Standalone Dictation + Model Auto-Update
+## Current Milestone: v1.2 — Standalone Dictation + Model Auto-Update + Dark Mode Parity
 
-**Goal:** Make PS Transcribe useful as a standalone dictation tool -- hotkey-triggered capture that writes to clipboard and/or a plain OS folder with no Obsidian/Notion required -- and let the ASR model update without shipping a new app build.
+**Goal:** Make PS Transcribe useful as a standalone dictation tool -- hotkey-triggered capture that writes to clipboard and/or a plain OS folder with no Obsidian/Notion required -- let the ASR model update without shipping a new app build, and bring the macOS app to full dark-mode parity so every surface respects the system appearance.
 
 **Dates:** 2026-04-27 → TBD  
 **Requirements:** 26 (11 dictation hotkey/clipboard + 5 plain-folder + 10 model auto-update)  
-**Phases:** 4 (Phases 16–19)
+**Phases:** 5 (Phases 16–20)
 
 ### Phases
 
@@ -19,6 +19,7 @@
 - [x] **Phase 17: Model Auto-Update** — `ModelUpdateService` (manifest fetch, version compare, staging download, SHA-256 verify, atomic rename, rollback), `TranscriptionEngine.reloadModels()` hot-swap, Settings > Model section with version display + update badge + "Check for Updates" button + cancellable progress. (completed 2026-04-28)
 - [x] **Phase 18: Hotkey Dictation + Plain-Folder Output** — `DictationHotkeyController` (KeyboardShortcuts/`RegisterEventHotKey`, no permissions needed), `DictationCoordinator`, `DictationWindowController` + `DictationHUD` NSPanel, clipboard write with privacy markers, NSOpenPanel folder picker, `DictationLogger` plain-markdown writer, hotkey recorder UI, dictation settings section. (completed 2026-04-28)
 - [ ] **Phase 19: Integration & Hardening** — End-to-end validation: mutual exclusion between meeting recording / dictation / model-update apply, model rollback path simulation, privacy-mode HUD verification, SettingsView UX audit (three-folder-picker coherence), full QA checklist.
+- [ ] **Phase 20: Dark mode parity** — Audit and fix dark-mode rendering across the macOS app so every surface (HUD, Settings, library, content views) matches the system appearance. Plan scope locked via `/gsd-plan-phase 20` (3 plans, 3 waves).
 
 ### Phase Details
 
@@ -80,7 +81,7 @@
 **Goal**: Refactor save destinations into a top-level shared layer (Notion / Obsidian / Local File) so all content producers (meeting recording, voice memo, dictation) emit `(content, sessionType)` to a single `SaveDestinations` fan-out; retire `DictationOutputMode` and the dictation-private folder picker; add Local File destination peer to Notion / Obsidian; collapse Obsidian to a single folder + frontmatter tagging.
 **Requirements**: FOLDER-01 (reframed via Local File), FOLDER-02 (Local File `Dictation/` subfolder), FOLDER-03, FOLDER-05, DICT-05 (always-on clipboard), DICT-09 (privacy markers); FOLDER-04 REMOVED (replaced by always-on clipboard + destination fan-out)
 **Depends on:** Phase 18
-**Plans:** 6/6 plans complete
+**Plans:** 9/9 plans complete
 
 Plans:
 - [x] 18.1-01-PLAN.md — AppSettings rip-and-replace (delete dictationOutputMode/dictationFolderPath/vaultMeetingsPath/vaultVoicePath; add localFileEnabled/localFileRoot/obsidianEnabled/obsidianFolderPath) + delete DictationOutputMode enum + persistence tests (Wave 1)
@@ -103,6 +104,18 @@ Plans:
   5. The full "Looks Done But Isn't" checklist from PITFALLS.md passes: clipboard history exclusion, file naming collision test (10 rapid dictations), security-scoped bookmark surviving relaunch, mutual exclusion (meeting + dictation), disk-space preflight warning
 **Plans**: TBD
 
+#### Phase 20: Dark mode parity
+
+**Goal**: Remove all forced `.preferredColorScheme` overrides and convert the Chronicle design system to a unified light+dark token palette so every macOS surface (main window, capture dock, Settings, NotionTagSheet, OnboardingView, DictationHUD) re-renders correctly when the user toggles System Settings > Appearance, with the light-mode appearance remaining pixel-stable.
+**Depends on**: Phase 19
+**Requirements**: REQ-20.1 (override removal), REQ-20.2 (Chronicle adaptive tokens), REQ-20.3 (legacy token promotion), REQ-20.4 (call-site adaptation), REQ-20.5 (light-mode pixel stability), REQ-20.6 (DictationHUD vibrancy)
+**Plans:** 3 plans
+
+Plans:
+- [ ] 20-01-PLAN.md — Token system foundation: Color(light:dark:) helper + 17 Chronicle tokens adaptive + 11 legacy tokens promoted + TranscriptView legacy block deleted (Wave 1)
+- [ ] 20-02-PLAN.md — Call-site audit across 10 surfaces: warningTint/warningInk/errorTint added; 6 known inline literals tokenized; DictationHUD partial-text confirmed adaptive (Wave 2)
+- [ ] 20-03-PLAN.md — Override removal + D-10 UAT script: delete .preferredColorScheme calls; full Light->Dark->Light->Auto UAT; capture wave-3 light AND dark screenshots; document deviations (Wave 3, autonomous: false)
+
 ### Progress Table
 
 | Phase | Plans Complete | Status | Completed |
@@ -110,8 +123,9 @@ Plans:
 | 16. Foundation | 4/4 | Complete    | 2026-04-27 |
 | 17. Model Auto-Update | 5/5 | Complete    | 2026-04-28 |
 | 18. Hotkey Dictation + Plain-Folder Output | 8/8 | Complete   | 2026-04-28 |
-| 18.1 Shared save destinations + Local File | 6/6 | Complete    | 2026-04-30 |
+| 18.1 Shared save destinations + Local File | 9/9 | Complete    | 2026-04-30 |
 | 19. Integration & Hardening | 0/0 | Not started | - |
+| 20. Dark mode parity | 0/3 | Not started | - |
 
 ## Backlog
 
