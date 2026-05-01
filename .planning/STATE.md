@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: — Standalone Dictation + Model Auto-Update + Dark Mode Parity
-status: executing
-stopped_at: Phase 21 Plan 02 complete
-last_updated: "2026-05-01T18:36:10Z"
-last_activity: 2026-05-01 -- Phase 21 Plan 02 (wire AppearancePreference into Scene roots, NSPanel, SettingsView) complete
+status: completed
+stopped_at: Phase 21 Plan 03 complete (Phase 21 closed, milestone v1.2 ready for tag)
+last_updated: "2026-05-01T19:30:00Z"
+last_activity: 2026-05-01 -- Phase 21 Plan 03 (manual UAT + Phase 21 verification) complete; ALL PASS; v1.2 milestone closed (D-01 status flip)
 progress:
   total_phases: 7
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 33
-  completed_plans: 32
-  percent: 97
+  completed_plans: 33
+  percent: 100
 ---
 
 # Project State
@@ -34,12 +34,12 @@ See: .planning/PROJECT.md (updated 2026-04-27)
 
 ## Current Position
 
-Phase: 21 (appearance-override) — EXECUTING
-Plan: 3 of 3
-Status: Plan 21-02 complete; Plan 21-03 (UAT) ready
-Last activity: 2026-05-01 -- Phase 21 Plan 02 (wire AppearancePreference into Scene roots, NSPanel, SettingsView) complete
+Phase: 21 (appearance-override) — COMPLETE
+Plan: 3 of 3 (final)
+Status: Phase 21 verified end-to-end (ALL PASS); v1.2 milestone closed (D-01); v1.2 git tag pending separate ship gate
+Last activity: 2026-05-01 -- Phase 21 Plan 03 (manual UAT + Phase 21 verification) complete; 8/8 UAT scenarios PASS; KVO fallback for NSPanel `.system` not needed; tolerated gap captured (status bar icon glyph system-rendered)
 
-Progress: [█████████░] 97%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -68,6 +68,7 @@ Progress: [█████████░] 97%
 | Phase 20 P02 | 3min | 3 tasks | 7 files |
 | Phase 21 P01 | ~5min | 1 tasks | 1 files |
 | Phase 21 P02 | ~3min | 3 tasks | 3 files |
+| Phase 21 P03 | ~10min | 3 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -119,6 +120,10 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent milestone-level d
 - [Phase 21]: [Phase 21-02]: MenuBarExtra menu content wrapped in Group { ... } so .preferredColorScheme attaches to the multi-statement view builder body. Status-bar Image label intentionally NOT modified -- system-rendered NSStatusItem inherits NSApp.effectiveAppearance regardless of .preferredColorScheme; documented tolerated gap per CONTEXT.md.
 - [Phase 21]: [Phase 21-02]: Recursive observeAppearance() continuation pattern (re-arming withObservationTracking) chosen over for-await/AsyncStream because @Observable doesn't expose AsyncSequence. Task { @MainActor in ... } continuation in onChange compiled cleanly under Swift 6.2 strict concurrency without capture-list adjustments or @MainActor.assumeIsolated workarounds.
 - [Phase 21]: [Phase 21-02]: Relaxed D-06 grep gate satisfied -- all three runtime .preferredColorScheme call-sites in PSTranscribe/Sources (excluding #Preview blocks and /// doc comments) live in PSTranscribeApp.swift at lines 163, 185, 197 and read settings.appearancePreference.colorScheme.
+- [Phase 21]: [Phase 21-03]: 8/8 UAT scenarios PASS without notes; user response "approved". KVO fallback for NSPanel `.system` resolution NOT needed -- `panel.appearance = nil` correctly inherits NSApp.effectiveAppearance on live macOS Light↔Dark toggle (Scenario G step 8).
+- [Phase 21]: [Phase 21-03]: D-06 deviation documented inline in 21-VERIFICATION.md TWICE (audit gate intro paragraph + criteria-table row 3) so future verifiers reading SPEC #4's superseded "exactly ONE hit" wording are immediately redirected to the relaxed location+source check.
+- [Phase 21]: [Phase 21-03]: MenuBarExtra status bar icon glyph remaining system-rendered (does not flip per app preference) confirmed as tolerated gap; not a Phase 22 candidate. Dropdown menu *content* flips correctly via Group { ... }.preferredColorScheme(...) wrapper from Plan 21-02.
+- [v1.2 close-out]: D-01 milestone state flip executed -- STATE.md status: completed, ROADMAP.md Phase 21 ticked, Progress Table 3/3 Complete 2026-05-01. v1.2 git tag remains separate ship gate (NOT part of Plan 21-03 metadata commit).
 
 ### Pending Todos
 
@@ -141,6 +146,6 @@ Deferred to a later milestone (see PROJECT.md "Future Candidate Goals"):
 
 ## Session Continuity
 
-Last session: 2026-05-01T18:36:10Z
-Stopped at: Phase 21 Plan 02 complete (commits 70eb18f, 0bed62d, c1c21bf); Plan 21-03 (UAT) ready
-Resume file: .planning/phases/21-appearance-override/21-03-PLAN.md
+Last session: 2026-05-01T19:30:00Z
+Stopped at: Phase 21 Plan 03 complete (commits f4b2faf, 828b4eb); Phase 21 closed; v1.2 milestone closed (D-01 status flip); v1.2 git tag pending separate ship gate
+Resume file: None — v1.2 ready for tag/ship; next milestone planning is the natural next step

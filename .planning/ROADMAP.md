@@ -20,7 +20,7 @@
 - [x] **Phase 18: Hotkey Dictation + Plain-Folder Output** — `DictationHotkeyController` (KeyboardShortcuts/`RegisterEventHotKey`, no permissions needed), `DictationCoordinator`, `DictationWindowController` + `DictationHUD` NSPanel, clipboard write with privacy markers, NSOpenPanel folder picker, `DictationLogger` plain-markdown writer, hotkey recorder UI, dictation settings section. (completed 2026-04-28)
 - [ ] **Phase 19: Integration & Hardening** — End-to-end validation: mutual exclusion between meeting recording / dictation / model-update apply, model rollback path simulation, privacy-mode HUD verification, SettingsView UX audit (three-folder-picker coherence), full QA checklist.
 - [ ] **Phase 20: Dark mode parity** — Audit and fix dark-mode rendering across the macOS app so every surface (HUD, Settings, library, content views) matches the system appearance. Plan scope locked via `/gsd-plan-phase 20` (3 plans, 3 waves).
-- [ ] **Phase 21: User-controlled appearance preference** — Add a three-way `AppearancePreference` (System / Light / Dark) to `SettingsView` that overrides system color scheme app-wide. Default `.system` preserves Phase 20 behavior. Persisted via `AppSettings` → `UserDefaults`, applied at every SwiftUI scene root in `PSTranscribeApp.body`; `DictationWindowController` mirrors via `NSAppearance` for the AppKit-owned HUD panel.
+- [x] **Phase 21: User-controlled appearance preference** — Add a three-way `AppearancePreference` (System / Light / Dark) to `SettingsView` that overrides system color scheme app-wide. Default `.system` preserves Phase 20 behavior. Persisted via `AppSettings` → `UserDefaults`, applied at every SwiftUI scene root in `PSTranscribeApp.body`; `DictationWindowController` mirrors via `NSAppearance` for the AppKit-owned HUD panel. (completed 2026-05-01)
 
 ### Phase Details
 
@@ -135,7 +135,7 @@ Plans:
 Plans:
 - [x] 21-01-PLAN.md — Add AppearancePreference enum + appearancePreference property to AppSettings.swift (Wave 1, autonomous) — 2026-05-01
 - [x] 21-02-PLAN.md — Three .preferredColorScheme call-sites in PSTranscribeApp.body + NSPanel.appearance observation in DictationWindowController + Section("Appearance") Picker at top of SettingsView (Wave 2, autonomous) — 2026-05-01
-- [ ] 21-03-PLAN.md — Manual UAT (live-toggle, persistence, fresh-install, default-state visual parity, D-07 HUD verification) + relaxed D-06 grep-gate audit + 21-VERIFICATION.md (Wave 3, autonomous: false)
+- [x] 21-03-PLAN.md — Manual UAT (live-toggle, persistence, fresh-install, default-state visual parity, D-07 HUD verification) + relaxed D-06 grep-gate audit + 21-VERIFICATION.md (Wave 3, autonomous: false) — 2026-05-01
 
 ### Progress Table
 
@@ -147,7 +147,7 @@ Plans:
 | 18.1 Shared save destinations + Local File | 9/9 | Complete    | 2026-04-30 |
 | 19. Integration & Hardening | 0/0 | Not started | - |
 | 20. Dark mode parity | 2/3 | In Progress | - |
-| 21. User-controlled appearance preference | 2/3 | In Progress | - |
+| 21. User-controlled appearance preference | 3/3 | Complete    | 2026-05-01 |
 
 ## Backlog
 
