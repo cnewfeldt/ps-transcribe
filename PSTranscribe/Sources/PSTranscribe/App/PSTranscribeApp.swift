@@ -52,6 +52,16 @@ struct PSTranscribeApp: App {
         // which re-arms after each fire (the @Observable pattern).
         initialWindowCtrl.applyAppearance(initialSettings.appearancePreference)
         observeAppearance(controller: initialWindowCtrl, settings: initialSettings)
+        // Phase 21 CR-01 / WR-04: bridge the AppKit-owned main-window titlebar
+        // (Chronicle paper bg + dark title text) through the same appearance
+        // preference. The titlebar is configured via NSWindow / NSToolbar APIs
+        // outside the SwiftUI scene graph, so the .preferredColorScheme calls in
+        // `body` don't reach it. AppDelegate.applyChronicleTitlebar runs on
+        // applicationDidFinishLaunching + didBecomeKeyNotification only -- it
+        // never re-fires on settings changes. This observer covers that gap by
+        // iterating NSApp.windows and re-applying titlebar styling whenever the
+        // user toggles the preference.
+        observeChronicleTitlebar(settings: initialSettings)
         initialDictation.hotkeyService = initialHotkey
         // Phase 18 D-14: SessionCoordinator.dictation is the mutual-exclusion gate.
         initialCoordinator.dictation = initialDictation
@@ -231,6 +241,34 @@ private func observeAppearance(
     }
 }
 
+/// Phase 21 CR-01 / WR-04: re-arming `withObservationTracking` loop that
+/// re-applies `AppDelegate.applyChronicleTitlebar` to every `NSApp.windows`
+/// member whenever `AppSettings.appearancePreference` changes.
+///
+/// The Chronicle titlebar (cream paper background, custom NSToolbar centered
+/// title) lives in AppKit, outside the SwiftUI scene graph. `applyChronicleTitlebar`
+/// runs only at `applicationDidFinishLaunching` and on `didBecomeKeyNotification`.
+/// Without this observer, toggling the appearance picker after launch would
+/// leave the titlebar stuck in whatever palette was painted last -- breaking
+/// the SPEC §2 "every surface receives the override" invariant.
+///
+/// Mirrors `observeAppearance(controller:settings:)` (the HUD bridge): same
+/// re-arming pattern, same MainActor hop, same lifetime bound (settings is
+/// app-scoped, so the loop terminates with the process).
+@MainActor
+private func observeChronicleTitlebar(settings: AppSettings) {
+    withObservationTracking {
+        _ = settings.appearancePreference
+    } onChange: {
+        Task { @MainActor in
+            for window in NSApp.windows {
+                AppDelegate.applyChronicleTitlebar(to: window)
+            }
+            observeChronicleTitlebar(settings: settings)
+        }
+    }
+}
+
 /// Observes new window creation and applies screen-share visibility setting.
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -270,6 +308,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// Chronicle titlebar: paper bg, centered "PS Transcribe" title via NSToolbar.
     /// Only applies to the main window (not Settings).
+    ///
+    /// Phase 21 CR-01: bridges the AppKit-owned titlebar through the user's
+    /// `AppearancePreference`. `window.appearance` is set from the preference so
+    /// the system titlebar chrome (toolbar buttons, traffic lights) and the
+    /// `effectiveAppearance` bookkeeping flip with the picker. The cream paper
+    /// background is only painted when the resolved `effectiveAppearance` is
+    /// Aqua; in Dark we clear `backgroundColor` so the system titlebar material
+    /// shows through. The toolbar title text uses `NSColor.labelColor` (a
+    /// dynamic system color) instead of an absolute RGB value so it adapts.
     static func applyChronicleTitlebar(to window: NSWindow) {
         // Settings window keeps its native style but gets a branded title.
         let isSettings = window.title == "Settings"
@@ -280,13 +327,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
+        // Phase 21 CR-01: bridge appearance preference onto the AppKit window.
+        // Read directly from UserDefaults so this static helper has no compile-time
+        // dependency on AppSettings -- AppSettings owns the source of truth and
+        // `observeChronicleTitlebar` re-invokes us on every change.
+        let appearancePref = AppearancePreference(
+            rawValue: UserDefaults.standard.string(forKey: "appearancePreference") ?? AppearancePreference.system.rawValue
+        ) ?? .system
+        switch appearancePref {
+        case .system: window.appearance = nil
+        case .light:  window.appearance = NSAppearance(named: .aqua)
+        case .dark:   window.appearance = NSAppearance(named: .darkAqua)
+        }
+
         window.titleVisibility = .hidden // NSToolbar item supplies the visible title
         window.titlebarAppearsTransparent = true
         // Do NOT insert fullSizeContentView: we want the paper window bg to fill
         // the titlebar strip, not the SwiftUI content (which has per-column tints).
         window.styleMask.remove(.fullSizeContentView)
         window.isMovableByWindowBackground = true
-        window.backgroundColor = NSColor(red: 0xFA/255, green: 0xFA/255, blue: 0xF7/255, alpha: 1)
+
+        // Only paint the Chronicle cream in light contexts. In dark, defer to the
+        // system titlebar material (window.backgroundColor = nil). bestMatch reads
+        // the just-assigned `window.appearance` (or the inherited app appearance
+        // when the preference is .system), so this gates correctly across all
+        // three picker values.
+        let resolved = window.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua])
+        if resolved == .darkAqua {
+            window.backgroundColor = nil
+        } else {
+            window.backgroundColor = NSColor(red: 0xFA/255, green: 0xFA/255, blue: 0xF7/255, alpha: 1)
+        }
 
         if window.toolbar?.identifier != ChronicleTitlebarDelegate.toolbarID {
             let toolbar = NSToolbar(identifier: ChronicleTitlebarDelegate.toolbarID)
@@ -323,7 +394,11 @@ final class ChronicleTitlebarDelegate: NSObject, NSToolbarDelegate {
         let item = NSToolbarItem(itemIdentifier: itemIdentifier)
         let label = NSTextField(labelWithString: "PS Transcribe")
         label.font = .systemFont(ofSize: 13, weight: .semibold)
-        label.textColor = NSColor(red: 0x1A/255, green: 0x1A/255, blue: 0x17/255, alpha: 1)
+        // Phase 21 CR-01: use the dynamic system label color so the title text
+        // adapts to the window's effective appearance (Light vs Dark) without an
+        // explicit branch. Replaces the Phase-pre-21 absolute RGB literal that
+        // ignored the user's appearance preference.
+        label.textColor = NSColor.labelColor
         label.isBezeled = false
         label.drawsBackground = false
         label.isEditable = false
