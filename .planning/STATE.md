@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: — Standalone Dictation + Model Auto-Update + Dark Mode Parity
 status: executing
-stopped_at: Phase 20 context gathered
-last_updated: "2026-05-01T06:18:19.020Z"
-last_activity: 2026-04-30
+stopped_at: Completed 20-02-PLAN.md (Wave 2 — call-site audit)
+last_updated: "2026-05-01T06:48:11Z"
+last_activity: 2026-05-01 -- Wave 2 token call-site audit complete
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 30
-  completed_plans: 27
-  percent: 90
+  completed_plans: 29
+  percent: 96
 ---
 
 # Project State
@@ -21,7 +21,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-27)
 
 **Core value:** Users can record meetings and voice memos with accurate, private, on-device transcription. All processing stays on-device.
-**Current focus:** Phase 18.1 — shared-save-destinations-local-file
+**Current focus:** Phase 20 — dark-mode-parity
 
 **Shipped milestones:**
 
@@ -34,12 +34,12 @@ See: .planning/PROJECT.md (updated 2026-04-27)
 
 ## Current Position
 
-Phase: 19
-Plan: Not started
-Status: Executing Phase 18.1
-Last activity: 2026-04-30
+Phase: 20 (dark-mode-parity) — EXECUTING
+Plan: 2 of 3 (complete; ready for Wave 3)
+Status: Wave 2 complete — call-site audit done; ready for Wave 3 override-removal
+Last activity: 2026-05-01 -- Wave 2 token call-site audit complete
 
-Progress: [████████░░] 76%
+Progress: [█████████░] 96%
 
 ## Performance Metrics
 
@@ -64,6 +64,8 @@ Progress: [████████░░] 76%
 | Phase 18 P06 | 13min | 2 tasks | 12 files |
 | Phase 18 P07 | 4min | 4 tasks | 5 files |
 | Phase 18 P08 | 5min | 4 tasks | 5 files |
+| Phase 20 P01 | 8min | 2 tasks | 2 files |
+| Phase 20 P02 | 3min | 3 tasks | 7 files |
 
 ## Accumulated Context
 

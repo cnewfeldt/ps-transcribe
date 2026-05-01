@@ -112,8 +112,8 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 20-01-PLAN.md — Token system foundation: Color(light:dark:) helper + 17 Chronicle tokens adaptive + 11 legacy tokens promoted + TranscriptView legacy block deleted (Wave 1)
-- [ ] 20-02-PLAN.md — Call-site audit across 10 surfaces: warningTint/warningInk/errorTint added; 6 known inline literals tokenized; DictationHUD partial-text confirmed adaptive (Wave 2)
+- [x] 20-01-PLAN.md — Token system foundation: Color(light:dark:) helper + 17 Chronicle tokens adaptive + 11 legacy tokens promoted + TranscriptView legacy block deleted (Wave 1) — 2026-05-01
+- [x] 20-02-PLAN.md — Call-site audit across 10 surfaces: warningTint/warningInk/errorTint/overlayDim/glassRule added; 6 inline literals tokenized; DictationHUD partial-text confirmed adaptive (Wave 2) — 2026-05-01
 - [ ] 20-03-PLAN.md — Override removal + D-10 UAT script: delete .preferredColorScheme calls; full Light->Dark->Light->Auto UAT; capture wave-3 light AND dark screenshots; document deviations (Wave 3, autonomous: false)
 
 ### Progress Table
@@ -125,7 +125,7 @@ Plans:
 | 18. Hotkey Dictation + Plain-Folder Output | 8/8 | Complete   | 2026-04-28 |
 | 18.1 Shared save destinations + Local File | 9/9 | Complete    | 2026-04-30 |
 | 19. Integration & Hardening | 0/0 | Not started | - |
-| 20. Dark mode parity | 0/3 | Not started | - |
+| 20. Dark mode parity | 2/3 | In Progress | - |
 
 ## Backlog
 
