@@ -52,7 +52,7 @@ struct LibraryEntryRow: View {
                         .stroke(Color.rule, lineWidth: isSelected ? 0.5 : 0)
                 )
                 .shadow(
-                    color: isSelected ? Color(red: 30/255, green: 30/255, blue: 28/255).opacity(0.08) : .clear,
+                    color: isSelected ? Color.rule : .clear,
                     radius: 3, x: 0, y: 1
                 )
         )

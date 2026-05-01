@@ -524,7 +524,7 @@ struct SettingsView: View {
                 Text("Update available · ~\(sizeMB) MB")
                     .font(.system(size: 11))
                     .padding(.horizontal, 8).padding(.vertical, 3)
-                    .background(Color.orange.opacity(0.15))
+                    .background(Color.warningTint)
                     .foregroundStyle(.orange)
                     .clipShape(Capsule())
                 Button("Install Update") {

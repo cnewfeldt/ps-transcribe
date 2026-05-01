@@ -265,7 +265,7 @@ struct ContentView: View {
             .overlay {
                 if isNotionSending {
                     ZStack {
-                        Color.black.opacity(0.4)
+                        Color.overlayDim
                         ProgressView()
                             .progressViewStyle(.circular)
                             .tint(.white)

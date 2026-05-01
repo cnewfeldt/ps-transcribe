@@ -103,7 +103,7 @@ struct NotionTagSheet: View {
                     .textSelection(.enabled)
                     .padding(8)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.red.opacity(0.1))
+                    .background(Color.errorTint)
                     .clipShape(RoundedRectangle(cornerRadius: 6))
             }
 

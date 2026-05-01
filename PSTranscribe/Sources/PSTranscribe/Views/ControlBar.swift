@@ -210,7 +210,7 @@ struct ControlBar: View {
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(isActive ? Color.accent1.opacity(0.12) : Color.white.opacity(0.06))
+                    .stroke(isActive ? Color.accent1.opacity(0.12) : Color.glassRule)
             )
         }
         .buttonStyle(.plain)

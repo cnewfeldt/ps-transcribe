@@ -59,7 +59,7 @@ struct LibrarySidebar: View {
         .padding(.vertical, 6)
         .background(
             RoundedRectangle(cornerRadius: Radius.button)
-                .fill(Color(red: 30/255, green: 30/255, blue: 28/255).opacity(0.05))
+                .fill(Color.rule.opacity(0.625))
         )
         .padding(.horizontal, Spacing.x14)
         .padding(.bottom, Spacing.x10)
