@@ -201,28 +201,3 @@ private struct VolatileIndicator: View {
         }
     }
 }
-
-// MARK: - Legacy dark-theme tokens (kept until other views migrate)
-
-extension Color {
-    // Backgrounds — warm
-    static let bg0 = Color(red: 0.10, green: 0.09, blue: 0.09)   // #1A1818
-    static let bg1 = Color(red: 0.18, green: 0.17, blue: 0.16)   // #2E2B29 (glass base)
-    static let bg2 = Color(red: 0.14, green: 0.13, blue: 0.12)   // #242120
-
-    // Foregrounds — warm cream
-    static let fg1 = Color(red: 0.94, green: 0.93, blue: 0.91)   // #F0EDE8
-    static let fg2 = Color(red: 0.54, green: 0.52, blue: 0.50)   // #8A8480
-    static let fg3 = Color(red: 0.36, green: 0.34, blue: 0.33)   // #5C5854
-
-    // Accent — lavender
-    static let accent1 = Color(red: 0.77, green: 0.63, blue: 1.0) // #C4A0FF
-    static let accent2 = Color(red: 0.58, green: 0.47, blue: 0.75)// dimmer
-
-    // Recording red
-    static let recordRed = Color(red: 0.91, green: 0.36, blue: 0.36) // #E85B5B
-
-    // Named speaker palette
-    static let speakerTeal = Color(red: 0.60, green: 0.85, blue: 0.75)
-    static let speakerAmber = Color(red: 0.95, green: 0.75, blue: 0.45)
-}
