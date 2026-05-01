@@ -27,6 +27,15 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            Section("Appearance") {
+                Picker("Appearance", selection: $settings.appearancePreference) {
+                    Text("System").tag(AppearancePreference.system)
+                    Text("Light").tag(AppearancePreference.light)
+                    Text("Dark").tag(AppearancePreference.dark)
+                }
+                .font(.system(size: 12))
+            }
+
             Section("Audio Input") {
                 Picker("Microphone", selection: $settings.inputDeviceID) {
                     Text("System Default").tag(AudioDeviceID(0))
