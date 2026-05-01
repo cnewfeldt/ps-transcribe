@@ -151,6 +151,7 @@ struct PSTranscribeApp: App {
                 .onAppear {
                     settings.applyScreenShareVisibility()
                 }
+                .preferredColorScheme(settings.appearancePreference.colorScheme)
         }
         .defaultSize(width: 1280, height: 820)
         .commands {
@@ -172,15 +173,19 @@ struct PSTranscribeApp: App {
                 notionService: notionService,
                 modelUpdateService: modelUpdateService
             )
+            .preferredColorScheme(settings.appearancePreference.colorScheme)
         }
         MenuBarExtra {
-            Text("PS Transcribe")
-                .font(.headline)
-            Divider()
-            Button("Quit PS Transcribe") {
-                NSApplication.shared.terminate(nil)
+            Group {
+                Text("PS Transcribe")
+                    .font(.headline)
+                Divider()
+                Button("Quit PS Transcribe") {
+                    NSApplication.shared.terminate(nil)
+                }
+                .keyboardShortcut("q")
             }
-            .keyboardShortcut("q")
+            .preferredColorScheme(settings.appearancePreference.colorScheme)
         } label: {
             // Phase 18 DICT-03: pulsing mic when dictation is active.
             Image(systemName: dictationCoordinator.isActive ? "mic.fill" : "book.closed")
