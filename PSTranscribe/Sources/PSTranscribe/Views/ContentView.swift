@@ -248,7 +248,6 @@ struct ContentView: View {
         }
         .frame(minWidth: 960, minHeight: 640)
         .background(Color.paper)
-        .preferredColorScheme(.light)
         .sheet(item: $notionSendEntry) { entry in
             NotionTagSheet(
                 entryTitle: entry.displayName,

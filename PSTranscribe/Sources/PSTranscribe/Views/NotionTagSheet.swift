@@ -127,7 +127,6 @@ struct NotionTagSheet: View {
         .frame(width: 340)
         .padding(20)
         .background(Color.bg0)
-        .preferredColorScheme(.dark)
     }
 
     // MARK: - Actions
