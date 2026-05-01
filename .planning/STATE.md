@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.2
-milestone_name: — Standalone Dictation + Model Auto-Update
+milestone_name: — Standalone Dictation + Model Auto-Update + Dark Mode Parity
 status: executing
-stopped_at: Phase 18.1 context gathered
-last_updated: "2026-04-30T04:39:21.536Z"
+stopped_at: Phase 20 context gathered
+last_updated: "2026-04-30T22:00:00.000Z"
 last_activity: 2026-04-30
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 24
-  completed_plans: 24
+  total_plans: 27
+  completed_plans: 27
   percent: 100
 ---
 
@@ -55,7 +55,7 @@ Progress: [████████░░] 76%
 |-----------|--------|-------|---------|
 | v1.0 — PS Transcribe | 8 active (5/6 abandoned) | 28 | 2026-04-14 |
 | v1.1 — Marketing Website | 4 (15 reverted) | 16 | 2026-04-25 |
-| v1.2 — Standalone Dictation + Model Auto-Update | 4 (in progress) | TBD | TBD |
+| v1.2 — Standalone Dictation + Model Auto-Update + Dark Mode Parity | 5 (in progress) | TBD | TBD |
 | Phase 18 P01 | 3min | 1 tasks | 16 files |
 | Phase 18 P02 | 3min | 2 tasks | 4 files |
 | Phase 18 P03 | 2min | 1 tasks | 2 files |
@@ -70,6 +70,7 @@ Progress: [████████░░] 76%
 ### Roadmap Evolution
 
 - Phase 18.1 inserted after Phase 18: Shared save destinations + Local File (URGENT) — Phase 18 paused mid-UAT after architectural feedback that dictation-private folder picker duplicates what shared destinations should own; Phase 18.1 introduces top-level Local File destination parallel to Notion/Obsidian and refactors dictation off `DictationOutputMode`. (2026-04-29)
+- Phase 20 added: Dark mode parity (2026-04-30)
 
 ### Decisions
 
@@ -131,6 +132,6 @@ Deferred to a later milestone (see PROJECT.md "Future Candidate Goals"):
 
 ## Session Continuity
 
-Last session: 2026-04-29T17:33:01.101Z
-Stopped at: Phase 18.1 context gathered
-Resume file: .planning/phases/18.1-shared-save-destinations-local-file/18.1-CONTEXT.md
+Last session: 2026-04-30T00:00:00.000Z
+Stopped at: Phase 20 context gathered
+Resume file: .planning/phases/20-dark-mode-parity/20-CONTEXT.md
