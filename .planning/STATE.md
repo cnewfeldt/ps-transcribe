@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: — Standalone Dictation + Model Auto-Update + Dark Mode Parity
 status: executing
-stopped_at: Phase 21 Plan 01 complete
-last_updated: "2026-05-01T18:30:00Z"
-last_activity: 2026-05-01 -- Phase 21 Plan 01 (AppearancePreference enum + property) complete
+stopped_at: Phase 21 Plan 02 complete
+last_updated: "2026-05-01T18:36:10Z"
+last_activity: 2026-05-01 -- Phase 21 Plan 02 (wire AppearancePreference into Scene roots, NSPanel, SettingsView) complete
 progress:
   total_phases: 7
   completed_phases: 5
   total_plans: 33
-  completed_plans: 31
-  percent: 94
+  completed_plans: 32
+  percent: 97
 ---
 
 # Project State
@@ -35,11 +35,11 @@ See: .planning/PROJECT.md (updated 2026-04-27)
 ## Current Position
 
 Phase: 21 (appearance-override) — EXECUTING
-Plan: 2 of 3
-Status: Plan 21-01 complete; Plan 21-02 ready
-Last activity: 2026-05-01 -- Phase 21 Plan 01 (AppearancePreference enum + property) complete
+Plan: 3 of 3
+Status: Plan 21-02 complete; Plan 21-03 (UAT) ready
+Last activity: 2026-05-01 -- Phase 21 Plan 02 (wire AppearancePreference into Scene roots, NSPanel, SettingsView) complete
 
-Progress: [█████████░] 94%
+Progress: [█████████░] 97%
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Progress: [█████████░] 94%
 | Phase 20 P01 | 8min | 2 tasks | 2 files |
 | Phase 20 P02 | 3min | 3 tasks | 7 files |
 | Phase 21 P01 | ~5min | 1 tasks | 1 files |
+| Phase 21 P02 | ~3min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -115,6 +116,9 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent milestone-level d
 - [Phase 18]: [Phase 18-08]: Swift 6.2's region-based isolation checker rejected Task.detached { @MainActor in ... } for the eager pre-warm Task. Refactored to Task.detached(priority: .background) + MainActor.run for the hotkeyAssigned read followed by an inner Task { @MainActor in await preWarmModels() }. Equivalent semantics, compiles cleanly. Documented as Rule 3 deviation.
 - [Phase 21]: [Phase 21-01]: AppearancePreference enum lands at file scope in AppSettings.swift (D-08 lock), not nested or extracted. Sendable conformance added beyond plan minimum -- free for String-backed enums under Swift 6.2 strict concurrency. Init read positioned between dictation block and model-update block so v1.2 init() body groups read top-to-bottom in the same order as the MARK sections.
 - [Phase 21]: [Phase 21-01]: colorScheme: ColorScheme? returns nil for .system -- a SwiftUI no-op when fed to .preferredColorScheme(_:). This is the primitive Plan 21-02 will use to bypass overrides without a separate code branch for .system; satisfies Req 6 (invisible migration to system-following default).
+- [Phase 21]: [Phase 21-02]: MenuBarExtra menu content wrapped in Group { ... } so .preferredColorScheme attaches to the multi-statement view builder body. Status-bar Image label intentionally NOT modified -- system-rendered NSStatusItem inherits NSApp.effectiveAppearance regardless of .preferredColorScheme; documented tolerated gap per CONTEXT.md.
+- [Phase 21]: [Phase 21-02]: Recursive observeAppearance() continuation pattern (re-arming withObservationTracking) chosen over for-await/AsyncStream because @Observable doesn't expose AsyncSequence. Task { @MainActor in ... } continuation in onChange compiled cleanly under Swift 6.2 strict concurrency without capture-list adjustments or @MainActor.assumeIsolated workarounds.
+- [Phase 21]: [Phase 21-02]: Relaxed D-06 grep gate satisfied -- all three runtime .preferredColorScheme call-sites in PSTranscribe/Sources (excluding #Preview blocks and /// doc comments) live in PSTranscribeApp.swift at lines 163, 185, 197 and read settings.appearancePreference.colorScheme.
 
 ### Pending Todos
 
@@ -137,6 +141,6 @@ Deferred to a later milestone (see PROJECT.md "Future Candidate Goals"):
 
 ## Session Continuity
 
-Last session: 2026-05-01T18:30:00Z
-Stopped at: Phase 21 Plan 01 complete (commit cea6cb6); Plan 21-02 ready
-Resume file: .planning/phases/21-appearance-override/21-02-PLAN.md
+Last session: 2026-05-01T18:36:10Z
+Stopped at: Phase 21 Plan 02 complete (commits 70eb18f, 0bed62d, c1c21bf); Plan 21-03 (UAT) ready
+Resume file: .planning/phases/21-appearance-override/21-03-PLAN.md
