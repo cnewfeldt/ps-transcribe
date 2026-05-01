@@ -20,6 +20,7 @@
 - [x] **Phase 18: Hotkey Dictation + Plain-Folder Output** — `DictationHotkeyController` (KeyboardShortcuts/`RegisterEventHotKey`, no permissions needed), `DictationCoordinator`, `DictationWindowController` + `DictationHUD` NSPanel, clipboard write with privacy markers, NSOpenPanel folder picker, `DictationLogger` plain-markdown writer, hotkey recorder UI, dictation settings section. (completed 2026-04-28)
 - [ ] **Phase 19: Integration & Hardening** — End-to-end validation: mutual exclusion between meeting recording / dictation / model-update apply, model rollback path simulation, privacy-mode HUD verification, SettingsView UX audit (three-folder-picker coherence), full QA checklist.
 - [ ] **Phase 20: Dark mode parity** — Audit and fix dark-mode rendering across the macOS app so every surface (HUD, Settings, library, content views) matches the system appearance. Plan scope locked via `/gsd-plan-phase 20` (3 plans, 3 waves).
+- [ ] **Phase 21: User-controlled appearance preference** — Add a three-way `AppearancePreference` (System / Light / Dark) to `SettingsView` that overrides system color scheme app-wide. Default `.system` preserves Phase 20 behavior. Persisted via `AppSettings` → `UserDefaults`, applied at every SwiftUI scene root in `PSTranscribeApp.body`; `DictationWindowController` mirrors via `NSAppearance` for the AppKit-owned HUD panel.
 
 ### Phase Details
 
@@ -116,6 +117,26 @@ Plans:
 - [x] 20-02-PLAN.md — Call-site audit across 10 surfaces: warningTint/warningInk/errorTint/overlayDim/glassRule added; 6 inline literals tokenized; DictationHUD partial-text confirmed adaptive (Wave 2) — 2026-05-01
 - [ ] 20-03-PLAN.md — Override removal + D-10 UAT script: delete .preferredColorScheme calls; full Light->Dark->Light->Auto UAT; capture wave-3 light AND dark screenshots; document deviations (Wave 3, autonomous: false)
 
+#### Phase 21: User-controlled appearance preference
+
+**Goal**: Add a three-way `AppearancePreference` (System / Light / Dark) to `SettingsView` that overrides the macOS system color scheme app-wide; default `.system` preserves Phase 20's system-following behavior byte-for-byte; preference persists via `AppSettings` → `UserDefaults` and is applied at every SwiftUI scene root in `PSTranscribeApp.body`; `DictationWindowController` mirrors the preference onto its NSPanel via `NSAppearance` because the HUD lives outside the SwiftUI scene graph.
+**Depends on**: Phase 20
+**Requirements**: 6 locked via `21-SPEC.md` (persisted preference enum, app-root override, Settings Picker UI, Phase 20 invariant preserved with relaxed grep gate per D-06, default-state pixel stability, invisible migration)
+**Success Criteria** (what must be TRUE):
+  1. `AppearancePreference` enum with `.system`/`.light`/`.dark` cases lives in `Settings/AppSettings.swift` and exposes a `colorScheme: ColorScheme?` computed property (`nil` for `.system`)
+  2. `AppSettings.appearancePreference` persists via `UserDefaults` key `"appearancePreference"`, defaults to `.system` when key absent, follows the existing `didSet` write pattern
+  3. `SettingsView` shows a new `Section("Appearance")` at the top of the Form (above `Section("Audio Input")`) with a default-style Picker bound to the property; labels are "System" / "Light" / "Dark"
+  4. `grep -rn "preferredColorScheme(" PSTranscribe/Sources` returns hits only inside `PSTranscribe/Sources/PSTranscribe/App/PSTranscribeApp.swift` (and `#Preview` blocks), all reading from `settings.appearancePreference.colorScheme` — three intentional call-sites: WindowGroup root, Settings scene root, MenuBarExtra label (D-05/D-06)
+  5. `DictationWindowController` mirrors the preference onto its NSPanel via `NSAppearance(named:)` — `.darkAqua` for `.dark`, `.aqua` for `.light`, `nil` for `.system` — and the HUD re-renders live without app restart (D-07)
+  6. With preference `.system` (default), the post-Phase-21 build is visually indistinguishable from the post-Phase-20 build on every surface across macOS Light/Dark/Auto toggling
+  7. Manual UAT recorded in `21-VERIFICATION.md`: live picker change without restart, persistence across relaunch, fresh-install (no key) shows "System", non-System preference survives relaunch
+**Plans:** 3 plans
+
+Plans:
+- [ ] 21-01-PLAN.md — Add AppearancePreference enum + appearancePreference property to AppSettings.swift (Wave 1, autonomous)
+- [ ] 21-02-PLAN.md — Three .preferredColorScheme call-sites in PSTranscribeApp.body + NSPanel.appearance observation in DictationWindowController + Section("Appearance") Picker at top of SettingsView (Wave 2, autonomous)
+- [ ] 21-03-PLAN.md — Manual UAT (live-toggle, persistence, fresh-install, default-state visual parity, D-07 HUD verification) + relaxed D-06 grep-gate audit + 21-VERIFICATION.md (Wave 3, autonomous: false)
+
 ### Progress Table
 
 | Phase | Plans Complete | Status | Completed |
@@ -126,6 +147,7 @@ Plans:
 | 18.1 Shared save destinations + Local File | 9/9 | Complete    | 2026-04-30 |
 | 19. Integration & Hardening | 0/0 | Not started | - |
 | 20. Dark mode parity | 2/3 | In Progress | - |
+| 21. User-controlled appearance preference | 0/3 | Planned     | - |
 
 ## Backlog
 
