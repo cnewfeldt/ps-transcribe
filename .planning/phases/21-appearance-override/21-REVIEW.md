@@ -13,7 +13,22 @@ findings:
   warning: 4
   info: 3
   total: 8
-status: issues_found
+findings_fixed:
+  critical: 1
+  warning: 3
+  info: 0
+  total: 4
+findings_remaining:
+  critical: 0
+  warning: 1   # WR-03 deferred to v1.3 (escapeKeyMonitor / windowObserver teardown -- pre-existing pattern, app-scope only)
+  info: 3      # IN-01, IN-02, IN-03 deferred per scope policy (info-level, no behavioural impact)
+  total: 4
+status: fixed
+fixed_at: 2026-05-01T00:00:00Z
+fix_commits:
+  - 197043b  # fix(21): bridge Chronicle titlebar through AppearancePreference (CR-01 + WR-04)
+  - ee28500  # refactor(21): close observeAppearance coalescing window with assumeIsolated (WR-01)
+  - 4b51319  # docs(21): clarify observeAppearance MainActor semantics in docstring (WR-02)
 ---
 
 # Phase 21: Code Review Report
@@ -21,7 +36,7 @@ status: issues_found
 **Reviewed:** 2026-05-01
 **Depth:** standard
 **Files Reviewed:** 4
-**Status:** issues_found
+**Status:** fixed (2026-05-01) — CR-01, WR-01, WR-02, WR-04 addressed in 197043b / ee28500 / 4b51319. WR-03 deferred to v1.3; IN-01 / IN-02 / IN-03 deferred per scope policy.
 
 ## Summary
 
