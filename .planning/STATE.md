@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: — Standalone Dictation + Model Auto-Update + Dark Mode Parity
-status: executing
-stopped_at: Completed 20-02-PLAN.md (Wave 2 — call-site audit)
-last_updated: "2026-05-01T06:48:11Z"
-last_activity: 2026-05-01 -- Wave 2 token call-site audit complete
+status: completed
+stopped_at: Phase 20 context gathered
+last_updated: "2026-05-01T07:07:41.768Z"
+last_activity: 2026-05-01 -- Phase 20 marked complete
 progress:
   total_phases: 6
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 30
-  completed_plans: 29
-  percent: 96
+  completed_plans: 30
+  percent: 100
 ---
 
 # Project State
@@ -34,10 +34,10 @@ See: .planning/PROJECT.md (updated 2026-04-27)
 
 ## Current Position
 
-Phase: 20 (dark-mode-parity) — EXECUTING
+Phase: 20 — COMPLETE
 Plan: 2 of 3 (complete; ready for Wave 3)
-Status: Wave 2 complete — call-site audit done; ready for Wave 3 override-removal
-Last activity: 2026-05-01 -- Wave 2 token call-site audit complete
+Status: Phase 20 complete
+Last activity: 2026-05-01 -- Phase 20 marked complete
 
 Progress: [█████████░] 96%
 
