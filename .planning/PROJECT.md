@@ -47,12 +47,13 @@ v1.1 — Marketing Website (shipped 2026-04-25):
 
 ### Active
 
-v1.2 — Standalone Dictation + Model Auto-Update (in progress):
+v1.2 — Standalone Dictation + Model Auto-Update + Dark Mode Parity (in progress):
 
 - ✓ Foundation: SessionType.dictation + DictationOutputMode + DictationHotkeyMode enums, six v1.2 AppSettings keys, DictationLogger actor (plain markdown, no YAML), LibraryStore lift to PSTranscribeApp scope, SessionCoordinator with computed anySessionActive — v1.2 (Phase 16, completed 2026-04-27)
 - Keyboard-triggered clipboard dictation (promotion of backlog 999.1)
 - Plain-folder dictation output (no Obsidian/Notion required)
 - Automatic FluidAudio ASR model version checking
+- Dark mode parity across the macOS app (HUD, Settings, library, content views)
 
 ### Out of Scope
 
@@ -78,9 +79,9 @@ v1.2 — Standalone Dictation + Model Auto-Update (in progress):
 
 > **Production slug fallback:** the canonical `ps-transcribe.vercel.app` was claimed by another Vercel account, so production lives at `ps-transcribe-web.vercel.app` until a custom domain replaces it.
 
-## Current Milestone: v1.2 Standalone Dictation + Model Auto-Update
+## Current Milestone: v1.2 Standalone Dictation + Model Auto-Update + Dark Mode Parity
 
-**Goal:** Make PS Transcribe useful as a standalone dictation tool -- hotkey-triggered capture that writes to clipboard and/or a plain OS folder with no Obsidian/Notion required -- and let the ASR model update without shipping a new app build.
+**Goal:** Make PS Transcribe useful as a standalone dictation tool -- hotkey-triggered capture that writes to clipboard and/or a plain OS folder with no Obsidian/Notion required -- let the ASR model update without shipping a new app build, and bring the macOS app to full dark-mode parity so every surface respects the system appearance.
 
 **Target features:**
 
@@ -183,4 +184,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-30 -- v1.2 Phase 18.1 (Shared save destinations + Local File) complete after gap closure. Save destinations are top-level shared sections (Notion / Obsidian / Local File); every content producer routes through `SaveDestinations.save(content, metadata)`; `DictationOutputMode` retired; clipboard write is unconditional (D-15). UAT surfaced three issues post-build: NSOpenPanel low-contrast title (gap 07), DictationHUD frozen at app-launch values (gap 08, pre-existing structural defect from Phase 18), and stale D-20 error trap requiring app restart (gap 09). All three closed structurally with regression tests. 9/9 plans, 24/24 must-haves verified, 221 tests pass across 40 suites. Code review surfaced 1 advisory warning (DictationHUDBinding retain-cycle comment overstated). Phase 19 (Integration & Hardening) unblocked.*
+*Last updated: 2026-05-01 -- v1.2 Phase 21 (User-controlled appearance preference) complete. `AppearancePreference` enum (`.system`/`.light`/`.dark`) added to `AppSettings` with UserDefaults persistence and `colorScheme: ColorScheme?` SwiftUI bridge; preference applied at three Scene roots in `PSTranscribeApp.swift` (WindowGroup, Settings, MenuBarExtra), mirrored onto `DictationWindowController`'s NSPanel via `NSAppearance(named:)`, and surfaced through a `Section("Appearance")` Picker at top of `SettingsView`. Default `.system` preserves Phase 20 byte-for-byte. Code review caught Chronicle titlebar (pre-existing hardcoded cream `#FAFAF7`) fighting Dark preference — fixed by bridging `window.appearance` from a settings observer (`observeChronicleTitlebar`), gating cream paint on Aqua effective appearance, and switching toolbar title to `NSColor.labelColor`. 3/3 plans, 11/11 SPEC criteria verified, 221 tests pass. Phase 21 closes v1.2 milestone — all 7 phases (16-21) shipped.*
