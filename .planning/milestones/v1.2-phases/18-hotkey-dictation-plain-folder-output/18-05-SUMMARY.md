@@ -41,8 +41,8 @@ key-decisions:
   - "DictationHUD does NOT subscribe to @Observable state directly. It accepts state/elapsed/partialText/onStop as inputs. Wave 4 (Plan 18-06) supplies the closure to setContent() that reads coordinator state and rebuilds the view -- @Observable's tracking handles re-renders. This keeps the view side-effect-free and trivially previewable."
 
 # Requirements traceability
+# supports: [DICT-04, DICT-10]  # historical sibling field, retired in Phase 22
 requirements-completed: []  # DICT-04 (HUD live partial transcription) and DICT-10 (HUD privacy mode) are NOT yet user-visible. The window+view land in this plan; user-facing show/hide/state-binding ships in Plan 18-06 (Wave 4) + Plan 18-08 (app-scope instantiation).
-requirements-supports: [DICT-04, DICT-10]
 
 # Metrics
 duration: 3min

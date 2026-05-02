@@ -45,8 +45,8 @@ patterns-established:
   - "Test pattern for libraries that fire callbacks: assert the assignable surface (closure can be set + invoked through public surface), defer cross-thread/cross-process verification to manual UAT"
   - "Library version pinning: `from: \"2.4.0\"` in Package.swift allows minor/patch upgrades; major-version drift requires manual edit. Test `defaultShortcutIsCmdShiftD` catches semantic regression on future minor releases (T-18-02-02 mitigation)."
 
+# scaffolded: [DICT-02]  # historical sibling field, retired in Phase 22
 requirements-completed: [DICT-01]
-requirements-scaffolded: [DICT-02]  # Plan frontmatter listed DICT-02; deferred -- the user-visible toggle/hold mode-switching behavior ships in Plan 18-04 (DictationCoordinator). 18-02 only ships the GlobalHotkeyService substrate (both onKeyDown and onKeyUp callbacks plumbed); the mode-switch logic itself is downstream. See Deviations §1.
 
 # Metrics
 duration: 3min

@@ -47,7 +47,7 @@ metrics:
   build_errors: 0
   build_warnings_new: 0
   completed: "2026-04-27T20:20:07Z"
-requirements_completed: [SC-1]
+requirements-completed: [SC-1]
 ---
 
 # Phase 16 Plan 01: Models.swift Dictation Enums + Switch-Site Updates Summary

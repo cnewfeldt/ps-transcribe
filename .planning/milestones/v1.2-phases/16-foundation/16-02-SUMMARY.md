@@ -35,7 +35,7 @@ metrics:
   completed_date: "2026-04-27"
   tests_added: 13
   files_changed: 2
-requirements_completed:
+requirements-completed:
   - SC-2
 ---
 

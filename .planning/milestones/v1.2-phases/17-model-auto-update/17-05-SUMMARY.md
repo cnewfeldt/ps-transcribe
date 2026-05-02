@@ -48,6 +48,7 @@ metrics:
   files_modified: 3
   tests_added: 5
   tests_total: 60
+requirements-completed: [MODEL-08]
 ---
 
 # Phase 17 Plan 05: D-14 Backfill + Manifest Publication Tooling Summary

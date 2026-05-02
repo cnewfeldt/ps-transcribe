@@ -43,8 +43,8 @@ key-decisions:
   - "AppSettingsDictationPersistenceTests use `defer { UserDefaults.standard.removeObject(forKey: ...) }` rather than wrapping in a custom suite trait. Reason: simplest mechanism that survives test crashes (Swift Testing runs `defer` even on `#expect` failure inside `@MainActor` test bodies). Each test is hermetic and the cleanup runs before the next test even starts."
   - "Did NOT migrate ClipboardRestoreTests to the PasteboardTestLock pattern from Plan 18-06. Reason: out of scope for Plan 18-07 (Settings UI + persistence tests). Filed as a deferred item with the diagnosis + suggested fix so a future plan can close it cleanly. The pre-existing intermittent failure does not invalidate Plan 18-07's deliverables."
 
+# touched-but-not-completed: [DICT-01, FOLDER-01]  # historical sibling field, retired in Phase 22
 requirements-completed: [DICT-02, FOLDER-04, FOLDER-05]
-requirements-touched-but-not-completed: [DICT-01, FOLDER-01]
 
 # Metrics
 duration: 4min

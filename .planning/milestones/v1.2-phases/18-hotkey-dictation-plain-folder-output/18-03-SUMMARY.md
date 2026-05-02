@@ -38,8 +38,8 @@ key-decisions:
   - "Did NOT introduce a new public surface for `currentFilePath: URL?` even though research (§3) considered it. hasActiveSession is the minimal-leak alternative: callers learn the lifecycle bit without observing the path. Path remains private."
 
 # Requirements traceability
+# supports: [DICT-08, FOLDER-04]  # historical sibling field, retired in Phase 22
 requirements-completed: []  # DICT-08 / FOLDER-04 are NOT yet delivered. discardSession + hasActiveSession are pure infrastructure that Plans 18-04 (FOLDER-04 mode branching) and 18-06 (DICT-08 cancel cleanup) will USE. The actual user-visible cancel-deletes-file behavior lands in 18-06; the actual output-mode branching lands in 18-06. Following the precedent from Plan 18-01: scaffolding-coverage is not delivery.
-requirements-supports: [DICT-08, FOLDER-04]  # Informational -- Plans 18-06 will mark these complete when the user-visible behavior ships.
 
 # Metrics
 duration: ~2min

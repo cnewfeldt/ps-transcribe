@@ -31,6 +31,7 @@ metrics:
   files_modified: 2
   tests_added: 17
   tests_total: 92
+requirements-completed: [MODEL-01, MODEL-02, MODEL-03, MODEL-09]
 ---
 
 # Phase 17 Plan 01: ModelUpdateService Skeleton + Wave 0 Test Infrastructure Summary

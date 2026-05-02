@@ -30,6 +30,7 @@ metrics:
   files_modified: 2
   tests_added: 7
   tests_total: 99
+requirements-completed: [MODEL-04, MODEL-06, MODEL-10]
 ---
 
 # Phase 17 Plan 02: Download Pipeline Summary

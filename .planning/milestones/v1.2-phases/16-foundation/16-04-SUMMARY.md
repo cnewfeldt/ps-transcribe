@@ -48,7 +48,7 @@ patterns-established:
   - "App-scope Observable coordinator with weak subsystem references and computed aggregate flags"
   - "trueWhenEngineRunning-style 'computed-not-stored' assertion pattern for testing computed properties whose true-state path requires modifying out-of-scope code"
 
-requirements_completed: [SC-4, SC-5]
+requirements-completed: [SC-4, SC-5]
 
 # Metrics
 metrics:

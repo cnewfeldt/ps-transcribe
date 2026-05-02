@@ -50,8 +50,8 @@ patterns-established:
   - "Forward-declared test pattern: @Test(.disabled('Pending Plan 18-XX')) gates compilation against unavailable symbols. The test body is a placeholder; the un-disabling wave (18-02..08) is responsible for replacing both the trait AND the body with real assertions."
   - "Source-grep test pattern: when SwiftUI Views/Forms can't be introspected, assert source contains required literals (Section names, modifier calls, SF Symbol names). Mirrors the existing approach in this test target."
 
+# scaffolded: [DICT-01, DICT-02, DICT-03, DICT-04, DICT-05, DICT-06, DICT-07, DICT-08, DICT-09, DICT-10, DICT-11, FOLDER-01, FOLDER-04, FOLDER-05]  # historical sibling field, retired in Phase 22
 requirements-completed: []  # Wave 0 ships test scaffolding only -- no requirement is delivered until its implementing wave (18-02..08) lands and un-disables the corresponding @Suite. Plan frontmatter listed these IDs to declare scaffolding-coverage, not delivery; see Deviations section.
-requirements-scaffolded: [DICT-01, DICT-02, DICT-03, DICT-04, DICT-05, DICT-06, DICT-07, DICT-08, DICT-09, DICT-10, DICT-11, FOLDER-01, FOLDER-04, FOLDER-05]
 
 # Metrics
 duration: 3min

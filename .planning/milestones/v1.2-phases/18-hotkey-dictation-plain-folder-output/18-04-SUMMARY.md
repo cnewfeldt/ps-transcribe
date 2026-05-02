@@ -51,8 +51,8 @@ key-decisions:
   - "isActiveReflectsListeningState test mirrors the production switch in the test body rather than mutating state directly (state is `private(set)`). This proves exhaustiveness against the public State enum cases without requiring a test-only state setter -- the full true-state path will be exercised in Plan 18-06's begin/end behavioral tests."
 
 # Requirements traceability
+# supports: [DICT-04, DICT-11]  # historical sibling field, retired in Phase 22
 requirements-completed: []  # DICT-04 (HUD live partial transcription) and DICT-11 (mutual exclusion) are NOT yet user-visible. The TYPE landing here is necessary infrastructure but the user-facing behavior depends on Plan 18-05 (HUD shell) + Plan 18-06 (begin/end/cancel methods) + Plan 18-08 (app-scope instantiation).
-requirements-supports: [DICT-04, DICT-11]  # Informational -- Plans 18-05/18-06/18-08 will mark these complete when the user-visible behavior ships.
 
 # Metrics
 duration: 4min

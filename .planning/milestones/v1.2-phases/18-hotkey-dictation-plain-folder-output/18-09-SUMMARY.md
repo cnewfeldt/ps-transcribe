@@ -4,7 +4,7 @@ plan: 09
 subsystem: hotkey-dictation-plain-folder-output
 tags: [gap-closure, data-flow, test-flake-fix, doc-lag]
 status: pending-checkpoint
-requirements_completed: [DICT-10, FOLDER-02, FOLDER-03, FOLDER-04]
+requirements-completed: [DICT-10, FOLDER-02, FOLDER-03, FOLDER-04]
 dependency_graph:
   requires: [18-01, 18-02, 18-03, 18-04, 18-05, 18-06, 18-07, 18-08]
   provides: [plain-folder-body-content, dict-10-doc-closure, phase-18-flake-closure]

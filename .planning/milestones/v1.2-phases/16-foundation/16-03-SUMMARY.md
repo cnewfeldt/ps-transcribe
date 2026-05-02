@@ -35,7 +35,7 @@ metrics:
   files_modified: 0
   tests_added: 9
   tests_passing: 9
-requirements_completed:
+requirements-completed:
   - SC-3
 ---
 
