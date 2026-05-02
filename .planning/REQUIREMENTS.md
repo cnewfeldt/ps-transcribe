@@ -82,15 +82,16 @@ Captured as seeds in `.planning/seeds/`:
 
 ## Traceability
 
-_(Filled by roadmapper after roadmap approval — maps each REQ-ID to a Phase number.)_
-
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| QA-01..QA-09 | _pending_ | Not started |
-| DOMAIN-01..DOMAIN-06 | _pending_ | Not started |
-| NYQUIST-01..NYQUIST-07 | _pending_ | Not started |
-| PROCESS-01..PROCESS-03 | _pending_ | Not started |
-| VISREG-01..VISREG-06 | _pending_ | Not started |
+| PROCESS-01..PROCESS-03 | Phase 22 — Process & Frontmatter Standard | Not started |
+| VISREG-01..VISREG-06 | Phase 23 — Visual Regression Infra | Not started |
+| NYQUIST-01..NYQUIST-05 | Phase 24 — Nyquist Sweep — v1.0 | Not started |
+| NYQUIST-06..NYQUIST-07 | Phase 25 — Nyquist Sweep — v1.2 | Not started |
+| QA-01..QA-09 | Phase 26 — QA Sweep + Visual UAT | Not started |
+| DOMAIN-01..DOMAIN-06 | Phase 27 — Custom Domain — gogglebox.com | Not started |
+
+**Coverage:** 31/31 requirements mapped to phases. ✓
 
 ---
 
