@@ -1,32 +1,42 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.2
-milestone_name: — Standalone Dictation + Model Auto-Update + Dark Mode Parity
-status: verifying
-stopped_at: Phase 21 Plan 03 complete (commits f4b2faf, 828b4eb); Phase 21 closed; v1.2 milestone closed (D-01 status flip); v1.2 git tag pending separate ship gate
-last_updated: "2026-05-02T02:14:33.976Z"
-last_activity: 2026-05-02
+milestone: none
+milestone_name: v1.2 closed 2026-05-01 — awaiting next milestone
+status: idle
+stopped_at: v1.2 milestone closed; ROADMAP/REQUIREMENTS/PROJECT archived; git tag v1.2 pending; ready for /gsd-new-milestone
+last_updated: "2026-05-01T00:00:00.000Z"
+last_activity: 2026-05-01
+last_milestone:
+  version: v1.2
+  name: Standalone Dictation + Model Auto-Update + Dark Mode Parity
+  shipped: 2026-05-01
+  app_release: v2.2.0
+  phases_executed: 6
+  phases_removed: 1  # Phase 19
+  plans_completed: 32
+  archive: milestones/v1.2-ROADMAP.md
 progress:
-  total_phases: 7
-  completed_phases: 6
-  total_plans: 33
-  completed_plans: 33
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-27)
+See: .planning/PROJECT.md (updated 2026-05-01)
 
-**Core value:** Users can record meetings and voice memos with accurate, private, on-device transcription. All processing stays on-device.
-**Current focus:** Phase 21 — appearance-override
+**Core value:** Users can record meetings and voice memos with accurate, private, on-device transcription. Plus standalone hotkey-triggered dictation as of v1.2. All processing stays on-device.
+**Current focus:** None — v1.2 closed; awaiting `/gsd-new-milestone`.
 
 **Shipped milestones:**
 
 - v1.0 PS Transcribe (2026-04-14) — see `milestones/v1.0-ROADMAP.md`
 - v1.1 Marketing Website (2026-04-25) — see `milestones/v1.1-ROADMAP.md`
+- v1.2 Standalone Dictation + Model Auto-Update + Dark Mode Parity (2026-05-01; macOS app v2.2.0) — see `milestones/v1.2-ROADMAP.md`
 
 **2026-04-04 scope reduction:** Phases 5 (Ollama Integration) and 6 (Live LLM Analysis) were abandoned in v1.0. PS Transcribe is scoped to transcription only; LLM analysis of transcripts is not part of the product. Implementation preserved at git tag `archive/llm-analysis-attempt`.
 
@@ -34,12 +44,12 @@ See: .planning/PROJECT.md (updated 2026-04-27)
 
 ## Current Position
 
-Phase: 21
-Plan: Not started
-Status: Phase 21 verified end-to-end (ALL PASS); v1.2 milestone closed (D-01); v1.2 git tag pending separate ship gate
-Last activity: 2026-05-02
+Phase: —
+Plan: —
+Status: v1.2 milestone closed 2026-05-01; archives in `milestones/`; git tag pending separate ship gate; ready for `/gsd-new-milestone`
+Last activity: 2026-05-01
 
-Progress: [██████████] 100%
+Progress: idle (no active milestone)
 
 ## Performance Metrics
 
@@ -55,7 +65,7 @@ Progress: [██████████] 100%
 |-----------|--------|-------|---------|
 | v1.0 — PS Transcribe | 8 active (5/6 abandoned) | 28 | 2026-04-14 |
 | v1.1 — Marketing Website | 4 (15 reverted) | 16 | 2026-04-25 |
-| v1.2 — Standalone Dictation + Model Auto-Update + Dark Mode Parity | 5 (in progress) | TBD | TBD |
+| v1.2 — Standalone Dictation + Model Auto-Update + Dark Mode Parity | 6 executed (19 removed from scope) | 32 | 2026-05-01 |
 | Phase 18 P01 | 3min | 1 tasks | 16 files |
 | Phase 18 P02 | 3min | 2 tasks | 4 files |
 | Phase 18 P03 | 2min | 1 tasks | 2 files |
@@ -127,25 +137,24 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent milestone-level d
 
 ### Pending Todos
 
-v1.2 phases ready to plan:
+v1.2 closed 2026-05-01. No active todos.
 
-- [ ] Phase 16: Foundation — lift LibraryStore, anySessionActive flag, Models.swift enums, AppSettings keys, TranscriptLogger plain methods
-- [ ] Phase 17: Model Auto-Update — ModelUpdateService, reloadModels(), Settings > Model section
-- [ ] Phase 18: Hotkey Dictation + Plain-Folder Output — DictationHotkeyController, DictationCoordinator, DictationHUD, clipboard write, folder picker, DictationLogger
-- [ ] Phase 19: Integration & Hardening — mutual exclusion, rollback simulation, QA checklist
+Deferred to a later milestone (see PROJECT.md "Future Candidate Goals" and REQUIREMENTS.md "Future Requirements"):
 
-Deferred to a later milestone (see PROJECT.md "Future Candidate Goals"):
-
-- [ ] Custom domain for marketing site
-- [ ] Nyquist validation sweep across v1.0 phases 1, 2, 3, 8, 10
-- [ ] `requirements_completed` frontmatter on future SUMMARY.md files (process improvement)
+- [ ] `QA-FUT-01` — Phase 19 "Looks Done But Isn't" QA checklist sweep
+- [ ] `DOMAIN-FUT-01` — Custom domain for marketing site
+- [ ] `NYQUIST-FUT-01` — Nyquist validation sweep (v1.0 phases 1/2/3/8/10 + Phase 20 + Phase 21)
+- [ ] `PROCESS-FUT-01` — `requirements_completed` frontmatter on future SUMMARY.md files
+- [ ] Phase 21 titlebar bridge visual UAT (4 items, code-verified)
+- [ ] Designer-tuned dark Chronicle pass
+- [ ] Automated visual-regression / snapshot testing for appearance override
 
 ### Blockers/Concerns
 
-**Research gate (Phase 17):** Manifest hosting strategy ADR must be resolved before Phase 17 planning locks. Options: HuggingFace refs API (lightweight, no infrastructure) vs. project-owned JSON manifest on gh-pages (enables per-file SHA-256 checksums and `min_app_version` compatibility gating). Recommendation in SUMMARY.md: project-owned manifest.
+None — v1.2 shipped clean.
 
 ## Session Continuity
 
-Last session: 2026-05-01T19:30:00Z
-Stopped at: Phase 21 Plan 03 complete (commits f4b2faf, 828b4eb); Phase 21 closed; v1.2 milestone closed (D-01 status flip); v1.2 git tag pending separate ship gate
-Resume file: None — v1.2 ready for tag/ship; next milestone planning is the natural next step
+Last session: 2026-05-01T00:00:00Z
+Stopped at: v1.2 milestone closed; archives written to `.planning/milestones/`; ROADMAP collapsed to one-line summary; PROJECT evolved; git tag `v1.2` pending separate ship gate
+Resume file: None — start next milestone with `/gsd-new-milestone`
