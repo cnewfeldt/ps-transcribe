@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Polish & Validation
 status: executing
-stopped_at: Phase 22 context gathered
-last_updated: "2026-05-02T07:41:09.325Z"
-last_activity: 2026-05-02 -- Phase 22 planning complete
+stopped_at: Phase 22 complete; Phase 23 next
+last_updated: "2026-05-02T19:30:00.000Z"
+last_activity: 2026-05-02 -- Phase 22 (Process & Frontmatter Standard) complete; lint green across archive
 progress:
   total_phases: 6
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  completed_phases: 1
+  total_plans: 6
+  completed_plans: 6
+  percent: 17
 ---
 
 # Project State
@@ -21,7 +21,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-01)
 
 **Core value:** Users can record meetings and voice memos with accurate, private, on-device transcription. Plus standalone hotkey-triggered dictation as of v1.2. All processing stays on-device.
-**Current focus:** v1.3 Polish & Validation — defining requirements (no new product features; backlog closure + test hardening).
+**Current focus:** v1.3 Polish & Validation — Phase 22 (SUMMARY frontmatter standard + CI lint) complete; Phase 23 (Visual Regression Infra) next.
 
 **Shipped milestones:**
 
@@ -35,12 +35,12 @@ See: .planning/PROJECT.md (updated 2026-05-01)
 
 ## Current Position
 
-Phase: Phase 22 next (not started)
+Phase: Phase 23 next (Visual Regression Infra)
 Plan: —
-Status: Ready to execute
-Last activity: 2026-05-02 -- Phase 22 planning complete
+Status: Phase 22 complete; ready to discuss/plan Phase 23
+Last activity: 2026-05-02 -- Phase 22 complete (lint green across 39 SUMMARYs)
 
-Progress: 0/6 phases (0%)
+Progress: 1/6 phases (17%)
 
 ## Performance Metrics
 
@@ -70,6 +70,12 @@ Progress: 0/6 phases (0%)
 | Phase 21 P01 | ~5min | 1 tasks | 1 files |
 | Phase 21 P02 | ~3min | 3 tasks | 3 files |
 | Phase 21 P03 | ~10min | 3 tasks | 1 files |
+| Phase 22 P01 | 2min | 1 tasks | 1 files |
+| Phase 22 P02 | 3min | 2 tasks | 3 files (out-of-repo templates) |
+| Phase 22 P03 | 4min | 2 tasks | 2 files (out-of-repo workflow + agent) |
+| Phase 22 P04 | 12min | 1 tasks | 1 files (lint script) |
+| Phase 22 P05 | 2min | 1 tasks | 1 files (CI workflow) |
+| Phase 22 P06 | 25min | 2 tasks | 19 files (18 SUMMARYs + ephemeral script) |
 
 ## Accumulated Context
 
@@ -125,6 +131,10 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent milestone-level d
 - [Phase 21]: [Phase 21-03]: D-06 deviation documented inline in 21-VERIFICATION.md TWICE (audit gate intro paragraph + criteria-table row 3) so future verifiers reading SPEC #4's superseded "exactly ONE hit" wording are immediately redirected to the relaxed location+source check.
 - [Phase 21]: [Phase 21-03]: MenuBarExtra status bar icon glyph remaining system-rendered (does not flip per app preference) confirmed as tolerated gap; not a Phase 22 candidate. Dropdown menu *content* flips correctly via Group { ... }.preferredColorScheme(...) wrapper from Plan 21-02.
 - [v1.2 close-out]: D-01 milestone state flip executed -- STATE.md status: completed, ROADMAP.md Phase 21 ticked, Progress Table 3/3 Complete 2026-05-01. v1.2 git tag remains separate ship gate (NOT part of Plan 21-03 metadata commit).
+- [Phase 22]: D-01 canonical key is `requirements-completed` (hyphen). All v1.3+ SUMMARY artifacts MUST use the hyphen form; underscore is forbidden and lint-flagged.
+- [Phase 22]: [Phase 22-04]: lint-summaries.sh added grep-based fallback for legacy v1.2 SUMMARYs whose YAML yq cannot parse (unquoted colons in list values). Without the fallback, set -euo pipefail aborted the script on the first parse error and missed downstream files.
+- [Phase 22]: [Phase 22-06]: Migration shipped as 2-commit pair (script-add → migration+script-rm) instead of single commit. Single-commit add+delete nets to zero in git, defeating D-13 reproducibility-via-history. Pattern documented for future ephemeral-script migrations.
+- [Phase 22]: [Phase 22-06]: lint-summaries.sh exits 0 with `39 SUMMARY files checked, 0 failures, 0 warnings` (33 archived + 6 v1.3 plan-22 SUMMARYs). CI gate active for all future PRs touching SUMMARY/PLAN files.
 
 ### Pending Todos
 
@@ -150,6 +160,6 @@ None — v1.2 shipped clean.
 
 ## Session Continuity
 
-Last session: 2026-05-02T07:12:14.760Z
-Stopped at: Phase 22 context gathered
-Resume file: .planning/milestones/v1.3-phases/22-process-frontmatter-standard/22-CONTEXT.md
+Last session: 2026-05-02T19:30:00.000Z
+Stopped at: Phase 22 complete; Phase 23 (Visual Regression Infra) next
+Resume file: .planning/milestones/v1.3-phases/22-process-frontmatter-standard/22-06-SUMMARY.md

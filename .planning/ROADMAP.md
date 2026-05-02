@@ -16,7 +16,7 @@
 
 | # | Phase | Status |
 |---|-------|--------|
-| 22 | Process & Frontmatter Standard | [ ] Pending |
+| 22 | Process & Frontmatter Standard | [x] Complete 2026-05-02 |
 | 23 | Visual Regression Infra | [ ] Pending |
 | 24 | Nyquist Sweep — v1.0 | [ ] Pending |
 | 25 | Nyquist Sweep — v1.2 | [ ] Pending |
@@ -25,16 +25,16 @@
 
 ### Phase 22: Process & Frontmatter Standard
 
-**Goal:** Add `requirements_completed` field to the SUMMARY.md template + generation flow + CI lint, so v1.3's own SUMMARY.md files (and every future milestone's) carry mechanical requirement traceability.
+**Goal:** Add `requirements-completed` field (canonical hyphen form per Phase 22 D-01) to the SUMMARY.md template + generation flow + CI lint, so v1.3's own SUMMARY.md files (and every future milestone's) carry mechanical requirement traceability.
 
 **Requirements:** PROCESS-01, PROCESS-02, PROCESS-03
 
 **Success criteria:**
 
-1. SUMMARY.md template (`$HOME/.claude/get-shit-done/templates/...`) includes `requirements_completed` field with documented schema
+1. SUMMARY.md template (`$HOME/.claude/get-shit-done/templates/...`) includes `requirements-completed` field with documented schema
 2. SUMMARY.md generation flow (gsd-doc-writer agent + manual workflows) populates the field automatically by parsing PLAN.md requirement references
-3. CI or pre-commit lint check fails when SUMMARY.md is committed without `requirements_completed`
-4. v1.3 phases 23-27 produce SUMMARY.md files that include `requirements_completed`
+3. CI or pre-commit lint check fails when SUMMARY.md is committed without `requirements-completed`
+4. v1.3 phases 23-27 produce SUMMARY.md files that include `requirements-completed`
 
 **Why first:** Every subsequent v1.3 phase produces a SUMMARY.md. Landing the template change first means this milestone's own artifacts use the new format — dogfooding from day one.
 
@@ -42,20 +42,20 @@
 
 Plans:
 **Wave 1**
-- [ ] 22-01-PLAN.md — Reword REQUIREMENTS.md PROCESS-01..03 from underscore to canonical hyphen form
+- [x] 22-01-PLAN.md — Reword REQUIREMENTS.md PROCESS-01..03 from underscore to canonical hyphen form
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 22-02-PLAN.md — Add `requirements-completed: []` to summary-standard.md and summary-minimal.md; tighten doc in summary.md
-- [ ] 22-03-PLAN.md — Tighten `<step name="create_summary">` contract in execute-plan.md and add cross-reference in gsd-doc-writer.md
+- [x] 22-02-PLAN.md — Add `requirements-completed: []` to summary-standard.md and summary-minimal.md; tighten doc in summary.md
+- [x] 22-03-PLAN.md — Tighten `<step name="create_summary">` contract in execute-plan.md and add cross-reference in gsd-doc-writer.md
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 22-04-PLAN.md — Implement scripts/lint-summaries.sh (Bash + yq, presence + subset checks)
+- [x] 22-04-PLAN.md — Implement scripts/lint-summaries.sh (Bash + yq, presence + subset checks)
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 22-05-PLAN.md — Wire .github/workflows/lint-summaries.yml (macos-26, path-filtered) as the CI gate
+- [x] 22-05-PLAN.md — Wire .github/workflows/lint-summaries.yml (macos-26, path-filtered) as the CI gate
 
 **Wave 5** *(blocked on Wave 4 completion)*
-- [ ] 22-06-PLAN.md — One-shot migration of 18 archived SUMMARYs to canonical form; ephemeral migrate-summary-frontmatter.sh git-rm'd in same commit
+- [x] 22-06-PLAN.md — One-shot migration of 18 archived SUMMARYs to canonical form; ephemeral migrate-summary-frontmatter.sh git-rm'd in same commit
 
 ### Phase 23: Visual Regression Infra
 
