@@ -56,7 +56,13 @@ v1.2 — Standalone Dictation + Model Auto-Update + Dark Mode Parity (shipped 20
 
 ### Active
 
-_None — v1.2 milestone closed 2026-05-01. Run `/gsd-new-milestone` to start the next milestone cycle._
+v1.3 — Polish & Validation (in flight, requirements pending):
+
+- [ ] `QA-FUT-01` — Phase 19 "Looks Done But Isn't" QA checklist sweep (clipboard history vs. Maccy/Alfred live, multi-monitor HUD positioning, security-scoped bookmark survival across relaunch, disk-space preflight UAT) + Phase 21 titlebar visual UAT (4 items, code-verified `ce79965`) folded in
+- [ ] `DOMAIN-FUT-01` — Custom domain for marketing site (replaces `ps-transcribe-web.vercel.app` slug fallback)
+- [ ] `NYQUIST-FUT-01` — Full Nyquist validation sweep across v1.0 phases 1/2/3/8/10 + v1.2 phases 20/21
+- [ ] `PROCESS-FUT-01` — `requirements_completed` frontmatter on SUMMARY.md template + tooling
+- [ ] `VISREG-01` — Visual regression / snapshot testing infra for appearance override (light/dark/system parity guarantees)
 
 ### Out of Scope
 
@@ -83,21 +89,35 @@ _None — v1.2 milestone closed 2026-05-01. Run `/gsd-new-milestone` to start th
 
 > **Production slug fallback:** the canonical `ps-transcribe.vercel.app` was claimed by another Vercel account, so production lives at `ps-transcribe-web.vercel.app` until a custom domain replaces it.
 
-## Current Milestone
+## Current Milestone: v1.3 Polish & Validation
 
-_None — v1.2 closed 2026-05-01 (macOS app v2.2.0 released). Run `/gsd-new-milestone` to start the next milestone cycle._
+**Goal:** Close deferred backlog from v1.0-1.2 — ship custom marketing-site domain, complete the Phase 19 "Looks Done But Isn't" QA checklist, backfill Nyquist validation across 7 phases (v1.0 1/2/3/8/10 + v1.2 20/21), and standardize SUMMARY.md frontmatter + visual regression infra.
 
-## Future Candidate Goals (post-v1.2)
+**Target features:**
 
-Candidates deferred to a later milestone:
+- Phase 19 QA checklist sweep + Phase 21 titlebar visual UAT (`QA-FUT-01`)
+- Custom domain for marketing site (`DOMAIN-FUT-01`)
+- Full Nyquist validation sweep across 7 phases (`NYQUIST-FUT-01`) — largest line item, ~2-3 dedicated phases
+- `requirements_completed` frontmatter on SUMMARY.md template + tooling (`PROCESS-FUT-01`)
+- Visual regression / snapshot testing infra (`VISREG-01`) — net-new tooling for appearance override
 
-- **`QA-FUT-01`:** Phase 19 "Looks Done But Isn't" QA checklist sweep — clipboard history exclusion under Maccy/Alfred (live test), multi-monitor HUD positioning, security-scoped bookmark survival across relaunch, disk-space preflight warning UAT.
-- **`DOMAIN-FUT-01`:** Custom domain for the marketing site (replaces the `ps-transcribe-web.vercel.app` slug fallback).
-- **`NYQUIST-FUT-01`:** Nyquist validation sweep across v1.0 phases 1 / 2 / 3 / 8 / 10 + Phase 20 + Phase 21 (Wave 0 RED scaffolding pattern was retired post-18.1).
-- **`PROCESS-FUT-01`:** `requirements_completed` frontmatter on future SUMMARY.md files (so requirement traceability is mechanical, not manual).
-- **Phase 21 titlebar bridge visual UAT** (4 items, 30s each — code-verified at `ce79965`).
-- **Designer-tuned dark Chronicle pass** (existing backlog item).
-- **Automated visual-regression / snapshot testing** for the appearance override (existing backlog item).
+**Key context:**
+
+- Phases continue numbering from v1.2 → v1.3 starts at **Phase 22**
+- No new product features — 100% backlog closure + test hardening
+- Designer-tuned dark Chronicle pass **dropped from scope** — revisit only if dark-mode issues surface
+- Estimated 5-7 phases total
+- Future feature directions captured as seeds in `.planning/seeds/` (SEED-001..004): dictation extensions, library upgrade, transcript editing, format reach
+
+## Future Candidate Goals (post-v1.3)
+
+Candidates deferred beyond v1.3:
+
+- **Designer-tuned dark Chronicle pass** — dropped from v1.3; revisit only if dark-mode issues surface in production.
+- **Dictation extensions** (SEED-001) — history pane, voice commands, format-as-you-speak, multi-hotkey profiles, direct-paste-into-focused-app.
+- **Library upgrade** (SEED-002) — full-text search, tags, smart filters, audio scroll-sync, speaker rename/redact.
+- **Transcript editing surface** (SEED-003) — inline correction, speaker rename/bulk, redact w/ audio mute, merge/split.
+- **Format reach** (SEED-004) — DOCX/PDF/SRT/VTT/JSON/TXT export, per-destination presets, Notion property refresh.
 
 <details>
 <summary>Archived: v1.2 milestone goal</summary>
@@ -208,4 +228,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-01 -- v1.2 milestone closed (macOS app released as v2.2.0). 6 phases executed (16, 17, 18, 18.1, 20, 21); Phase 19 (Integration & Hardening) formally removed from scope at close (coverage absorbed by 17/18/18.1; QA checklist deferred to `QA-FUT-01`). 32 plans shipped. Hotkey dictation, shared save-destinations architecture, FluidAudio model auto-update, Chronicle adaptive light/dark token palette, three-way `AppearancePreference` override, Chronicle titlebar bridge. Audit report at `.planning/milestones/v1.2-MILESTONE-AUDIT.md` flagged 7 non-blocking gaps (doc traceability lag for DICT-10/MODEL-01..10, untraced REQ-20.x and Phase 21 SPEC criteria, stale ROADMAP Phase 20 row, missing Nyquist VALIDATION.md for 20/21, deferred Phase 21 titlebar visual UAT) — all resolved at close. 221 Phase 18.1 suite tests pass; Phase 21 SPEC 11/11 verified.*
+*Last updated: 2026-05-01 -- v1.3 Polish & Validation milestone started. Goal: close deferred backlog from v1.0-1.2 — `QA-FUT-01` Phase 19 QA checklist + Phase 21 titlebar visual UAT, `DOMAIN-FUT-01` custom domain, `NYQUIST-FUT-01` full Nyquist sweep across 7 phases (v1.0 1/2/3/8/10 + v1.2 20/21), `PROCESS-FUT-01` SUMMARY.md frontmatter, `VISREG-01` visual regression infra. Designer-tuned dark Chronicle pass dropped from scope. Phases continue from v1.2 → v1.3 starts at Phase 22. Future feature seeds (dictation extensions, library upgrade, transcript editing, format reach) captured in `.planning/seeds/`.*

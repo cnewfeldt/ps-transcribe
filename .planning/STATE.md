@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
-milestone: none
-milestone_name: v1.2 closed 2026-05-01 — awaiting next milestone
-status: idle
-stopped_at: v1.2 milestone closed; ROADMAP/REQUIREMENTS/PROJECT archived; git tag v1.2 pending; ready for /gsd-new-milestone
-last_updated: "2026-05-01T00:00:00.000Z"
+milestone: v1.3
+milestone_name: Polish & Validation
+status: planning
+stopped_at: defining requirements for v1.3 (Polish & Validation)
+last_updated: "2026-05-01T18:00:00.000Z"
 last_activity: 2026-05-01
 last_milestone:
   version: v1.2
@@ -30,7 +30,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-01)
 
 **Core value:** Users can record meetings and voice memos with accurate, private, on-device transcription. Plus standalone hotkey-triggered dictation as of v1.2. All processing stays on-device.
-**Current focus:** None — v1.2 closed; awaiting `/gsd-new-milestone`.
+**Current focus:** v1.3 Polish & Validation — defining requirements (no new product features; backlog closure + test hardening).
 
 **Shipped milestones:**
 
@@ -44,12 +44,12 @@ See: .planning/PROJECT.md (updated 2026-05-01)
 
 ## Current Position
 
-Phase: —
+Phase: Not started (defining requirements)
 Plan: —
-Status: v1.2 milestone closed 2026-05-01; archives in `milestones/`; git tag pending separate ship gate; ready for `/gsd-new-milestone`
-Last activity: 2026-05-01
+Status: Defining requirements
+Last activity: 2026-05-01 — Milestone v1.3 started
 
-Progress: idle (no active milestone)
+Progress: 0% (planning)
 
 ## Performance Metrics
 
@@ -137,17 +137,21 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent milestone-level d
 
 ### Pending Todos
 
-v1.2 closed 2026-05-01. No active todos.
+v1.3 active scope (now in REQUIREMENTS.md):
 
-Deferred to a later milestone (see PROJECT.md "Future Candidate Goals" and REQUIREMENTS.md "Future Requirements"):
-
-- [ ] `QA-FUT-01` — Phase 19 "Looks Done But Isn't" QA checklist sweep
+- [ ] `QA-FUT-01` — Phase 19 "Looks Done But Isn't" QA checklist sweep + Phase 21 titlebar visual UAT (folded in)
 - [ ] `DOMAIN-FUT-01` — Custom domain for marketing site
-- [ ] `NYQUIST-FUT-01` — Nyquist validation sweep (v1.0 phases 1/2/3/8/10 + Phase 20 + Phase 21)
-- [ ] `PROCESS-FUT-01` — `requirements_completed` frontmatter on future SUMMARY.md files
-- [ ] Phase 21 titlebar bridge visual UAT (4 items, code-verified)
-- [ ] Designer-tuned dark Chronicle pass
-- [ ] Automated visual-regression / snapshot testing for appearance override
+- [ ] `NYQUIST-FUT-01` — Full Nyquist validation sweep (v1.0 phases 1/2/3/8/10 + Phase 20 + Phase 21)
+- [ ] `PROCESS-FUT-01` — `requirements_completed` frontmatter on SUMMARY.md template + tooling
+- [ ] `VISREG-01` — Visual regression / snapshot testing infra for appearance override
+
+Deferred beyond v1.3 (see PROJECT.md "Future Candidate Goals" + `.planning/seeds/`):
+
+- Designer-tuned dark Chronicle pass — dropped from v1.3; revisit only if dark-mode issues surface
+- SEED-001 Dictation extensions
+- SEED-002 Library upgrade
+- SEED-003 Transcript editing surface
+- SEED-004 Format reach
 
 ### Blockers/Concerns
 
@@ -155,6 +159,6 @@ None — v1.2 shipped clean.
 
 ## Session Continuity
 
-Last session: 2026-05-01T00:00:00Z
-Stopped at: v1.2 milestone closed; archives written to `.planning/milestones/`; ROADMAP collapsed to one-line summary; PROJECT evolved; git tag `v1.2` pending separate ship gate
-Resume file: None — start next milestone with `/gsd-new-milestone`
+Last session: 2026-05-01T18:00:00Z
+Stopped at: v1.3 Polish & Validation milestone started; PROJECT.md + STATE.md updated; backlog seeds (SEED-001..004) captured; awaiting REQUIREMENTS.md + ROADMAP.md generation
+Resume file: None — continue with REQUIREMENTS definition + roadmapper spawn
