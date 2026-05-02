@@ -43,9 +43,9 @@
 
 ### Process (`PROCESS-FUT-01`) — SUMMARY.md frontmatter standard
 
-- [ ] **PROCESS-01**: Add `requirements_completed` (list) field to SUMMARY.md template frontmatter
+- [ ] **PROCESS-01**: Add `requirements-completed` (list) field to SUMMARY.md template frontmatter
 - [ ] **PROCESS-02**: Update SUMMARY.md generation flow (gsd-doc-writer agent + manual workflows) to populate the field automatically by parsing PLAN.md requirement references
-- [ ] **PROCESS-03**: Add a lint check (CI or pre-commit) that fails when SUMMARY.md is committed without `requirements_completed`
+- [ ] **PROCESS-03**: Add a lint check (CI or pre-commit) that fails when SUMMARY.md is committed without `requirements-completed`
 
 ### Visual Regression / Snapshot Testing (`VISREG-01`)
 
