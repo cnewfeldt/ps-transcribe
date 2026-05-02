@@ -1,8 +1,8 @@
 ---
 phase: 21-appearance-override
 verified: 2026-05-01T00:00:00Z
-status: human_needed
-score: 11/11 SPEC criteria verified; post-fix titlebar bridge code-verified, UAT pending
+status: passed
+score: 11/11 SPEC criteria verified; post-fix titlebar bridge code-verified + visually confirmed (user attestation 2026-05-01 via 21-HUMAN-UAT.md)
 overrides_applied: 1
 overrides:
   - must_have: "SPEC #4 grep gate — exactly ONE hit outside #Preview blocks"
