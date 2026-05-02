@@ -73,6 +73,20 @@ Plans:
 
 **Dependencies:** None — independent infra work.
 
+**Plans:** 5 plans
+
+Plans:
+**Wave 0** *(parallel)*
+- [ ] 23-01-PLAN.md — Add swift-snapshot-testing 1.19.2 dep + empty test suite skeleton + SnapshotFixtures helper
+- [ ] 23-02-PLAN.md — Write ADR documenting framework choice and rejected alternatives (Nygard short-form)
+
+**Wave 1** *(parallel; both depend on 23-01)*
+- [ ] 23-03-PLAN.md — Implement 15 @Test methods (5 surfaces × 3 appearances) and record/commit 15 baseline PNGs
+- [ ] 23-04-PLAN.md — Extend build-check.yml with swift test + record-mode guard + diff-artifact upload
+
+**Wave 2** *(depends on 23-03 + 23-04)*
+- [ ] 23-05-PLAN.md — Refresh TESTING.md and create CONTRIBUTING.md with regen workflow
+
 ### Phase 24: Nyquist Sweep — v1.0
 
 **Goal:** Backfill `*-VALIDATION.md` for v1.0 phases that shipped without Nyquist test coverage (Phase 1 Rebrand, Phase 2 Security/Stability, Phase 3 Library, Phase 8 Defects, Phase 10 Obsidian/Cleanup).
