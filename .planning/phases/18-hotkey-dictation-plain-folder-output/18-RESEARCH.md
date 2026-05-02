@@ -1015,32 +1015,37 @@ private func fallbackTimestampName() -> String {
 
 **Plan_check trigger:** A1, A2, A3 should each be verified by a test or code inspection during Wave 1/2; if any are wrong, the planner should add a small fixup task before later waves depend on them.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should `LibraryEntry.filePath` become Optional, or do we always assign a sentinel like an empty string?**
    - What we know: D-12 says clipboard-only entries should not point at any file. `LibraryEntry.filePath: String` is non-optional. Existing call sites (LibraryEntryRow.swift:60, 73-77) read it without nil-checks.
    - What's unclear: whether the cleaner refactor (Optional) or the sentinel (`""`) is closer to the project's existing conventions. Looking at the codebase, other Optionals exist (`name: String?`, `firstLinePreview: String?`, `notionPageURL: String?`) — so Optional fits the pattern.
    - Recommendation: refactor to `String?`. Wave 2 task. Update all 19 read sites with `?? ""` or proper nil-handling. Add a test that decodes an old `library.json` with `filePath: ""` AND a new one with `filePath: nil` (or absent) — both should round-trip.
+   - **RESOLVED:** keep `filePath: String` non-optional with `""` sentinel (matches existing meeting-flow placeholder pattern at ContentView.swift:905; avoids 19-site refactor risk). For D-12 transcript persistence, add `inlineTranscript: String?` to `LibraryEntry` so clipboard-only entries retain their transcript after the clipboard restore window expires — see Plan 18-06 (BLOCKER #2 fix).
 
 2. **Pre-warm timing on first launch — sequence the two `prepareModels()` calls or run concurrently?**
    - What we know: both `meeting engine.prepareModels()` and `dictation engine.prepareModels()` are called at app launch. They share the on-disk model cache. FluidAudio's `DownloadUtils.allModelsExist` short-circuits when files are present.
    - What's unclear: behavior on a fresh install where the model isn't cached. Two concurrent downloads to the same target?
    - Recommendation: in Wave 7 integration, dictationCoordinator.preWarmModels() awaits a notification or polls `meetingEngine.modelsReady == true OR meetingEngine.assetStatus == "Ready"` before calling its own prepareModels. On warm starts (already cached) this is instant. Cost: ~0ms warm, fully serialized cold.
+   - **RESOLVED:** serialize via 2 s `Task.sleep` before `dictationEngine.prepareModels()` in `PSTranscribeApp.init`'s background `Task.detached` — see Plan 18-08 init.
 
 3. **DictationLogger has no public getter for `currentFilePath`; how does DictationCoordinator know whether a file is open without re-opening?**
    - What we know: DictationLogger.swift:33 `private var currentFilePath: URL?`; only `endSession()` returns it. Coordinator tracks an `openFolderFilePath: URL?` independently.
    - What's unclear: whether to add a public getter (`var isSessionOpen: Bool` or `var currentURL: URL?`) on the actor, or rely on the coordinator's parallel state.
    - Recommendation: add a `var hasActiveSession: Bool { currentFilePath != nil }` async property to DictationLogger in Wave 2 (small, additive). Coordinator queries it instead of mirroring state. Reduces drift risk.
+   - **RESOLVED:** `var hasActiveSession: Bool` added on `DictationLogger` actor — see Plan 18-03.
 
 4. **HUD width if user's screen is narrower than 420pt** (e.g., compact-mode external display, edge case)?
    - What we know: NSPanel content rect is set to 420×56 in `DictationWindowController`.
    - What's unclear: whether to clamp to `min(420, screen.visibleFrame.width - 40)` or leave fixed.
    - Recommendation: clamp during `positionAtBottomCenter()` — if `panelFrame.width > screenFrame.width - 40`, reduce panelFrame.width and re-center. Edge case handling.
+   - **RESOLVED:** clamp width to `min(420, screen.visibleFrame.width - 40)` with floor at 280pt during `positionAtBottomCenter()` — see Plan 18-05.
 
 5. **Should the dictation-session library entry's `sourceApp` be `"PSTranscribe"` or the frontmost app at hotkey-press time?**
    - What we know: existing meeting/voice memo flows use `"PSTranscribe"` (verified via grep; the field is mostly informational).
    - What's unclear: whether dictation-from-Slack should record `sourceApp = "Slack"`. This requires reading `NSWorkspace.shared.frontmostApplication?.bundleIdentifier` at begin time.
    - Recommendation: ship with `"PSTranscribe"` (consistent with existing entries). Defer per-app source tracking to a future polish.
+   - **RESOLVED:** literal `"PSTranscribe"` (consistent with meeting/voice-memo entries) — see Plan 18-06 commit path.
 
 ## Environment Availability
 

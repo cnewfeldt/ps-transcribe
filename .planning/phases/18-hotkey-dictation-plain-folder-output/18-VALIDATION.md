@@ -2,8 +2,8 @@
 phase: 18
 slug: hotkey-dictation-plain-folder-output
 status: draft
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: false  # flips to true after Plan 18-01 executes
 created: 2026-04-28
 ---
 
@@ -108,9 +108,9 @@ created: 2026-04-28
 
 - [ ] All tasks have `<automated>` verify or Wave 0 dependencies
 - [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references (16 RED test files queued)
+- [x] Wave 0 covers all MISSING references (16 RED test files queued — Plan 18-01 frontmatter aligned)
 - [ ] No watch-mode flags
 - [ ] Feedback latency < 30 s
-- [ ] `nyquist_compliant: true` set in frontmatter (planner toggles after revision)
+- [x] `nyquist_compliant: true` set in frontmatter (toggled by planner during revision iter 1)
 
-**Approval:** pending
+**Approval:** planner-approved (Phase 18 revision iter 1) — checker re-runs after orchestrator-supplied revisions land
