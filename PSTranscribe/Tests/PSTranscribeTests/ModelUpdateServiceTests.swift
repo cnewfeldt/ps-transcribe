@@ -72,8 +72,8 @@ struct ModelUpdateServiceTests {
         installResponder(data: manifestData(version: "20260601", minAppVersion: "1.0.0",
                                             releasedAt: "2026-06-01T00:00:00Z"))
 
-        // Inject appVersion "2.1.1" (matches Info.plist) so min_app_version "1.0.0" does not block.
-        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        // Inject appVersion "2.2.0" (matches Info.plist) so min_app_version "1.0.0" does not block.
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.2.0")
         await service.checkForUpdate(force: true)
 
         if case .updateAvailable(let ver, let sizeBytes, _) = service.updateState {
@@ -96,7 +96,7 @@ struct ModelUpdateServiceTests {
         installResponder(data: manifestData(version: "20260601", minAppVersion: "1.0.0"))
 
         // Inject appVersion so min_app_version "1.0.0" does not block.
-        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.2.0")
         await service.checkForUpdate(force: true)
 
         // Assert state is NOT one of the download/apply states
@@ -117,10 +117,10 @@ struct ModelUpdateServiceTests {
 
         let settings = AppSettings()
         settings.installedModelVersion = "20260427"
-        // min_app_version "99.0.0" is greater than injected appVersion "2.1.1" — must block.
+        // min_app_version "99.0.0" is greater than injected appVersion "2.2.0" — must block.
         installResponder(data: manifestData(version: "20260601", minAppVersion: "99.0.0"))
 
-        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.2.0")
         await service.checkForUpdate(force: true)
 
         if case .blocked(.minAppVersion(let req, _, _)) = service.updateState {
@@ -175,7 +175,7 @@ struct ModelUpdateServiceTests {
             return (response, self.manifestData())
         }
 
-        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.2.0")
         await service.checkForUpdate(force: true)
 
         #expect(responderInvokedCount == 1, "Forced check should bypass throttle and invoke responder once")
@@ -227,7 +227,7 @@ struct ModelUpdateServiceTests {
             return (response, self.manifestData())
         }
 
-        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.2.0")
         await service.checkForUpdate(force: true)
 
         #expect(responderInvoked == true, "Forced check must bypass disabled flag")
@@ -338,7 +338,7 @@ struct ModelUpdateServiceTests {
         settings.installedModelVersion = "20260427"
         installManifestAndFileResponder(manifest: manifest, fileBodies: files)
 
-        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.2.0")
         service.modelsRootOverride = modelsRoot
         // Plan 17-03: inject no-op reload handler so applySwap proceeds without real FluidAudio models.
         service.reloadHandler = { }
@@ -403,7 +403,7 @@ struct ModelUpdateServiceTests {
         settings.installedModelVersion = "20260427"
         installManifestAndFileResponder(manifest: manifest, fileBodies: files)
 
-        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.2.0")
         service.modelsRootOverride = modelsRoot
         // Plan 17-03: inject no-op reload handler so applySwap proceeds without real FluidAudio models.
         service.reloadHandler = { }
@@ -473,7 +473,7 @@ struct ModelUpdateServiceTests {
 
         let settings = AppSettings()
         settings.installedModelVersion = "20260427"
-        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.2.0")
         service.modelsRootOverride = modelsRoot
         service.updateState = .updateAvailable(
             version: manifest.version,
@@ -562,7 +562,7 @@ struct ModelUpdateServiceTests {
 
         let settings = AppSettings()
         settings.installedModelVersion = "20260427"
-        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.2.0")
         service.modelsRootOverride = modelsRoot
         service.updateState = .updateAvailable(
             version: manifest.version,
@@ -608,7 +608,7 @@ struct ModelUpdateServiceTests {
 
         let settings = AppSettings()
         settings.installedModelVersion = "20260427"
-        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.2.0")
         service.modelsRootOverride = modelsRoot
         service.updateState = .updateAvailable(
             version: manifest.version,
@@ -649,7 +649,7 @@ struct ModelUpdateServiceTests {
 
         let settings = AppSettings()
         settings.installedModelVersion = "20260427"
-        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.2.0")
         service.modelsRootOverride = modelsRoot
         service.updateState = .updateAvailable(
             version: manifest.version,
@@ -718,7 +718,7 @@ struct ModelUpdateServiceTests {
         let settings = AppSettings()
         settings.installedModelVersion = "20260427"
         _ = manifestURL // silence unused warning
-        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.2.0")
         service.modelsRootOverride = modelsRoot
         service.updateState = .updateAvailable(
             version: manifest.version,
@@ -813,7 +813,7 @@ struct ModelUpdateServiceTests {
         settings.installedModelVersion = "20260427"
         let coordinator = SessionCoordinator()
 
-        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.2.0")
         service.modelsRootOverride = modelsRoot
         // No-op reload handler -- no real FluidAudio required
         service.reloadHandler = { }
@@ -854,7 +854,7 @@ struct ModelUpdateServiceTests {
         _ = try makeStagingDir(root: modelsRoot, markerName: "NEW")
 
         let settings = AppSettings()
-        let service = ModelUpdateService(settings: settings, appVersion: "2.1.1")
+        let service = ModelUpdateService(settings: settings, appVersion: "2.2.0")
         service.modelsRootOverride = modelsRoot
         service.reloadHandler = { }
         service.anySessionActiveProvider = { false }
@@ -891,7 +891,7 @@ struct ModelUpdateServiceTests {
         _ = try makeStagingDir(root: modelsRoot, markerName: "NEW")
 
         let settings = AppSettings()
-        let service = ModelUpdateService(settings: settings, appVersion: "2.1.1")
+        let service = ModelUpdateService(settings: settings, appVersion: "2.2.0")
         service.modelsRootOverride = modelsRoot
         service.reloadHandler = { throw NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "reload failed"]) }
         service.anySessionActiveProvider = { false }
@@ -944,7 +944,7 @@ struct ModelUpdateServiceTests {
         _ = try makeStagingDir(root: modelsRoot, markerName: "NEW")
 
         let settings = AppSettings()
-        let service = ModelUpdateService(settings: settings, appVersion: "2.1.1")
+        let service = ModelUpdateService(settings: settings, appVersion: "2.2.0")
         service.modelsRootOverride = modelsRoot
         service.reloadHandler = { }
         service.anySessionActiveProvider = { false }
@@ -979,7 +979,7 @@ struct ModelUpdateServiceTests {
         _ = try makeStagingDir(root: modelsRoot, markerName: "NEW")
 
         let settings = AppSettings()
-        let service = ModelUpdateService(settings: settings, appVersion: "2.1.1")
+        let service = ModelUpdateService(settings: settings, appVersion: "2.2.0")
         service.modelsRootOverride = modelsRoot
         service.reloadHandler = { }
 
@@ -1088,7 +1088,7 @@ struct ModelUpdateServiceTests {
 
         let settings = AppSettings()
         // installedModelVersion left as "" (default) -- backfill condition 1 met
-        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.2.0")
         service.modelsRootOverride = modelsRoot
 
         await service.checkForUpdate(force: true)
@@ -1132,7 +1132,7 @@ struct ModelUpdateServiceTests {
 
         let settings = AppSettings()
         settings.installedModelVersion = "20260101"   // pre-set -- backfill must NOT overwrite
-        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.2.0")
         service.modelsRootOverride = modelsRoot
 
         await service.checkForUpdate(force: true)
@@ -1190,7 +1190,7 @@ struct ModelUpdateServiceTests {
 
         let settings = AppSettings()
         // installedModelVersion stays "" (empty) -- backfill would fire IF size matched
-        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.2.0")
         service.modelsRootOverride = modelsRoot
 
         await service.checkForUpdate(force: true)
@@ -1236,7 +1236,7 @@ struct ModelUpdateServiceTests {
         installManifestOnlyResponder(manifest: manifest)
 
         let settings = AppSettings()
-        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.2.0")
         service.modelsRootOverride = modelsRoot
 
         await service.checkForUpdate(force: true)
@@ -1273,7 +1273,7 @@ struct ModelUpdateServiceTests {
         installManifestOnlyResponder(manifest: manifest)
 
         let settings = AppSettings()
-        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.1.1")
+        let service = ModelUpdateService(settings: settings, session: .mocked(), appVersion: "2.2.0")
         service.modelsRootOverride = nonExistentRoot
 
         // Must not crash; backfill must skip silently

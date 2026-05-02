@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.2.0] — 2026-05-01
+
+### Features
+- **User-controlled appearance preference (Phase 21).** New "Appearance" section at top of Settings with a System / Light / Dark Picker. Default `.system` preserves prior system-following behavior byte-for-byte; `.light` and `.dark` force the chosen scheme app-wide. Preference persists via `UserDefaults` key `appearancePreference` and applies live without app restart.
+- New `AppearancePreference` enum (`.system`/`.light`/`.dark`) in `AppSettings.swift` with `colorScheme: ColorScheme?` SwiftUI bridge (`nil` for `.system`).
+- Three `.preferredColorScheme(settings.appearancePreference.colorScheme)` call-sites at every Scene root in `PSTranscribeApp.body` (WindowGroup, Settings, MenuBarExtra). Phase 20's relaxed grep gate audits location + source rather than count (per CONTEXT.md D-06).
+- `DictationWindowController` mirrors the preference onto its NSPanel via `NSAppearance(named:)` (`.aqua` / `.darkAqua` / `nil`) so the AppKit-owned dictation HUD vibrancy flips live.
+
+### Fixes
+- **Chronicle titlebar Dark-mode bridge.** `applyChronicleTitlebar(to:)` previously hardcoded cream `#FAFAF7` background and near-black `#1A1A17` toolbar title text via absolute `NSColor` literals — these did not adapt to `effectiveAppearance` and fought `.preferredColorScheme(.dark)`. Now bridges `window.appearance` from `appearancePreference`, gates cream paint on Aqua effective appearance (clears to `nil` under Dark Aqua so system titlebar material applies), and switches toolbar title to `NSColor.labelColor`. New `observeChronicleTitlebar(settings:)` re-applies on every preference mutation.
+- **Observation coalescing window closed.** Both `observeAppearance` (HUD) and the new `observeChronicleTitlebar` use `MainActor.assumeIsolated { ... }` instead of `Task { @MainActor in ... }` for re-arm. The async hop opened a window where rapid mutations could be dropped between `withObservationTracking` invocations; synchronous re-arm closes it.
+
+### Internal
+- `import SwiftUI` added to `AppSettings.swift` for the `ColorScheme?` return type on `AppearancePreference.colorScheme`.
+- Picker UI uses default `.menu` style with `.font(.system(size: 12))` and explicit case tags (System / Light / Dark in that order).
+- 221/221 tests pass across 40 suites. 11/11 Phase 21 SPEC criteria verified; 4/4 post-fix titlebar UAT items confirmed by user.
+- Code review caught CR-01 (Chronicle titlebar bridge) + WR-01/02/04 (observation semantics + docstring) — all resolved before phase close. WR-03 (`escapeKeyMonitor` / `windowObserver` teardown) deferred to v1.3 per reviewer recommendation.
+- v1.2 milestone (`Standalone Dictation + Model Auto-Update + Dark Mode Parity`) closes with this release — all 7 phases (16-21) shipped.
+
 ## [2.1.1] — 2026-04-23
 
 ### Distribution / Tooling
