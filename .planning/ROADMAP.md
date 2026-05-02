@@ -130,7 +130,7 @@ Plans:
   5. `DictationWindowController` mirrors the preference onto its NSPanel via `NSAppearance(named:)` — `.darkAqua` for `.dark`, `.aqua` for `.light`, `nil` for `.system` — and the HUD re-renders live without app restart (D-07)
   6. With preference `.system` (default), the post-Phase-21 build is visually indistinguishable from the post-Phase-20 build on every surface across macOS Light/Dark/Auto toggling
   7. Manual UAT recorded in `21-VERIFICATION.md`: live picker change without restart, persistence across relaunch, fresh-install (no key) shows "System", non-System preference survives relaunch
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 21-01-PLAN.md — Add AppearancePreference enum + appearancePreference property to AppSettings.swift (Wave 1, autonomous) — 2026-05-01
@@ -147,7 +147,7 @@ Plans:
 | 18.1 Shared save destinations + Local File | 9/9 | Complete    | 2026-04-30 |
 | 19. Integration & Hardening | 0/0 | Not started | - |
 | 20. Dark mode parity | 2/3 | In Progress | - |
-| 21. User-controlled appearance preference | 3/3 | Complete    | 2026-05-01 |
+| 21. User-controlled appearance preference | 3/3 | Complete    | 2026-05-02 |
 
 ## Backlog
 

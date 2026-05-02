@@ -1,10 +1,10 @@
 # Requirements: PS Transcribe v1.2
 
 **Defined:** 2026-04-27
-**Milestone:** v1.2 -- Standalone Dictation + Model Auto-Update
+**Milestone:** v1.2 -- Standalone Dictation + Model Auto-Update + Dark Mode Parity
 **Core Value:** Users can record meetings and voice memos with accurate, private, on-device transcription. All processing stays on-device.
 
-**Milestone goal:** Make PS Transcribe useful as a standalone dictation tool -- hotkey-triggered capture that writes to clipboard and/or a plain OS folder with no Obsidian/Notion required -- and let the ASR model update without shipping a new app build.
+**Milestone goal:** Make PS Transcribe useful as a standalone dictation tool -- hotkey-triggered capture that writes to clipboard and/or a plain OS folder with no Obsidian/Notion required -- let the ASR model update without shipping a new app build, and bring the macOS app to full dark-mode parity so every surface respects the system appearance.
 
 ## v1.2 Requirements
 
