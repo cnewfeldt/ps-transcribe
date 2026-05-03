@@ -7,6 +7,14 @@ on:
 jobs:
   build:
     runs-on: macos-26
+    env:
+      # Phase 23 VISREG-04: snapshot test failures write diff PNGs here. The
+      # actions/upload-artifact step at the end of this job uploads the
+      # directory if any earlier step fails. swift-snapshot-testing reads
+      # SNAPSHOT_ARTIFACTS at runtime via ProcessInfo.processInfo.environment;
+      # if unset it falls back to NSTemporaryDirectory which is opaque on the
+      # CI runner.
+      SNAPSHOT_ARTIFACTS: ${{ runner.temp }}/snapshot-failures
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
 
@@ -15,6 +23,39 @@ jobs:
           sudo xcode-select -s /Applications/Xcode_26.app || sudo xcode-select -s /Applications/Xcode.app
           swift --version
 
+      # Phase 23 VISREG-04: refuse to run tests in CI if SNAPSHOT_TESTING_RECORD
+      # is set to anything other than 'never'. Defends against accidental record-
+      # mode leakage via repo Variables/Secrets, which would silently overwrite
+      # baselines and mask the regressions this gate exists to catch.
+      - name: Guard against snapshot record mode
+        run: |
+          if [ -n "$SNAPSHOT_TESTING_RECORD" ] && [ "$SNAPSHOT_TESTING_RECORD" != "never" ]; then
+            echo "::error::SNAPSHOT_TESTING_RECORD is set to '$SNAPSHOT_TESTING_RECORD' -- refusing to run tests in CI to prevent silent baseline overwrite. Unset the variable in repo settings."
+            exit 1
+          fi
+
       - name: Build
         working-directory: PSTranscribe
         run: swift build
+
+      # Phase 23 VISREG-05: PR-merge gate. Runs the full Swift Testing suite
+      # (including the new VisualRegression suite). Same working-directory:
+      # PSTranscribe as the build step -- the SwiftPM root is nested.
+      - name: Test
+        working-directory: PSTranscribe
+        run: swift test
+
+      # Phase 23 VISREG-04: surface diff PNGs to the reviewer when a snapshot
+      # regression breaks the build. The conditional below only runs if an
+      # earlier step in this job failed. if-no-files-found: ignore keeps the
+      # workflow green when failures are non-snapshot (e.g. compile error -- no
+      # PNGs to upload). Retention 7 days is enough for a reviewer to download
+      # and decide whether to regenerate baselines.
+      - name: Upload snapshot failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshot-failures
+          path: ${{ runner.temp }}/snapshot-failures/
+          retention-days: 7
+          if-no-files-found: ignore
