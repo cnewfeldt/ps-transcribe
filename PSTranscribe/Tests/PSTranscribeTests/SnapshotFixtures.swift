@@ -67,6 +67,11 @@ enum SnapshotFixtures {
         ] {
             defaults.removeObject(forKey: key)
         }
+        // Pin onboarding completed so ContentView snapshots render the production
+        // library/transcript surface, not the OnboardingView .sheet overlay (which
+        // ContentView triggers via .task when this key is false). UserDefaults is
+        // process-global and survives between tests; safe to set unconditionally.
+        defaults.set(true, forKey: "hasCompletedOnboarding")
         return AppSettings()
     }
 

@@ -43,6 +43,7 @@ final class VisualRegressionTests {
         _ view: V,
         size: CGSize,
         named name: String,
+        appearance: NSAppearance.Name? = nil,
         fileID: StaticString = #fileID,
         filePath: StaticString = #filePath,
         function: String = #function,
@@ -51,6 +52,13 @@ final class VisualRegressionTests {
     ) {
         let host = NSHostingView(rootView: view.frame(width: size.width, height: size.height))
         host.frame = NSRect(x: 0, y: 0, width: size.width, height: size.height)
+        // .preferredColorScheme on a SwiftUI view does not reach NSHostingView's
+        // resolved appearance during off-screen bitmap capture. Set the host's
+        // NSAppearance directly for Light/Dark; pass nil to inherit from
+        // NSApp.appearance (set by SnapshotFixtures.withAppearance for System).
+        if let appearance {
+            host.appearance = NSAppearance(named: appearance)
+        }
         // Pitfall #1: NSHostingView lays out lazily. Force a layout pass before the
         // snapshot strategy reads bitmap, otherwise first-run baselines clip or use
         // SwiftUI default sizing.
@@ -95,7 +103,7 @@ final class VisualRegressionTests {
             saveDestinations: saveDest
         )
         .preferredColorScheme(.light)
-        snapshot(view, size: SnapshotFixtures.contentViewFrame, named: "ContentView-Light")
+        snapshot(view, size: SnapshotFixtures.contentViewFrame, named: "ContentView-Light", appearance: .aqua)
     }
 
     @Test @MainActor func contentViewDark() async {
@@ -120,7 +128,7 @@ final class VisualRegressionTests {
             saveDestinations: saveDest
         )
         .preferredColorScheme(.dark)
-        snapshot(view, size: SnapshotFixtures.contentViewFrame, named: "ContentView-Dark")
+        snapshot(view, size: SnapshotFixtures.contentViewFrame, named: "ContentView-Dark", appearance: .darkAqua)
     }
 
     @Test @MainActor func contentViewSystem() async {
@@ -159,14 +167,14 @@ final class VisualRegressionTests {
         let entries = SnapshotFixtures.stubLibraryEntries(count: 3)
         let view = LibrarySidebarHarness(entries: entries)
             .preferredColorScheme(.light)
-        snapshot(view, size: SnapshotFixtures.librarySidebarFrame, named: "LibrarySidebar-Light")
+        snapshot(view, size: SnapshotFixtures.librarySidebarFrame, named: "LibrarySidebar-Light", appearance: .aqua)
     }
 
     @Test @MainActor func librarySidebarDark() {
         let entries = SnapshotFixtures.stubLibraryEntries(count: 3)
         let view = LibrarySidebarHarness(entries: entries)
             .preferredColorScheme(.dark)
-        snapshot(view, size: SnapshotFixtures.librarySidebarFrame, named: "LibrarySidebar-Dark")
+        snapshot(view, size: SnapshotFixtures.librarySidebarFrame, named: "LibrarySidebar-Dark", appearance: .darkAqua)
     }
 
     @Test @MainActor func librarySidebarSystem() {
@@ -205,7 +213,7 @@ final class VisualRegressionTests {
             modelUpdateService: modelUpdate
         )
         .preferredColorScheme(.light)
-        snapshot(view, size: SnapshotFixtures.settingsViewFrame, named: "SettingsView-Light")
+        snapshot(view, size: SnapshotFixtures.settingsViewFrame, named: "SettingsView-Light", appearance: .aqua)
     }
 
     @Test @MainActor func settingsViewDark() {
@@ -228,7 +236,7 @@ final class VisualRegressionTests {
             modelUpdateService: modelUpdate
         )
         .preferredColorScheme(.dark)
-        snapshot(view, size: SnapshotFixtures.settingsViewFrame, named: "SettingsView-Dark")
+        snapshot(view, size: SnapshotFixtures.settingsViewFrame, named: "SettingsView-Dark", appearance: .darkAqua)
     }
 
     @Test @MainActor func settingsViewSystem() {
@@ -274,7 +282,7 @@ final class VisualRegressionTests {
             onStop: {}
         )
         .preferredColorScheme(.light)
-        snapshot(view, size: SnapshotFixtures.controlBarFrame, named: "ControlBar-Light")
+        snapshot(view, size: SnapshotFixtures.controlBarFrame, named: "ControlBar-Light", appearance: .aqua)
     }
 
     @Test @MainActor func controlBarDark() {
@@ -294,7 +302,7 @@ final class VisualRegressionTests {
             onStop: {}
         )
         .preferredColorScheme(.dark)
-        snapshot(view, size: SnapshotFixtures.controlBarFrame, named: "ControlBar-Dark")
+        snapshot(view, size: SnapshotFixtures.controlBarFrame, named: "ControlBar-Dark", appearance: .darkAqua)
     }
 
     @Test @MainActor func controlBarSystem() {
@@ -332,7 +340,7 @@ final class VisualRegressionTests {
             onStop: {}
         )
         .preferredColorScheme(.light)
-        snapshot(view, size: SnapshotFixtures.dictationHUDFrame, named: "DictationHUD-Light")
+        snapshot(view, size: SnapshotFixtures.dictationHUDFrame, named: "DictationHUD-Light", appearance: .aqua)
     }
 
     @Test @MainActor func dictationHUDDark() {
@@ -343,7 +351,7 @@ final class VisualRegressionTests {
             onStop: {}
         )
         .preferredColorScheme(.dark)
-        snapshot(view, size: SnapshotFixtures.dictationHUDFrame, named: "DictationHUD-Dark")
+        snapshot(view, size: SnapshotFixtures.dictationHUDFrame, named: "DictationHUD-Dark", appearance: .darkAqua)
     }
 
     @Test @MainActor func dictationHUDSystem() {
