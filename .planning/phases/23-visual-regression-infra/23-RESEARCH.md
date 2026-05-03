@@ -637,32 +637,32 @@ SNAPSHOT_TESTING_RECORD=never swift test --filter VisualRegression
 
 **Resolution path:** A4 is the only one needing user input before the phase locks. A1, A2, A3, A5 will resolve via execution and can be revisited if they materialize.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **swift-snapshot-testing version pin: 1.x vs nonexistent 2.x**
    - What we know: Latest released version is 1.19.2 (2026-03-30). No v2.x has been tagged or announced.
    - What's unclear: CONTEXT.md D-01 says "v2.x". Was that a typo or did the user expect a v2 from elsewhere?
-   - Recommendation: Pin `from: "1.19.2"`. Planner should call this out in the PLAN's open-questions or note section so the user can confirm.
+   - **RESOLVED in Plan 01:** Pinned `from: "1.19.2"` in PSTranscribe/Package.swift (test-target dep only). Planner should call this out in the PLAN's open-questions or note section so the user can confirm.
 
 2. **ADR location convention**
    - What we know: Repo has no ADR directory. CONTEXT.md "Claude's Discretion" leaves location to planner. Two well-known formats: **MADR** (Markdown Architectural Decision Records) — structured with explicit alternatives, pros/cons, decision drivers; and **Nygard** — short single-page, focused on the decision and its forces. [VERIFIED: arxiv.org/html/2604.27333 empirical comparison; adr.github.io templates]
    - What's unclear: Repo's prior decision-recording shape is the `.planning/` GSD ecosystem, not standalone ADRs. Introducing `.planning/adr/` adds a new convention; embedding inside `23-PLAN.md` keeps everything in the phase folder.
-   - Recommendation: For a single-decision ADR (snapshot framework choice), favor a short Nygard-style doc inline at `.planning/phases/23-visual-regression-infra/23-ADR-snapshot-framework.md`. Avoids introducing a new top-level directory for one ADR. If future phases produce more ADRs, the planner of that phase can promote the convention to `.planning/adr/`.
+   - **RESOLVED in Plan 02:** Nygard-style ADR placed at `.planning/phases/23-visual-regression-infra/23-ADR-snapshot-framework.md`. Avoids introducing a new top-level directory for one ADR. If future phases produce more ADRs, the planner of that phase can promote the convention to `.planning/adr/`.
 
 3. **DictationHUD render path: extract or parallel?**
    - What we know: `DictationWindowController.setContent(_:)` (line 95) accepts an `AnyView` to update the HUD body at runtime. The production HUD is constructed with stub `EmptyView` then `attach(windowController:)` swaps in the live binding (PSTranscribeApp.swift:43-45).
    - What's unclear: For the snapshot test, do we instantiate a parallel `DictationHUD(state:elapsed:partialText:onStop:)` directly (clean, no controller dependency) or do we instantiate the controller and snapshot what it produced?
-   - Recommendation: Instantiate `DictationHUD` directly with stub state. The view is parameter-only (no `@Observable` binding) per Phase 18-05 STATE notes ("DictationHUD is parameterized, NOT @Observable-bound"). Wrap in `NSHostingView`, snapshot. The runtime `NSPanel` chrome (vibrancy, shadow, sharingType) is intentionally out of scope per CONTEXT.md D-03.
+   - **RESOLVED in Plan 03:** DictationHUD instantiated directly with `state:elapsed:partialText:onStop:` parameters; no DictationWindowController involved (must_have truth #5). The view is parameter-only (no `@Observable` binding) per Phase 18-05 STATE notes ("DictationHUD is parameterized, NOT @Observable-bound"). Wrap in `NSHostingView`, snapshot. The runtime `NSPanel` chrome (vibrancy, shadow, sharingType) is intentionally out of scope per CONTEXT.md D-03.
 
 4. **NSHostingView resize-on-frame-change timing**
    - What we know: `host.frame = NSRect(...)` and `host.layoutSubtreeIfNeeded()` should layout the SwiftUI tree at the requested size before the snapshot strategy reads bitmap.
    - What's unclear: SwiftUI's `.frame(width:height:)` modifier inside the rootView vs setting `NSHostingView.frame` externally — if both are set, which wins?
-   - Recommendation: Set both — the inner `.frame(width:height:)` modifier inside `view.frame(...)` constrains SwiftUI's intrinsic sizing, and `host.frame` constrains the AppKit container. Pass the same dimensions via the `size:` parameter to `.image(...)` strategy as well (third pin). Belt-and-suspenders. If one is wrong, the other corrects.
+   - **RESOLVED in Plan 03:** Snapshot helper sets all three pins (inner `.frame`, `host.frame`, and `size:` parameter on the `.image` strategy). Pass the same dimensions via the `size:` parameter to `.image(...)` strategy as well (third pin). Belt-and-suspenders. If one is wrong, the other corrects.
 
 5. **TestPlan/CI test selection: include or filter?**
    - What we know: The CI step runs `swift test` with no filter, so the new VisualRegressionTests run alongside the existing ~18 test files. Total runtime impact: TBD but cheap relative to the existing `swift build`.
    - What's unclear: If snapshot tests grow to dozens, do we want a separate CI job that only runs them, or keep them in the main test job?
-   - Recommendation: Keep in main test job for now. Single test step, single failure surface. Revisit if total test runtime exceeds 5 minutes.
+   - **RESOLVED in Plan 04:** `swift test` step added to existing `build-check.yml`; single test job, single failure surface. Single test step, single failure surface. Revisit if total test runtime exceeds 5 minutes.
 
 ## Environment Availability
 
