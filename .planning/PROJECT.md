@@ -62,7 +62,7 @@ v1.3 — Polish & Validation (in flight, requirements pending):
 - [ ] `DOMAIN-FUT-01` — Custom domain for marketing site (replaces `ps-transcribe-web.vercel.app` slug fallback)
 - [ ] `NYQUIST-FUT-01` — Full Nyquist validation sweep across v1.0 phases 1/2/3/8/10 + v1.2 phases 20/21
 - [ ] `PROCESS-FUT-01` — `requirements_completed` frontmatter on SUMMARY.md template + tooling
-- [ ] `VISREG-01` — Visual regression / snapshot testing infra for appearance override (light/dark/system parity guarantees)
+- [x] `VISREG-01` — Visual regression / snapshot testing infra for appearance override (light/dark/system parity guarantees) — **Validated in Phase 23: Visual Regression Infra (2026-05-04)**. swift-snapshot-testing 1.19.2 wired into test target, 15 baselines locked across 5 surfaces × Light/Dark/System, CI runs `swift test` with record-mode guard + failure-only diff artifact upload.
 
 ### Out of Scope
 
@@ -228,4 +228,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-01 -- v1.3 Polish & Validation milestone started. Goal: close deferred backlog from v1.0-1.2 — `QA-FUT-01` Phase 19 QA checklist + Phase 21 titlebar visual UAT, `DOMAIN-FUT-01` custom domain, `NYQUIST-FUT-01` full Nyquist sweep across 7 phases (v1.0 1/2/3/8/10 + v1.2 20/21), `PROCESS-FUT-01` SUMMARY.md frontmatter, `VISREG-01` visual regression infra. Designer-tuned dark Chronicle pass dropped from scope. Phases continue from v1.2 → v1.3 starts at Phase 22. Future feature seeds (dictation extensions, library upgrade, transcript editing, format reach) captured in `.planning/seeds/`.*
+*Last updated: 2026-05-04 -- Phase 23 (Visual Regression Infra) complete; `VISREG-01` validated. v1.3 Polish & Validation milestone in progress. Goal: close deferred backlog from v1.0-1.2 — `QA-FUT-01` Phase 19 QA checklist + Phase 21 titlebar visual UAT, `DOMAIN-FUT-01` custom domain, `NYQUIST-FUT-01` full Nyquist sweep across 7 phases (v1.0 1/2/3/8/10 + v1.2 20/21), `PROCESS-FUT-01` SUMMARY.md frontmatter (✓ Phase 22), `VISREG-01` visual regression infra (✓ Phase 23). Designer-tuned dark Chronicle pass dropped from scope. Phases continue from v1.2 → v1.3 starts at Phase 22. Future feature seeds (dictation extensions, library upgrade, transcript editing, format reach) captured in `.planning/seeds/`.*
