@@ -1,24 +1,27 @@
 # Testing Patterns
 
-**Analysis Date:** 2026-03-30
+**Analysis Date:** 2026-03-30 (refreshed 2026-05-04 for Phase 23)
 
 ## Test Framework
 
 **Current Status:**
-- **No test targets detected** in `Package.swift` (executable target only)
-- **No test files** in `Sources/Tome/`
-- **No test configuration** (no XCTest, pytest, or test runner)
+- **Swift Testing test target** declared in `PSTranscribe/Package.swift` (`.testTarget("PSTranscribeTests")`)
+- **18+ test files** in `PSTranscribe/Tests/PSTranscribeTests/` covering AppSettings, DictationLogger, Keychain, LibraryStore, ModelManifest, ModelUpdateService, NotionService, ObsidianURL, SessionCoordinator, transcript parsing, and (Phase 23) visual regression
+- **Framework:** Swift Testing (`import Testing` + `@Suite` + `@Test`); some suites use `.serialized` for shared-state mutation
+- **Convention:** `@testable import PSTranscribe`, per-test `defer` for cleanup, `Issue.record` for soft-fail messaging
 
-**macOS Build Verification:**
-The repository uses CI/CD verification only:
+**macOS Build + Test Verification:**
 ```yaml
 # .github/workflows/build-check.yml
 - name: Build
-  working-directory: Tome
+  working-directory: PSTranscribe
   run: swift build
+- name: Test
+  working-directory: PSTranscribe
+  run: swift test
 ```
 
-Build succeeds on `macos-26` with Swift 6.2 but no automated tests are run.
+Build + test run on `macos-26` with Swift 6.2 + Xcode 26.
 
 ## Testing Approach
 
@@ -28,7 +31,7 @@ Build succeeds on `macos-26` with Swift 6.2 but no automated tests are run.
 
 Rather than unit tests, the codebase uses structured diagnostic logging to validate behavior during development and troubleshooting.
 
-In `Sources/Tome/Transcription/TranscriptionEngine.swift`:
+In `Sources/PSTranscribe/Transcription/TranscriptionEngine.swift`:
 ```swift
 func diagLog(_ msg: String) {
     #if DEBUG
@@ -54,7 +57,7 @@ tail -f /tmp/tome.log
 
 ### OS Log Framework (Production)
 
-In `Sources/Tome/Transcription/StreamingTranscriber.swift`:
+In `Sources/PSTranscribe/Transcription/StreamingTranscriber.swift`:
 ```swift
 private let log = Logger(subsystem: "io.gremble.tome", category: "StreamingTranscriber")
 
@@ -171,8 +174,8 @@ Sequential execution is guaranteed; no race conditions without explicit Task spa
 ### File Organization
 
 ```
-Tome/
-├── Sources/Tome/
+PSTranscribe/
+├── Sources/PSTranscribe/
 │   ├── App/
 │   ├── Audio/
 │   ├── Models/
@@ -275,24 +278,14 @@ jobs:
           sudo xcode-select -s /Applications/Xcode_26.app || sudo xcode-select -s /Applications/Xcode.app
           swift --version
       - name: Build
-        working-directory: Tome
+        working-directory: PSTranscribe
         run: swift build
+      - name: Test
+        working-directory: PSTranscribe
+        run: swift test
 ```
 
-**Could be extended to:**
-```yaml
-- name: Build
-  working-directory: Tome
-  run: swift build
-
-- name: Run Tests
-  working-directory: Tome
-  run: swift test
-
-- name: Check Logging
-  working-directory: Tome
-  run: swift build -c debug && grep -r "TODO\|FIXME" Sources/
-```
+Phase 23 extended this with a record-mode guard step (fail-fast if `SNAPSHOT_TESTING_RECORD` is set in the runner env), `SNAPSHOT_ARTIFACTS=$RUNNER_TEMP/snapshot-failures` env on the build job, and an `if: failure()` step that uploads `snapshot-failures/` via `actions/upload-artifact@v4` (7-day retention).
 
 ## Validation Approach
 
@@ -304,6 +297,66 @@ Without automated tests, validation occurs through:
 4. **End-to-End Testing:** Run the app and test recording flows manually
 5. **Code Review:** Inspect changes for correctness patterns before merge
 
+## Visual Regression
+
+Phase 23 (v1.3) added a snapshot test suite at `PSTranscribe/Tests/PSTranscribeTests/VisualRegressionTests.swift` covering 5 macOS surfaces across 3 appearance variants (15 baselines total).
+
+### Surfaces
+
+| Surface | Source | Canonical frame |
+|---------|--------|-----------------|
+| ContentView | `Sources/PSTranscribe/Views/ContentView.swift` | 1280 x 820 |
+| LibrarySidebar | `Sources/PSTranscribe/Views/LibrarySidebar.swift` | 280 x 600 |
+| SettingsView | `Sources/PSTranscribe/Views/SettingsView.swift` | 520 x 400 |
+| ControlBar | `Sources/PSTranscribe/Views/ControlBar.swift` | 800 x 56 |
+| DictationHUD | `Sources/PSTranscribe/Views/DictationHUD.swift` | 560 x 120 |
+
+### Appearance variants
+
+- **Light:** `.preferredColorScheme(.light)` on the test wrapper
+- **Dark:** `.preferredColorScheme(.dark)` on the test wrapper
+- **System:** `NSApp.appearance = NSAppearance(named: .aqua)` for the test duration (no `.preferredColorScheme`); validates that views resolve color scheme from `NSApp.effectiveAppearance` when no explicit override is set
+
+### Strict precision
+
+Baselines are compared at `precision: 1.0`, `perceptualPrecision: 0.99` (Phase 23 D-02). The product invariant: a real visual change must cause a baseline regen, not silently pass. Per-test loosening is allowed only with documented justification in the test body comment. See `.planning/phases/23-visual-regression-infra/23-ADR-snapshot-framework.md` for rationale.
+
+### Baseline storage
+
+Baseline PNGs live at `PSTranscribe/Tests/PSTranscribeTests/__Snapshots__/VisualRegressionTests/` and are committed to `main`. No git LFS (~750 KB total expected for 15 PNGs).
+
+### Regenerate baselines locally
+
+After a legitimate UI change:
+
+```bash
+cd PSTranscribe
+SNAPSHOT_TESTING_RECORD=all swift test --filter VisualRegression
+```
+
+Then `git add` the changed PNGs and include them in the same PR as the source change. The reviewer eyeballs the diff in the PR.
+
+The env var accepts `all | failed | missing | never` -- NOT `true`. Common modes:
+
+| Value | Behavior |
+|-------|----------|
+| `all` | Always overwrite baselines on every test run |
+| `failed` | Overwrite a baseline only when the test fails the diff |
+| `missing` | Write a baseline only when none exists on disk (suite default) |
+| `never` | Never write; fail the test if a baseline is missing or differs |
+
+### CI behavior
+
+`.github/workflows/build-check.yml` runs `swift test` on every PR against `main`. The `VisualRegression` suite is part of the run. CI fails fast if `SNAPSHOT_TESTING_RECORD` is set in the runner env (prevents silent baseline overwrite). On test failure, snapshot diff PNGs are uploaded as a `snapshot-failures` artifact (7-day retention).
+
+`release-dmg.yml` does NOT run tests -- the test gate is the PR-merge surface only.
+
+### See also
+
+- `CONTRIBUTING.md` -- developer-facing summary of the regen workflow
+- `.planning/phases/23-visual-regression-infra/23-ADR-snapshot-framework.md` -- framework choice rationale
+
 ---
 
 *Testing analysis: 2026-03-30*
+*Visual Regression section added: 2026-05-04 (Phase 23)*
