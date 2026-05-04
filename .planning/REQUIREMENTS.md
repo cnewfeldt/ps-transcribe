@@ -49,12 +49,12 @@
 
 ### Visual Regression / Snapshot Testing (`VISREG-01`)
 
-- [ ] **VISREG-01**: Research and choose snapshot test framework (likely `swift-snapshot-testing` from pointfreeco, or alternative) — produce ADR
-- [ ] **VISREG-02**: Add snapshot tests for primary surfaces in Light appearance: `ContentView`, `LibraryView`, `SettingsView`, `RecordingView`, `DictationHUD`
-- [ ] **VISREG-03**: Add snapshot tests for primary surfaces in Dark appearance (same surfaces as VISREG-02)
-- [ ] **VISREG-04**: Add snapshot tests for System appearance (validates inheritance, not appearance-pinning)
-- [ ] **VISREG-05**: Wire snapshot tests into CI (`release-dmg.yml` or new test workflow) as a pre-merge gate
-- [ ] **VISREG-06**: Document snapshot update workflow in CONTRIBUTING / `.planning/codebase/` — when and how to regenerate baselines after legitimate UI changes
+- [x] **VISREG-01**: Research and choose snapshot test framework (likely `swift-snapshot-testing` from pointfreeco, or alternative) — produce ADR
+- [x] **VISREG-02**: Add snapshot tests for primary surfaces in Light appearance: `ContentView`, `LibraryView`, `SettingsView`, `RecordingView`, `DictationHUD`
+- [x] **VISREG-03**: Add snapshot tests for primary surfaces in Dark appearance (same surfaces as VISREG-02)
+- [x] **VISREG-04**: Add snapshot tests for System appearance (validates inheritance, not appearance-pinning)
+- [x] **VISREG-05**: Wire snapshot tests into CI (`release-dmg.yml` or new test workflow) as a pre-merge gate
+- [x] **VISREG-06**: Document snapshot update workflow in CONTRIBUTING / `.planning/codebase/` — when and how to regenerate baselines after legitimate UI changes
 
 ---
 
