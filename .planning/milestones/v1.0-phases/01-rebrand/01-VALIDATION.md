@@ -5,7 +5,7 @@ status: approved
 nyquist_compliant: true
 wave_0_complete: true
 created: 2026-04-01
-last_audited: 2026-04-27
+last_audited: 2026-05-05
 ---
 
 # Phase 1 -- Validation Strategy
@@ -37,14 +37,16 @@ last_audited: 2026-04-27
 
 ## Per-Task Verification Map
 
-| Task ID | Plan | Wave | Requirement | Test Type | Automated Command | Status |
-|---------|------|------|-------------|-----------|-------------------|--------|
-| 01-01-01 | 01 | 1 | REBR-04 | automated | `test -d PSTranscribe/Sources/PSTranscribe/App && test ! -d Tome` | green |
-| 01-01-02 | 01 | 1 | REBR-01, REBR-02, REBR-03 | automated | `cd PSTranscribe && swift build` + `grep -rn '"Tome"' PSTranscribe/Sources/ PSTranscribe/Package.swift` (expect 0) + `grep com.pstranscribe.app PSTranscribe/Sources/PSTranscribe/Transcription/StreamingTranscriber.swift` | green |
-| 01-02-01 | 02 | 2 | REBR-06, REBR-07 | automated | `grep com.pstranscribe.app PSTranscribe/Sources/PSTranscribe/Info.plist` + `grep "PS Transcribe" PSTranscribe/Sources/PSTranscribe/Info.plist` + `grep "OWNER/ps-transcribe" PSTranscribe/Sources/PSTranscribe/Info.plist` + `grep 'APP_NAME="PS Transcribe"' scripts/build_swift_app.sh` + `grep 'APP_PATH="dist/PS Transcribe.app"' scripts/make_dmg.sh` | green |
-| 01-02-02 | 02 | 2 | REBR-05 | automated | `grep -c "Tome" .github/workflows/build-check.yml .github/workflows/release-dmg.yml` (expect 0) + `grep "working-directory: PSTranscribe" .github/workflows/build-check.yml` + `grep "PS-Transcribe-dmg" .github/workflows/release-dmg.yml` | green |
-| 01-03-01 | 03 | 2 | REBR-08 | manual | Static check at phase completion (commit 291e0e3): `grep migrateUserDefaultsIfNeeded PSTranscribeApp.swift` >= 2 + `grep "io.gremble.tome" PSTranscribeApp.swift` >= 1 + `grep hasMigratedFromTome PSTranscribeApp.swift` >= 1. Note: code intentionally removed post-v1.0 ship (commit 4ef30e0) -- migration window has closed. | green-historical |
-| 01-03-02 | 03 | 2 | REBR-08 | manual | Human-verify checkpoint approved 2026-04-02 (commit 304a158) -- `defaults read com.pstranscribe.app` showed 6 migrated keys + `hasMigratedFromTome=1` after first launch | green-historical |
+| Task ID | Plan | Wave | Requirement | Test Type | Automated Command | Status | Notes |
+|---------|------|------|-------------|-----------|-------------------|--------|-------|
+| 24-01-01 | 24-01 | 1 | REBR-01 | unit | `cd PSTranscribe && swift test --filter RebrandInfoPlistTests/bundleNameIsPSTranscribe` | green | Re-audit 2026-05-05 (D-01) |
+| 24-01-02 | 24-01 | 1 | REBR-02 | unit | `cd PSTranscribe && swift test --filter RebrandInfoPlistTests/bundleIdentifierIsPSTranscribe` | green | Re-audit 2026-05-05 (D-01) |
+| 24-01-03 | 24-01 | 1 | REBR-03 | unit | `cd PSTranscribe && swift test` (compile-time proof; `@testable import PSTranscribe` resolves) | green | Re-audit 2026-05-05 (D-01); frontmatter `source/pstranscribe` covered separately by Plan 24-03 |
+| 24-01-04 | 24-01 | 1 | REBR-04 | unit | `cd PSTranscribe && swift test --filter RebrandInfoPlistTests/executableNameIsPSTranscribe` | green | Re-audit 2026-05-05 (D-01) |
+| 24-05-XX | 24-05 | 1 | REBR-05 | unit | `cd PSTranscribe && swift test --filter WorkflowSecretsTests` | pending | Workflow secrets test created in Plan 24-05; cross-reference here |
+| 24-01-05 | 24-01 | 1 | REBR-06 | unit | `cd PSTranscribe && swift test --filter RebrandInfoPlistTests/sparkleFeedURLPointsAtPSTranscribe` | green | Re-audit 2026-05-05 (D-01) |
+| 24-01-06 | 24-01 | 1 | REBR-07 | unit | `cd PSTranscribe && swift test --filter RebrandInfoPlistTests/displayNameAndMicUsageMentionPSTranscribe` | green | Re-audit 2026-05-05 (D-01) |
+| 24-01-07 | 24-01 | 1 | REBR-08 | WITHDRAWN | n/a -- WITHDRAWN | withdrawn | Code deleted post-v1.0 in commit `4ef30e0` (`migrateUserDefaultsIfNeeded()` and `hasMigratedFromTome` sentinel removed; upgrade window closed). v1.0 milestone audit verified live migration on 2026-04-14. Source: 01-VERIFICATION.md REBR-08 row. |
 
 *Status: pending / green / red / flaky / green-historical*
 
@@ -61,27 +63,16 @@ last_audited: 2026-04-27
 
 ---
 
-## Manual-Only Verifications
-
-| Behavior | Requirement | Why Manual | Test Instructions |
-|----------|-------------|------------|-------------------|
-| User-facing strings show "PS Transcribe" in running UI | REBR-01 | Requires visual UI inspection -- grep proves source-level absence of "Tome" string literals, but only a launched app reveals titles, menu bar text, and About dialog rendering | Launch app, check window title, menu bar extra ("PS Transcribe" + "Quit PS Transcribe"), About dialog, Settings window title |
-| UserDefaults migration preserves settings on first launch with old prefs | REBR-08 | Runtime UserDefaults behavior on a machine that previously ran Tome -- cannot be statically verified | Performed and approved 2026-04-02: confirmed `defaults read com.pstranscribe.app` showed all 6 migrated keys + `hasMigratedFromTome=1`; old `io.gremble.tome` keys deleted. (Subsequently the migration code was removed in commit 4ef30e0 because the migration window has closed -- v1.0 shipped, all old-binary users already migrated.) |
-
-*Two behaviors require manual verification due to no test target. Both have been performed and recorded.*
-
----
-
 ## Validation Sign-Off
 
 - [x] All tasks have automated verify or Wave 0 dependencies
 - [x] Sampling continuity: no 3 consecutive tasks without automated verify
 - [x] Wave 0 covers all MISSING references (no missing references -- existing infra suffices)
 - [x] No watch-mode flags
-- [x] Feedback latency < 30s
+- [x] Feedback latency < 90s
 - [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** approved 2026-04-27 (retroactive audit)
+**Approval:** re-approved 2026-05-05 (Phase 24 NYQUIST-01 -- Swift Testing-backed; supersedes 2026-04-27 build+grep audit per D-01)
 
 ---
 
@@ -113,3 +104,28 @@ Re-ran every automated command in the per-task map against current HEAD:
 - The original VALIDATION.md (created 2026-04-01) misassigned all 8 task entries to Plan 01 Wave 1. Actual plan structure is Plan 01 (REBR-01 to 04, Wave 1) + Plan 02 (REBR-05 to 07, Wave 2) + Plan 03 (REBR-08, Wave 2). Map corrected to reflect 6 actual task slots across 3 plans.
 - REBR-08 migration code (commits 291e0e3 and 304a158 approval) was deliberately removed post-v1.0 ship in commit 4ef30e0. This is not a regression -- the requirement was satisfied during the relevant migration window and the human-verify checkpoint was passed before removal.
 - The lone "Tome" residue in `scripts/build_swift_app.sh:71` is a LICENSE comment ("covers PS Transcribe, Tome, OpenGranola per MIT") preserving copyright attribution; intentional and correct.
+
+---
+
+## Validation Audit 2026-05-05 (Phase 24 -- NYQUIST-01)
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 1 (Phase 1 originally approved on `swift build` + grep alone -- D-01 brings Phase 1 into Phase 24's uniform test-target sweep) |
+| Resolved | 1 (RebrandInfoPlistTests.swift adds 5 `@Test` methods backing REBR-01/02/04/06/07) |
+| Withdrawn | 1 (REBR-08; code deleted post-v1.0 in `4ef30e0`) |
+| Escalated | 0 |
+| Document updates | Frontmatter `last_audited` bumped to 2026-05-05; Per-Task Map rewritten with unit rows and one WITHDRAWN row per D-03; Manual-Only Verifications section removed (D-03 lenient policy supersedes prior 2026-04-27 manual rows). |
+
+### Audit Method
+
+- Created `PSTranscribe/Tests/PSTranscribeTests/RebrandInfoPlistTests.swift` (5 `@Test` methods: `bundleNameIsPSTranscribe`, `bundleIdentifierIsPSTranscribe`, `executableNameIsPSTranscribe`, `sparkleFeedURLPointsAtPSTranscribe`, `displayNameAndMicUsageMentionPSTranscribe`).
+- Pattern: direct file IO `URL(fileURLWithPath: "Sources/PSTranscribe/Info.plist")` + `PropertyListSerialization` (NOT `Bundle.main` -- test bundle is the runner, not the app; per Phase 24 RESEARCH.md Risk #2).
+- Ran `cd PSTranscribe && swift test --filter RebrandInfoPlistTests` -- exits 0, 5 passing tests.
+- Ran full `cd PSTranscribe && swift test` -- exits 0.
+
+### Notes
+
+- REBR-03 (Package.swift `name: "PSTranscribe"`) is verified at compile-time by `@testable import PSTranscribe` resolving in every test file in the target. The frontmatter `source/pstranscribe` half of REBR-03 (TranscriptLogger.swift:151) is asserted separately by Plan 24-03 (Phase 8 audit) in `FrontmatterSourceTagTests.swift` -- see 08-VALIDATION.md.
+- REBR-05 (workflow file rebrand) is asserted by `WorkflowSecretsTests.swift` created in Plan 24-05 (Phase 02 audit) -- cross-referenced here so Plan 24-01's audit closes atomically without waiting on 24-05's wave. The cross-reference row's status reads `pending` until 24-05 ships and is flipped at that time by the Plan 24-05 close step.
+- The 2026-04-27 audit block is preserved above for audit-trail continuity. This 2026-05-05 block supersedes the manual-only entries (REBR-01 visual UI, REBR-08 runtime migration) under D-03.
