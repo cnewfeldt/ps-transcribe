@@ -7,14 +7,6 @@ on:
 jobs:
   build:
     runs-on: macos-26
-    env:
-      # Phase 23 VISREG-04: snapshot test failures write diff PNGs here. The
-      # actions/upload-artifact step at the end of this job uploads the
-      # directory if any earlier step fails. swift-snapshot-testing reads
-      # SNAPSHOT_ARTIFACTS at runtime via ProcessInfo.processInfo.environment;
-      # if unset it falls back to NSTemporaryDirectory which is opaque on the
-      # CI runner.
-      SNAPSHOT_ARTIFACTS: ${{ runner.temp }}/snapshot-failures
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
 
@@ -41,8 +33,12 @@ jobs:
       # Phase 23 VISREG-05: PR-merge gate. Runs the full Swift Testing suite
       # (including the new VisualRegression suite). Same working-directory:
       # PSTranscribe as the build step -- the SwiftPM root is nested.
+      # Phase 24-05 fix: SNAPSHOT_ARTIFACTS must live at step-level, not job-level
+      # env -- runner.temp is only resolvable in the step context.
       - name: Test
         working-directory: PSTranscribe
+        env:
+          SNAPSHOT_ARTIFACTS: ${{ runner.temp }}/snapshot-failures
         run: swift test
 
       # Phase 23 VISREG-04: surface diff PNGs to the reviewer when a snapshot
