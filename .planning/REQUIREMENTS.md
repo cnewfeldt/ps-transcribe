@@ -33,11 +33,11 @@
 
 ### Nyquist Validation Sweep (`NYQUIST-FUT-01`)
 
-- [ ] **NYQUIST-01**: Backfill `01-VALIDATION.md` for v1.0 Phase 1 (Rebrand from Tome) — generate tests covering UserDefaults migration, bundle ID change, app name visibility, executable rename
-- [ ] **NYQUIST-02**: Backfill `02-VALIDATION.md` for v1.0 Phase 2 (Security + Stability) — tests for the 12 SCAN findings, crash recovery path, diarization midnight bug, error suppression cleanup
-- [ ] **NYQUIST-03**: Backfill `03-VALIDATION.md` for v1.0 Phase 3 (Session Library + Recording Naming) — tests for grid view, missing-file detection, naming policy, session lifecycle (stop → clear → save)
-- [ ] **NYQUIST-04**: Backfill `08-VALIDATION.md` for v1.0 Phase 8 (Code Defect Fixes) — tests for crash recovery path, speaker label collapse, source/tome tag, print() removal
-- [ ] **NYQUIST-05**: Backfill `10-VALIDATION.md` for v1.0 Phase 10 (Obsidian Deep-link + Defect Cleanup) — tests for deep-link URL construction, missing-file UX, right-click "Show in Finder"
+- [x] **NYQUIST-01**: Backfill `01-VALIDATION.md` for v1.0 Phase 1 (Rebrand from Tome) — generate tests covering UserDefaults migration, bundle ID change, app name visibility, executable rename
+- [x] **NYQUIST-02**: Backfill `02-VALIDATION.md` for v1.0 Phase 2 (Security + Stability) — tests for the 12 SCAN findings, crash recovery path, diarization midnight bug, error suppression cleanup
+- [x] **NYQUIST-03**: Backfill `03-VALIDATION.md` for v1.0 Phase 3 (Session Library + Recording Naming) — tests for grid view, missing-file detection, naming policy, session lifecycle (stop → clear → save)
+- [x] **NYQUIST-04**: Backfill `08-VALIDATION.md` for v1.0 Phase 8 (Code Defect Fixes) — tests for crash recovery path, speaker label collapse, source/tome tag, print() removal
+- [x] **NYQUIST-05**: Backfill `10-VALIDATION.md` for v1.0 Phase 10 (Obsidian Deep-link + Defect Cleanup) — tests for deep-link URL construction, missing-file UX, right-click "Show in Finder"
 - [ ] **NYQUIST-06**: Backfill `20-VALIDATION.md` for v1.2 Phase 20 (Chronicle adaptive light/dark token palette) — tests for token color resolution per appearance, removal of `.preferredColorScheme(.light)` overrides
 - [ ] **NYQUIST-07**: Backfill `21-VALIDATION.md` for v1.2 Phase 21 (AppearancePreference) — tests for `colorScheme: ColorScheme?` bridge, AppSettings persistence, three Scene-root call-sites, `DictationWindowController.NSAppearance(named:)` mirror, Chronicle titlebar bridge
 
