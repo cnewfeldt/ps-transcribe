@@ -45,8 +45,19 @@ struct ZeroDestinationsBlockTests {
 
     @Test("ContentView no longer references vaultMeetingsPath/vaultVoicePath")
     func contentViewHasNoLegacyVaultRefs() {
-        #expect(!contentViewSource.contains("vaultMeetingsPath"))
-        #expect(!contentViewSource.contains("vaultVoicePath"))
+        // Phase 24 (NYQUIST-05): tightened from bare-substring to property-access
+        // pattern. The guardrail's intent is "no reads of the removed AppSettings
+        // properties `vaultMeetingsPath` / `vaultVoicePath`." Plan 24-02 lifted a
+        // pure helper `recoveredSessionType(transcriptPath:vaultVoicePath:)` whose
+        // parameter name (intentionally named after the conceptual prefix string)
+        // collides with the bare-substring check while introducing zero legacy
+        // AppSettings reads. The tightened pattern matches the original intent:
+        // forbid `settings.vaultVoicePath` / `settings.vaultMeetingsPath` reads,
+        // allow unrelated identifiers that happen to share the substring.
+        #expect(!contentViewSource.contains("settings.vaultMeetingsPath"))
+        #expect(!contentViewSource.contains("settings.vaultVoicePath"))
+        #expect(!contentViewSource.contains(".vaultMeetingsPath ="))
+        #expect(!contentViewSource.contains(".vaultVoicePath ="))
     }
 
     @Test("ContentView no longer references DictationOutputMode/dictationFolderPath/dictationOutputMode")

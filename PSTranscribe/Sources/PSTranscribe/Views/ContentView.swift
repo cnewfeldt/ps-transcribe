@@ -17,6 +17,14 @@ private let conferencingBundleIDs: [String: String] = [
     "com.microsoft.edgemac": "Edge",
 ]
 
+/// Phase 24 (NYQUIST-05): pure helper for crash-recovered session type inference.
+/// Lifted from inline `.task` block to enable direct unit testing in
+/// RecoveredSessionTypeTests.swift. No behavior change -- same prefix check, same fallback.
+/// Visibility is `internal` (default) so `@testable import PSTranscribe` reaches it.
+func recoveredSessionType(transcriptPath: String, vaultVoicePath: String) -> SessionType {
+    transcriptPath.hasPrefix(vaultVoicePath) ? .voiceMemo : .callCapture
+}
+
 struct ContentView: View {
     @Bindable var settings: AppSettings
     let notionService: NotionService
@@ -322,14 +330,14 @@ struct ContentView: View {
                 if !existsInLibrary {
                     // 18.1 D-04: voice memos and meetings live in subfolders under localFileRoot.
                     // Detect by subfolder name in the recovered transcript path.
-                    let recoveredType: SessionType
+                    // Phase 24 (NYQUIST-05): inference lifted to file-scope `recoveredSessionType`
+                    // free function so RecoveredSessionTypeTests can exercise it directly.
                     let voiceSubfolder = (settings.localFileRoot as NSString)
                         .appendingPathComponent(SessionType.voiceMemo.localFileSubfolder)
-                    if checkpoint.transcriptPath.hasPrefix(voiceSubfolder) {
-                        recoveredType = .voiceMemo
-                    } else {
-                        recoveredType = .callCapture
-                    }
+                    let recoveredType = recoveredSessionType(
+                        transcriptPath: checkpoint.transcriptPath,
+                        vaultVoicePath: voiceSubfolder
+                    )
                     let entry = LibraryEntry(
                         id: UUID(),
                         name: nil,
