@@ -22,15 +22,6 @@
 - [ ] **QA-08**: Phase 21 titlebar visual UAT — System preference follows OS appearance change live (no app restart required)
 - [ ] **QA-09**: Phase 21 titlebar visual UAT — Preference toggle while window is unfocused still updates titlebar correctly
 
-### Custom Domain (`DOMAIN-FUT-01`)
-
-- [ ] **DOMAIN-01**: Acquire and configure custom domain `gogglebox.com` at registrar
-- [ ] **DOMAIN-02**: Configure Vercel project to serve marketing site at custom domain (add domain in Vercel dashboard, verify ownership)
-- [ ] **DOMAIN-03**: Set up DNS records (A / AAAA / CNAME per Vercel guidance) and verify SSL certificate provisioning succeeds
-- [ ] **DOMAIN-04**: Update marketing site canonical URLs (`og:url`, `sitemap.xml`, MDX internal links, layout `<link rel="canonical">`) to new domain
-- [ ] **DOMAIN-05**: Configure redirect from `ps-transcribe-web.vercel.app` to `gogglebox.com` (308 permanent), preserving link integrity
-- [ ] **DOMAIN-06**: Update README, PROJECT.md, in-app links, GitHub repo description, and any external references to point to `gogglebox.com`
-
 ### Nyquist Validation Sweep (`NYQUIST-FUT-01`)
 
 - [x] **NYQUIST-01**: Backfill `01-VALIDATION.md` for v1.0 Phase 1 (Rebrand from Tome) — generate tests covering UserDefaults migration, bundle ID change, app name visibility, executable rename
@@ -89,9 +80,8 @@ Captured as seeds in `.planning/seeds/`:
 | NYQUIST-01..NYQUIST-05 | Phase 24 — Nyquist Sweep — v1.0 | Not started |
 | NYQUIST-06..NYQUIST-07 | Phase 25 — Nyquist Sweep — v1.2 | Not started |
 | QA-01..QA-09 | Phase 26 — QA Sweep + Visual UAT | Not started |
-| DOMAIN-01..DOMAIN-06 | Phase 27 — Custom Domain — gogglebox.com | Not started |
 
-**Coverage:** 31/31 requirements mapped to phases. ✓
+**Coverage:** 25/25 requirements mapped to phases. ✓
 
 ---
 

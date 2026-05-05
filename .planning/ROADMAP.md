@@ -8,9 +8,9 @@
 
 ## Current Milestone — v1.3 Polish & Validation
 
-**Goal:** Close deferred backlog from v1.0-1.2 — ship custom marketing-site domain (`gogglebox.com`), complete the Phase 19 "Looks Done But Isn't" QA checklist, backfill Nyquist validation across 7 phases (v1.0 1/2/3/8/10 + v1.2 20/21), and standardize SUMMARY.md frontmatter + visual regression infra.
+**Goal:** Close deferred backlog from v1.0-1.2 — complete the Phase 19 "Looks Done But Isn't" QA checklist, backfill Nyquist validation across 7 phases (v1.0 1/2/3/8/10 + v1.2 20/21), and standardize SUMMARY.md frontmatter + visual regression infra.
 
-**Phases:** Continue numbering from v1.2 → v1.3 starts at Phase 22. **6 phases · 31 requirements · all mapped.**
+**Phases:** Continue numbering from v1.2 → v1.3 starts at Phase 22. **5 phases · 25 requirements · all mapped.**
 
 ### Progress
 
@@ -21,7 +21,6 @@
 | 24 | Nyquist Sweep — v1.0 | [x] Complete 2026-05-05 |
 | 25 | Nyquist Sweep — v1.2 | [ ] Pending |
 | 26 | QA Sweep + Visual UAT | [ ] Pending |
-| 27 | Custom Domain — gogglebox.com | [ ] Pending |
 
 ### Phase 22: Process & Frontmatter Standard
 
@@ -142,22 +141,6 @@ Plans:
 6. Any failures generate todos in `.planning/todos/pending/` or fix plans inside Phase 26
 
 **Dependencies:** None — operates against the current shipped build.
-
-### Phase 27: Custom Domain — gogglebox.com
-
-**Goal:** Replace the `ps-transcribe-web.vercel.app` slug fallback with `gogglebox.com` as the canonical marketing-site domain.
-
-**Requirements:** DOMAIN-01, DOMAIN-02, DOMAIN-03, DOMAIN-04, DOMAIN-05, DOMAIN-06
-
-**Success criteria:**
-
-1. `gogglebox.com` resolves over HTTPS and serves the marketing site (Vercel-issued cert valid)
-2. `ps-transcribe-web.vercel.app` returns a 308 permanent redirect to `gogglebox.com` preserving the path
-3. All canonical URLs (`og:url`, `<link rel="canonical">`, `sitemap.xml`, MDX internal links) point to `gogglebox.com`
-4. README, PROJECT.md, in-app links, and GitHub repo description updated to reference `gogglebox.com`
-5. Production deploy verified via browser smoke test (landing + at least 2 docs pages render correctly under the new domain)
-
-**Why last:** Marketing site content is stable post-v1.1; doing the domain switch after the milestone's other work means a single clean cutover with no in-flight changes to chase.
 
 ## Backlog
 

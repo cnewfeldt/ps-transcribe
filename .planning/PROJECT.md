@@ -59,7 +59,6 @@ v1.2 — Standalone Dictation + Model Auto-Update + Dark Mode Parity (shipped 20
 v1.3 — Polish & Validation (in flight, requirements pending):
 
 - [ ] `QA-FUT-01` — Phase 19 "Looks Done But Isn't" QA checklist sweep (clipboard history vs. Maccy/Alfred live, multi-monitor HUD positioning, security-scoped bookmark survival across relaunch, disk-space preflight UAT) + Phase 21 titlebar visual UAT (4 items, code-verified `ce79965`) folded in
-- [ ] `DOMAIN-FUT-01` — Custom domain for marketing site (replaces `ps-transcribe-web.vercel.app` slug fallback)
 - [ ] `NYQUIST-FUT-01` — Full Nyquist validation sweep across v1.0 phases 1/2/3/8/10 + v1.2 phases 20/21
 - [ ] `PROCESS-FUT-01` — `requirements_completed` frontmatter on SUMMARY.md template + tooling
 - [x] `VISREG-01` — Visual regression / snapshot testing infra for appearance override (light/dark/system parity guarantees) — **Validated in Phase 23: Visual Regression Infra (2026-05-04)**. swift-snapshot-testing 1.19.2 wired into test target, 15 baselines locked across 5 surfaces × Light/Dark/System, CI runs `swift test` with record-mode guard + failure-only diff artifact upload.
@@ -74,7 +73,7 @@ v1.3 — Polish & Validation (in flight, requirements pending):
 - Multi-language simultaneous transcription — single locale per session
 - Complex onboarding wizard — minimal setup, user owns troubleshooting
 - Public changelog — **removed 2026-04-25.** `CHANGELOG.md` stays a developer-internal artifact; no `/changelog` route, RSS feed, or nav/footer link. Phase 15 was built and reverted.
-- Custom domain (v1.1) — site shipped on `ps-transcribe-web.vercel.app`. Custom domain is a v1.2 candidate.
+- Custom domain at `gogglebox.com` — **removed 2026-05-05.** Original `DOMAIN-FUT-01` plan was to migrate the marketing site to `gogglebox.com`; that domain is no longer the right home for PS Transcribe. Site continues to live at `ps-transcribe-web.vercel.app`. If a custom domain is revisited later, it will be a different domain and a fresh requirement.
 - Pricing page / commerce / newsletter / email capture (marketing site)
 - Dark mode (marketing site) — light-only to match the macOS app
 - Docs search (Cmd+K) and localization (marketing site)
@@ -87,7 +86,7 @@ v1.3 — Polish & Validation (in flight, requirements pending):
 - **v1.1 Marketing Website** (2026-04-25). Next.js 16 site at `ps-transcribe-web.vercel.app`, Chronicle design system port (paper palette, Spectral/Inter/JetBrains Mono, navy/sage accents, light-mode only), landing page, docs section (6 pages live). Phase 15 (Changelog) reverted. 4 phases, 22 requirements, 16 plans, all human UAT approved. See [`milestones/v1.1-ROADMAP.md`](milestones/v1.1-ROADMAP.md).
 - **v1.2 PS Transcribe (macOS app v2.2.0)** (2026-05-01). Standalone hotkey-triggered dictation (`Cmd+Shift+D` default) with floating HUD, clipboard write with privacy markers, and plain-folder Local File output. Shared save-destinations architecture (Local File / Obsidian / Notion top-level) introduced via Phase 18.1 architectural pivot. FluidAudio ASR model auto-update with manifest-based staging download + atomic swap + rollback. Chronicle adaptive light+dark token palette across 10 surfaces. Three-way `AppearancePreference` user override (System / Light / Dark) with Chronicle titlebar bridge. 6 executed phases, 32 plans, ~33 requirements. Phase 19 (Integration & Hardening) removed from scope; QA checklist deferred to `QA-FUT-01`. See [`milestones/v1.2-ROADMAP.md`](milestones/v1.2-ROADMAP.md) and [`milestones/v1.2-MILESTONE-AUDIT.md`](milestones/v1.2-MILESTONE-AUDIT.md).
 
-> **Production slug fallback:** the canonical `ps-transcribe.vercel.app` was claimed by another Vercel account, so production lives at `ps-transcribe-web.vercel.app` until a custom domain replaces it.
+> **Production slug:** `ps-transcribe-web.vercel.app` is the canonical host (the bare `ps-transcribe.vercel.app` slug is held by another Vercel account). The earlier plan to migrate to `gogglebox.com` is dropped — see Out of Scope.
 
 ## Current Milestone: v1.3 Polish & Validation
 
@@ -96,7 +95,6 @@ v1.3 — Polish & Validation (in flight, requirements pending):
 **Target features:**
 
 - Phase 19 QA checklist sweep + Phase 21 titlebar visual UAT (`QA-FUT-01`)
-- Custom domain for marketing site (`DOMAIN-FUT-01`)
 - Full Nyquist validation sweep across 7 phases (`NYQUIST-FUT-01`) — Phase 24 closed v1.0 half (NYQUIST-01..05); Phase 25 will close v1.2 half (NYQUIST-06..07)
 - `requirements_completed` frontmatter on SUMMARY.md template + tooling (`PROCESS-FUT-01`)
 - Visual regression / snapshot testing infra (`VISREG-01`) — net-new tooling for appearance override
@@ -230,4 +228,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-05 -- Phase 24 (Nyquist Sweep — v1.0) complete; `NYQUIST-01..05` validated. v1.0 half of `NYQUIST-FUT-01` closed (5 VALIDATION contracts approved, 10 new test files, 262/51 tests passing locally). v1.2 half (NYQUIST-06..07) deferred to Phase 25. Pre-existing CI debt tracked: Swift 6 strict-concurrency errors in `TranscriptionEngine.swift` and missing Xcode 26 on macos-26 runner — see `.planning/todos/pending/ci-build-check-failing-on-main.md`. v1.3 Polish & Validation milestone in progress. Goal: close deferred backlog from v1.0-1.2 — `QA-FUT-01` Phase 19 QA checklist + Phase 21 titlebar visual UAT, `DOMAIN-FUT-01` custom domain, `NYQUIST-FUT-01` Nyquist sweep (✓ v1.0 Phase 24, v1.2 Phase 25 pending), `PROCESS-FUT-01` SUMMARY.md frontmatter (✓ Phase 22), `VISREG-01` visual regression infra (✓ Phase 23). Designer-tuned dark Chronicle pass dropped from scope. Phases continue from v1.2 → v1.3 starts at Phase 22. Future feature seeds (dictation extensions, library upgrade, transcript editing, format reach) captured in `.planning/seeds/`.*
+*Last updated: 2026-05-05 -- Phase 24 (Nyquist Sweep — v1.0) complete; `NYQUIST-01..05` validated. v1.0 half of `NYQUIST-FUT-01` closed (5 VALIDATION contracts approved, 10 new test files, 262/51 tests passing locally). v1.2 half (NYQUIST-06..07) deferred to Phase 25. Pre-existing CI debt tracked: Swift 6 strict-concurrency errors in `TranscriptionEngine.swift` and missing Xcode 26 on macos-26 runner — see `.planning/todos/pending/ci-build-check-failing-on-main.md`. **Phase 27 (`gogglebox.com` custom domain) and `DOMAIN-FUT-01` removed from scope 2026-05-05** — site stays on `ps-transcribe-web.vercel.app`. v1.3 Polish & Validation milestone in progress. Goal: close deferred backlog from v1.0-1.2 — `QA-FUT-01` Phase 19 QA checklist + Phase 21 titlebar visual UAT, `NYQUIST-FUT-01` Nyquist sweep (✓ v1.0 Phase 24, v1.2 Phase 25 pending), `PROCESS-FUT-01` SUMMARY.md frontmatter (✓ Phase 22), `VISREG-01` visual regression infra (✓ Phase 23). Designer-tuned dark Chronicle pass dropped from scope. Phases continue from v1.2 → v1.3 starts at Phase 22. Future feature seeds (dictation extensions, library upgrade, transcript editing, format reach) captured in `.planning/seeds/`.*

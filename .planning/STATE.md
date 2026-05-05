@@ -141,7 +141,6 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent milestone-level d
 v1.3 active scope (now in REQUIREMENTS.md):
 
 - [ ] `QA-FUT-01` — Phase 19 "Looks Done But Isn't" QA checklist sweep + Phase 21 titlebar visual UAT (folded in)
-- [ ] `DOMAIN-FUT-01` — Custom domain for marketing site
 - [ ] `NYQUIST-FUT-01` — Full Nyquist validation sweep (v1.0 phases 1/2/3/8/10 + Phase 20 + Phase 21)
 - [ ] `PROCESS-FUT-01` — `requirements_completed` frontmatter on SUMMARY.md template + tooling
 - [ ] `VISREG-01` — Visual regression / snapshot testing infra for appearance override
