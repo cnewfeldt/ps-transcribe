@@ -103,6 +103,16 @@ Plans:
 
 **Dependencies:** Optional benefit from Phase 22 (SUMMARY frontmatter) but not blocked by it.
 
+**Plans:** 5 plans
+
+Plans:
+**Wave 1** *(all 5 plans roughly independent — each touches a separate `*-VALIDATION.md` and a different test file roster; smallest-first execution recommended)*
+- [ ] 24-01-PLAN.md — Re-audit Phase 1 Rebrand (NYQUIST-01): RebrandInfoPlistTests + 01-VALIDATION.md last_audited bump per D-01
+- [ ] 24-02-PLAN.md — Backfill Phase 10 Obsidian (NYQUIST-05): RecoveredSessionTypeTests + lift `recoveredSessionType()` helper from ContentView; cross-ref ObsidianURLTests
+- [ ] 24-03-PLAN.md — Backfill Phase 8 Defects (NYQUIST-04): TranscriptStoreClearTests + FrontmatterSourceTagTests; cross-ref SpeakerCodableTests + TranscriptParserTests
+- [ ] 24-04-PLAN.md — Backfill Phase 3 Session+Naming (NYQUIST-03): TranscriptRenameTests; cross-ref LibraryStoreTests + LibraryEntryTests + TranscriptParserTests + ObsidianURLTests
+- [ ] 24-05-PLAN.md — Backfill Phase 2 Security+Stability (NYQUIST-02): WorkflowSecretsTests + TranscriptLoggerSecurityTests + MidnightOffsetTests + CheckpointRoundTripTests + ErrorPathLoggingTests + SHA-pin regression fix on build-check.yml:56 (largest plan, 16 reqs, 1 human-verify CI checkpoint)
+
 ### Phase 25: Nyquist Sweep — v1.2
 
 **Goal:** Backfill `*-VALIDATION.md` for the two v1.2 phases that shipped without Nyquist coverage (Wave 0 RED scaffolding pattern was retired post-18.1).
