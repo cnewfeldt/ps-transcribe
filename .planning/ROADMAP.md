@@ -17,8 +17,8 @@
 | # | Phase | Status |
 |---|-------|--------|
 | 22 | Process & Frontmatter Standard | [x] Complete 2026-05-02 |
-| 23 | Visual Regression Infra | [ ] Pending |
-| 24 | Nyquist Sweep — v1.0 | [ ] Pending |
+| 23 | Visual Regression Infra | [x] Complete 2026-05-04 |
+| 24 | Nyquist Sweep — v1.0 | [x] Complete 2026-05-05 |
 | 25 | Nyquist Sweep — v1.2 | [ ] Pending |
 | 26 | QA Sweep + Visual UAT | [ ] Pending |
 | 27 | Custom Domain — gogglebox.com | [ ] Pending |
