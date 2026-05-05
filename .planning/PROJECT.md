@@ -97,9 +97,11 @@ v1.3 — Polish & Validation (in flight, requirements pending):
 
 - Phase 19 QA checklist sweep + Phase 21 titlebar visual UAT (`QA-FUT-01`)
 - Custom domain for marketing site (`DOMAIN-FUT-01`)
-- Full Nyquist validation sweep across 7 phases (`NYQUIST-FUT-01`) — largest line item, ~2-3 dedicated phases
+- Full Nyquist validation sweep across 7 phases (`NYQUIST-FUT-01`) — Phase 24 closed v1.0 half (NYQUIST-01..05); Phase 25 will close v1.2 half (NYQUIST-06..07)
 - `requirements_completed` frontmatter on SUMMARY.md template + tooling (`PROCESS-FUT-01`)
 - Visual regression / snapshot testing infra (`VISREG-01`) — net-new tooling for appearance override
+
+**Validated in Phase 24** (2026-05-05): NYQUIST-01..05. Backfilled `*-VALIDATION.md` for v1.0 phases 1, 2, 3, 8, 10 with real Swift Testing assertions. 10 new test files added; suite grew from 236 → 262 tests / 42 → 51 suites. SHA-pin regression on `build-check.yml:56` (introduced in Phase 23) fixed. Discovered pre-existing CI infrastructure debt: Swift 6 strict-concurrency errors at `TranscriptionEngine.swift:238,342` (commit `2a2e7af6`, April 2026) and missing Xcode 26 path on macos-26 runner — tracked in `.planning/todos/pending/ci-build-check-failing-on-main.md` for a follow-up phase.
 
 **Key context:**
 
@@ -228,4 +230,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-04 -- Phase 23 (Visual Regression Infra) complete; `VISREG-01` validated. v1.3 Polish & Validation milestone in progress. Goal: close deferred backlog from v1.0-1.2 — `QA-FUT-01` Phase 19 QA checklist + Phase 21 titlebar visual UAT, `DOMAIN-FUT-01` custom domain, `NYQUIST-FUT-01` full Nyquist sweep across 7 phases (v1.0 1/2/3/8/10 + v1.2 20/21), `PROCESS-FUT-01` SUMMARY.md frontmatter (✓ Phase 22), `VISREG-01` visual regression infra (✓ Phase 23). Designer-tuned dark Chronicle pass dropped from scope. Phases continue from v1.2 → v1.3 starts at Phase 22. Future feature seeds (dictation extensions, library upgrade, transcript editing, format reach) captured in `.planning/seeds/`.*
+*Last updated: 2026-05-05 -- Phase 24 (Nyquist Sweep — v1.0) complete; `NYQUIST-01..05` validated. v1.0 half of `NYQUIST-FUT-01` closed (5 VALIDATION contracts approved, 10 new test files, 262/51 tests passing locally). v1.2 half (NYQUIST-06..07) deferred to Phase 25. Pre-existing CI debt tracked: Swift 6 strict-concurrency errors in `TranscriptionEngine.swift` and missing Xcode 26 on macos-26 runner — see `.planning/todos/pending/ci-build-check-failing-on-main.md`. v1.3 Polish & Validation milestone in progress. Goal: close deferred backlog from v1.0-1.2 — `QA-FUT-01` Phase 19 QA checklist + Phase 21 titlebar visual UAT, `DOMAIN-FUT-01` custom domain, `NYQUIST-FUT-01` Nyquist sweep (✓ v1.0 Phase 24, v1.2 Phase 25 pending), `PROCESS-FUT-01` SUMMARY.md frontmatter (✓ Phase 22), `VISREG-01` visual regression infra (✓ Phase 23). Designer-tuned dark Chronicle pass dropped from scope. Phases continue from v1.2 → v1.3 starts at Phase 22. Future feature seeds (dictation extensions, library upgrade, transcript editing, format reach) captured in `.planning/seeds/`.*
