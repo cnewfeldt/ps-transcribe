@@ -96,19 +96,21 @@ Backfill `*-VALIDATION.md` for v1.0 phases 1, 2, 3, 8, and 10 — flipping each 
 
 ### Existing v1.0 VALIDATION.md drafts (Phase 24 input — to be updated in place)
 
-- `.planning/phases/01-rebrand/01-VALIDATION.md` — `status: approved` (2026-04-27, build+grep basis), `nyquist_compliant: true`. Phase 24 re-audits and adds real tests; bumps `last_audited`.
-- `.planning/phases/02-security-stability/02-VALIDATION.md` — `status: draft`, 16 requirement rows, all currently `pending`.
-- `.planning/phases/03-session-management-recording-naming/03-VALIDATION.md` — `status: draft`.
-- `.planning/phases/08-code-defect-fixes/08-VALIDATION.md` — `status: draft`.
-- `.planning/phases/10-final-defect-fixes-obsidian-deeplink/10-VALIDATION.md` — `status: draft`.
+> **Path note (2026-05-05):** v1.0 phase dirs were re-archived in commit `065d63f` and restored to `.planning/milestones/v1.0-phases/` as part of Phase 24 setup (matches v1.2-phases/, v1.3-phases/ convention). All paths below reflect the restored location.
+
+- `.planning/milestones/v1.0-phases/01-rebrand/01-VALIDATION.md` — `status: approved` (2026-04-27, build+grep basis), `nyquist_compliant: true`. Phase 24 re-audits and adds real tests; bumps `last_audited`.
+- `.planning/milestones/v1.0-phases/02-security-stability/02-VALIDATION.md` — `status: draft`, 16 requirement rows, all currently `pending`.
+- `.planning/milestones/v1.0-phases/03-session-management-recording-naming/03-VALIDATION.md` — `status: draft`.
+- `.planning/milestones/v1.0-phases/08-code-defect-fixes/08-VALIDATION.md` — `status: draft`.
+- `.planning/milestones/v1.0-phases/10-final-defect-fixes-obsidian-deeplink/10-VALIDATION.md` — `status: draft`.
 
 ### Existing v1.0 VERIFICATION.md (cross-reference for "originally satisfied" evidence)
 
-- `.planning/phases/01-rebrand/01-VERIFICATION.md` — confirms REBR-01..08 satisfied; REBR-08 verified live 2026-04-14.
-- `.planning/phases/02-security-stability/02-VERIFICATION.md` — confirms SECR-01..12 + STAB-01..04 satisfied; the WITHDRAWN-for-Nyquist set per D-03 references this file.
-- `.planning/phases/03-session-management-recording-naming/03-VERIFICATION.md`
-- `.planning/phases/08-code-defect-fixes/08-VERIFICATION.md`
-- `.planning/phases/10-final-defect-fixes-obsidian-deeplink/10-VERIFICATION.md`
+- `.planning/milestones/v1.0-phases/01-rebrand/01-VERIFICATION.md` — confirms REBR-01..08 satisfied; REBR-08 verified live 2026-04-14.
+- `.planning/milestones/v1.0-phases/02-security-stability/02-VERIFICATION.md` — confirms SECR-01..12 + STAB-01..04 satisfied; the WITHDRAWN-for-Nyquist set per D-03 references this file.
+- `.planning/milestones/v1.0-phases/03-session-management-recording-naming/03-VERIFICATION.md`
+- `.planning/milestones/v1.0-phases/08-code-defect-fixes/08-VERIFICATION.md`
+- `.planning/milestones/v1.0-phases/10-final-defect-fixes-obsidian-deeplink/10-VERIFICATION.md`
 
 ### Test infrastructure (Phase 16 + Phase 23 baseline — DO NOT modify in this phase)
 
@@ -179,7 +181,7 @@ Backfill `*-VALIDATION.md` for v1.0 phases 1, 2, 3, 8, and 10 — flipping each 
 
 - **Manual-Only entries / integration tests for force-quit / SIGKILL / runtime entitlement scenarios** — D-03 chose lenient WITHDRAWN. If a future production incident uncovers a regression in STAB-01 (crash recovery), SECR-09 (atomic write under kill), or STAB-04 (mic permission denial), a follow-up phase could add an integration-test scaffold (subprocess spawn, SIGKILL after N ms). Out of Phase 24 scope.
 - **Phase 4 (Mic Button), Phase 7 (Notion), Phase 9 (Verification Sweep) Nyquist sweep** — those phase directories live only in git history per the v1.0 audit. Restoring + auditing them is a separate phase if it matters; the audit framed the v1.0 sweep as "opt-in hygiene" and did not call out 4/7/9 as gaps.
-- **Move restored v1.0 phase directories from `.planning/phases/` to `.planning/milestones/v1.0-phases/`** — the restoration commit (23f3949) explicitly says "After the validation sweep completes, these directories will be moved into milestones/v1.0-phases/ where they should have lived all along." That cleanup is post-Phase 24 housekeeping; doesn't affect Phase 24's deliverables but should run before Phase 25 starts to avoid two parallel "where do v1.0 artifacts live" conventions.
+- ~~**Move restored v1.0 phase directories from `.planning/phases/` to `.planning/milestones/v1.0-phases/`**~~ — DONE 2026-05-05 as Phase 24 setup. After commit `065d63f` re-archived the v1.0 dirs from `.planning/phases/`, Phase 24 setup restored them to `.planning/milestones/v1.0-phases/` (the final home per the 23f3949 restoration-commit note). All `*-VALIDATION.md` edits in Phase 24 plans target the new location. v1.1 phase dirs (11–14) were also archived in `065d63f`; restoring/relocating those is a separate concern outside Phase 24 scope.
 - **Phase 23-VALIDATION.md own approval** — Phase 23 just completed; its own VALIDATION.md frontmatter still reads `status: draft`. If Phase 23 needs its own retroactive Nyquist approval, that's either a Phase 23 follow-up or part of the v1.3 milestone audit. Not Phase 24's job — Phase 24 is scoped to v1.0.
 - **Snapshot tests for v1.0 surfaces beyond the Phase 23 5-surface roster** — Phase 23 deferred TranscriptView, NotionTagSheet, OnboardingView, DetailsPane, CaptureDock, LibraryEntryRow. Adding snapshot baselines for these is a future visual-regression phase, not Phase 24.
 - **Backfilling `requirements-completed` frontmatter on v1.0 SUMMARY.md files** — v1.0 audit marked this "not worth the churn given the milestone is archived." Phase 24 does not add the frontmatter; new Phase 24 plan SUMMARY.md files DO carry it (PROCESS-01 from Phase 22 is already in effect).
