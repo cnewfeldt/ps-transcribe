@@ -150,3 +150,4 @@ Future feature directions captured as seeds in `.planning/seeds/` (surfaced by `
 - **SEED-002** Library upgrade — full-text search (FTS5), tags, smart filters, audio scroll-sync, speaker rename, redact
 - **SEED-003** Transcript editing surface — inline correction, speaker rename + bulk, redact w/ audio mute, merge/split, undo
 - **SEED-004** Format reach — DOCX / PDF / SRT / VTT / JSON / TXT, per-destination presets, Notion property mapping refresh
+- **SEED-005** Recording preflight guardrails — block silent recordings, missing-mic alert, live input level meter, permission preflight
