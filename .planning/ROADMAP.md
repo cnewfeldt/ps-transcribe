@@ -125,14 +125,14 @@ Plans:
 
 **Dependencies:** Phase 23 snapshot infra (optional — VALIDATION tests are unit/integration, but visual regression complements them for the appearance bridge).
 
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 **Wave 1**
 - [x] 25-01-PLAN.md — Backfill Phase 21 AppearancePreference (NYQUIST-07): AppSettingsTests extension + PreferredColorSchemeGrepGateTests creation + 21-VALIDATION.md with PARTIAL a/b split + Phase 26 cross-ref (smallest-first per D-04)
 
 **Wave 2** *(extends shared PreferredColorSchemeGrepGateTests.swift created in 25-01)*
-- [ ] 25-02-PLAN.md — Backfill Phase 20 Dark Mode Parity (NYQUIST-06): PreferredColorSchemeGrepGateTests extension + DesignTokensAdaptivePaletteTests creation + 20-VALIDATION.md with PARTIAL a/b split
+- [x] 25-02-PLAN.md — Backfill Phase 20 Dark Mode Parity (NYQUIST-06): PreferredColorSchemeGrepGateTests extension + DesignTokensAdaptivePaletteTests creation + 20-VALIDATION.md with PARTIAL a/b split
 
 ### Phase 26: QA Sweep + Visual UAT
 
