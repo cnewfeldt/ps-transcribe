@@ -29,8 +29,8 @@
 - [x] **NYQUIST-03**: Backfill `03-VALIDATION.md` for v1.0 Phase 3 (Session Library + Recording Naming) — tests for grid view, missing-file detection, naming policy, session lifecycle (stop → clear → save)
 - [x] **NYQUIST-04**: Backfill `08-VALIDATION.md` for v1.0 Phase 8 (Code Defect Fixes) — tests for crash recovery path, speaker label collapse, source/tome tag, print() removal
 - [x] **NYQUIST-05**: Backfill `10-VALIDATION.md` for v1.0 Phase 10 (Obsidian Deep-link + Defect Cleanup) — tests for deep-link URL construction, missing-file UX, right-click "Show in Finder"
-- [ ] **NYQUIST-06**: Backfill `20-VALIDATION.md` for v1.2 Phase 20 (Chronicle adaptive light/dark token palette) — tests for token color resolution per appearance, removal of `.preferredColorScheme(.light)` overrides
-- [ ] **NYQUIST-07**: Backfill `21-VALIDATION.md` for v1.2 Phase 21 (AppearancePreference) — tests for `colorScheme: ColorScheme?` bridge, AppSettings persistence, three Scene-root call-sites, `DictationWindowController.NSAppearance(named:)` mirror, Chronicle titlebar bridge
+- [x] **NYQUIST-06**: Backfill `20-VALIDATION.md` for v1.2 Phase 20 (Chronicle adaptive light/dark token palette) — tests for token color resolution per appearance, removal of `.preferredColorScheme(.light)` overrides
+- [x] **NYQUIST-07**: Backfill `21-VALIDATION.md` for v1.2 Phase 21 (AppearancePreference) — tests for `colorScheme: ColorScheme?` bridge, AppSettings persistence, three Scene-root call-sites, `DictationWindowController.NSAppearance(named:)` mirror, Chronicle titlebar bridge
 
 ### Process (`PROCESS-FUT-01`) — SUMMARY.md frontmatter standard
 
