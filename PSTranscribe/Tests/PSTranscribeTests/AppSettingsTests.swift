@@ -15,6 +15,7 @@ struct AppSettingsTests {
         "installedModelVersion",
         "modelLastCheckedDate",
         "modelAutoUpdateEnabled",
+        "appearancePreference",  // Phase 25 NYQUIST-07
     ]
 
     fileprivate static func clearV12Keys() {
@@ -58,6 +59,13 @@ struct AppSettingsTests {
             defer { AppSettingsTests.clearV12Keys() }
             let s = AppSettings()
             #expect(s.modelAutoUpdateEnabled == true)
+        }
+
+        @Test @MainActor func appearancePreferenceDefaultsToSystem() {
+            AppSettingsTests.clearV12Keys()
+            defer { AppSettingsTests.clearV12Keys() }
+            let s = AppSettings()
+            #expect(s.appearancePreference == .system)
         }
     }
 
@@ -132,5 +140,34 @@ struct AppSettingsTests {
         s1.modelAutoUpdateEnabled = true
         let s2 = AppSettings()
         #expect(s2.modelAutoUpdateEnabled == true)
+    }
+
+    // MARK: - v1.2 Appearance Override (Phase 25 NYQUIST-07)
+
+    @Test @MainActor func roundTrip_appearancePreferenceLight() {
+        Self.clearV12Keys()
+        defer { Self.clearV12Keys() }
+        let s1 = AppSettings()
+        s1.appearancePreference = .light
+        let s2 = AppSettings()
+        #expect(s2.appearancePreference == .light)
+    }
+
+    @Test @MainActor func roundTrip_appearancePreferenceDark() {
+        Self.clearV12Keys()
+        defer { Self.clearV12Keys() }
+        let s1 = AppSettings()
+        s1.appearancePreference = .dark
+        let s2 = AppSettings()
+        #expect(s2.appearancePreference == .dark)
+    }
+
+    @Test @MainActor func appearancePreferenceMissingKeyFallsBackToSystem() {
+        Self.clearV12Keys()
+        defer { Self.clearV12Keys() }
+        // Phase 25 NYQUIST-07 / REQ-21.6: Simulate fresh-from-Phase-20 install -- no key in UD.
+        #expect(UserDefaults.standard.object(forKey: "appearancePreference") == nil)
+        let s = AppSettings()
+        #expect(s.appearancePreference == .system)
     }
 }
