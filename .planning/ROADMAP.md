@@ -151,6 +151,12 @@ Plans:
 
 **Dependencies:** None — operates against the current shipped build.
 
+**Plans:** 1 plan (initial; 0..N conditional fix plans appended after batch-triage per D-02)
+
+Plans:
+**Wave 1**
+- [ ] 26-01-PLAN.md — Single execution plan covering full 9-scenario sweep (QA-01..QA-09) + 26-UAT.md authoring per D-04. QA-03 splits into 03a (single-display PASS) + 03b (multi-monitor UNTESTABLE-this-cycle); QA-04 WITHDRAWN with codebase-verified non-sandboxed reasoning; QA-06..09 are citation rows pointing at 21-HUMAN-UAT.md (passed 2026-05-01). Batch-triage + conditional fix routing per D-02.
+
 ## Backlog
 
 Future feature directions captured as seeds in `.planning/seeds/` (surfaced by `/gsd-new-milestone` when goals match):
