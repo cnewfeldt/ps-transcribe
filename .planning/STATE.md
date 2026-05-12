@@ -4,14 +4,14 @@ milestone: v1.3
 milestone_name: Polish & Validation
 status: milestone_complete
 stopped_at: Phase 26 context gathered
-last_updated: "2026-05-09T17:46:29.360Z"
-last_activity: 2026-05-09 -- Phase 26 execution started
+last_updated: "2026-05-12T06:35:41.191Z"
+last_activity: 2026-05-12 -- Phase 26.1 execution started
 progress:
-  total_phases: 5
-  completed_phases: 4
-  total_plans: 13
-  completed_plans: 12
-  percent: 80
+  total_phases: 6
+  completed_phases: 5
+  total_plans: 15
+  completed_plans: 14
+  percent: 83
 ---
 
 # Project State
@@ -21,7 +21,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-01)
 
 **Core value:** Users can record meetings and voice memos with accurate, private, on-device transcription. Plus standalone hotkey-triggered dictation as of v1.2. All processing stays on-device.
-**Current focus:** Phase 26 — qa-sweep-visual-uat
+**Current focus:** Phase 26.1 — close-gap-process-03-lint-summaries-failure-on-v1-0-archive
 
 **Shipped milestones:**
 
@@ -35,7 +35,7 @@ See: .planning/PROJECT.md (updated 2026-05-01)
 
 ## Current Position
 
-Phase: 26
+Phase: 26.1
 Plan: Not started
 Status: Milestone complete
 Last activity: 2026-05-12
@@ -83,6 +83,7 @@ Progress: 1/6 phases (17%)
 
 - Phase 18.1 inserted after Phase 18: Shared save destinations + Local File (URGENT) — Phase 18 paused mid-UAT after architectural feedback that dictation-private folder picker duplicates what shared destinations should own; Phase 18.1 introduces top-level Local File destination parallel to Notion/Obsidian and refactors dictation off `DictationOutputMode`. (2026-04-29)
 - Phase 20 added: Dark mode parity (2026-04-30)
+- Phase 26.1 inserted after Phase 26: Close gap: PROCESS-03 lint-summaries failure on v1.0 archive (URGENT)
 
 ### Decisions
 
