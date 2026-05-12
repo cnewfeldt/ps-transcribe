@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.3.0] — 2026-05-12
+
+v1.3 Polish & Validation milestone close. Six phases (22–26.1) shipped: visual-regression infra, two Nyquist coverage sweeps (v1.0 + v1.2), QA + visual UAT pass, frontmatter/lint standardization, and a follow-up lint closure phase. One user-facing removal; the rest is test infrastructure, process hardening, and traceability work.
+
+### Changes
+
+- **Removed: Clipboard Restore delay setting (DICT-06 retirement).** The `clipboardRestoreDelay` Stepper has been removed from `SettingsView` (Dictation section) and the underlying field deleted from `AppSettings`. The clipboard-restore code path in `DictationCoordinator` is also gone. The setting was a vestigial knob for behavior that never shipped end-to-end; users will see one fewer Stepper in the Dictation settings section. No persisted value is migrated -- the `UserDefaults` key (if present) is simply ignored.
+- **Behavior unchanged** for all other dictation flows. Recording, paste, undo, transcription, model auto-update, and appearance preference all behave identically to v2.2.0.
+
+### Internal
+
+- **Visual regression infra (Phase 23, VISREG-01..06).** 15 new snapshot tests under `VisualRegressionTests` covering Recordings list, Settings (Models / General / Appearance), and Dictation HUD across Light + Dark appearances. Baselines committed; failures emit PNG diffs to `.test-artifacts/`. Coverage gap: Settings → Dictation section is cropped out of the current 520x400 snapshot frame (tracked as v1.4 tech debt).
+- **Nyquist coverage sweep — v1.0 (Phase 24, NYQUIST-01..05).** 5 `VALIDATION.md` files authored for v1.0 phases 1/2/3/8/10. 26 net-new `@Test` methods across 10 test files. Phase verifier is `human_needed` pending CI green attestation; CI `build-check.yml` currently fails on `macos-26` runner due to pre-existing Swift 6 strict-concurrency errors in `TranscriptionEngine.swift:238,342` (toolchain divergence between local Xcode and CI runner). Tracked as `.planning/todos/pending/ci-build-check-failing-on-main.md`.
+- **Nyquist coverage sweep — v1.2 (Phase 25, NYQUIST-06..07).** 2 `VALIDATION.md` files for v1.2 phases 20/21 (Dark-mode parity, appearance preference). 12 net-new `@Test` methods across 3 suites. Wave-2 adaptive tokens (`warningTint` and 4 others) outside REQ-20.2 roster -- advisory `WR-02` in `25-REVIEW.md`.
+- **QA sweep + visual UAT (Phase 26, QA-01..09).** 10-row manual UAT matrix (`26-UAT.md`) executed across Mic, Window, Display, and Model flows. QA-01 / QA-02 / QA-04 retired with citation (covered by earlier phase tests or out-of-scope). QA-03b absorbed 4 multi-monitor sub-scenarios into a single primary-monitor PASS. QA-05 (disk-space preflight) deferred-with-todo to `.planning/todos/pending/model-manifest-url-404.md` -- blocked by the manifest URL returning HTTP 404 in production (deployment-process gap, not a v1.3 deliverable failure).
+- **Process & frontmatter standard (Phase 22 + 26.1, PROCESS-01..03).** `lint-summaries.sh` script + GitHub Actions CI gate added in Phase 22; regressed when Phase 24 restored unmigrated v1.0-archive SUMMARYs without `requirements-completed` frontmatter. Phase 26.1 closed the regression by adding `requirements-completed: []` to the 8 affected v1.0-archive SUMMARYs. Lint gate now reports `55 SUMMARY files checked, 0 failures, 0 warnings` and the CI workflow exits 0 on `main`. Scope blind spot remains: `DEFAULT_ROOT=".planning/milestones"` does not cover active phases under `.planning/phases/` -- architectural debt, no current violation.
+- **Version bump.** `CFBundleShortVersionString` + `CFBundleVersion` in `Info.plist` advanced from `2.2.0` → `2.3.0`. `ModelUpdateServiceTests.swift` `appVersion` fixtures + comments updated to keep the Info.plist parity contract honest (22 occurrences in test setup blocks; test logic is version-agnostic, but the literal value is documented to match Info.plist).
+- **Test suite health.** Swift Testing suite tracks 268/268 passing across 52 suites locally on macOS 26 (down from 274 post-Phase 25 due to DICT-06 retirement removing 6 clipboard-restore tests). Phase 26.1 added zero tests because it added zero code.
+
+### Outstanding tech debt (carried to v1.4)
+
+- `ci-build-check-failing-on-main.md` -- Swift 6 strict-concurrency errors in `TranscriptionEngine.swift` blocking CI green on `macos-26`.
+- `model-manifest-url-404.md` -- model auto-update manifest URL returns 404 in production; blocks QA-05 verification and all model updates end-to-end.
+- `REQUIREMENTS.md` traceability table lines 78-86 still read "Not started" for several v1.3 REQ-IDs despite individual checkboxes being correct (mid-phase vs milestone-close bookkeeping asymmetry).
+- `SettingsView` snapshot frame crops out the Dictation section -- coverage gap, not a failure.
+- 25-REVIEW.md `WR-01..05` advisory test-quality warnings on Phase 25.
+
 ## [2.2.0] — 2026-05-01
 
 ### Features
