@@ -104,12 +104,6 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(dictationHotkeyMode.rawValue, forKey: "dictationHotkeyMode") }
     }
 
-    /// Seconds to wait after dictation paste before restoring the prior clipboard contents (DICT-06).
-    /// Default 3.0 seconds.
-    var clipboardRestoreDelay: TimeInterval {
-        didSet { UserDefaults.standard.set(clipboardRestoreDelay, forKey: "clipboardRestoreDelay") }
-    }
-
     // MARK: - v1.2 Appearance Override (Phase 21, D-08 / D-09)
 
     /// User-controlled app-wide appearance preference. `.system` (default) preserves
@@ -184,13 +178,6 @@ final class AppSettings {
         let hotkeyModeRaw = defaults.string(forKey: "dictationHotkeyMode")
             ?? DictationHotkeyMode.toggle.rawValue
         self.dictationHotkeyMode = DictationHotkeyMode(rawValue: hotkeyModeRaw) ?? .toggle
-
-        // TimeInterval (Double) -- UserDefaults.double returns 0.0 for missing keys, so check object presence.
-        if defaults.object(forKey: "clipboardRestoreDelay") == nil {
-            self.clipboardRestoreDelay = 3.0
-        } else {
-            self.clipboardRestoreDelay = defaults.double(forKey: "clipboardRestoreDelay")
-        }
 
         // v1.2 Appearance Override (Phase 21, D-08 / D-09)
         let appearanceRaw = defaults.string(forKey: "appearancePreference")
