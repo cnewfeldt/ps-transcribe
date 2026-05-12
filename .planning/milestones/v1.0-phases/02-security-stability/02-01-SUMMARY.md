@@ -3,6 +3,7 @@ phase: 02-security-stability
 plan: "01"
 subsystem: ci-cd
 tags: [security, ci, github-actions, gitignore, hardening]
+requirements-completed: []
 dependency_graph:
   requires: []
   provides: [hardened-ci-workflows, secret-file-gitignore]

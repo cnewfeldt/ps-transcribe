@@ -5,6 +5,7 @@ subsystem: manual-verification
 tags:
   - uat
   - verification
+requirements-completed: []
 ---
 
 ## Summary

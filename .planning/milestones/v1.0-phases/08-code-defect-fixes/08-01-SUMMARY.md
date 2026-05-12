@@ -3,6 +3,7 @@ phase: 08-code-defect-fixes
 plan: 01
 subsystem: speaker-model
 tags: [speaker-enum, codable, transcript-parser, transcript-view, tdd]
+requirements-completed: []
 dependency_graph:
   requires: []
   provides: [Speaker.named, namedSpeakerColor, SpeakerCodableTests]

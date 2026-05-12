@@ -3,6 +3,7 @@ phase: 03-session-management-recording-naming
 plan: "02"
 subsystem: ui-layout
 tags: [swiftui, navigation-split-view, sidebar, library-ui]
+requirements-completed: []
 dependency_graph:
   requires: ["03-01"]
   provides: ["LibrarySidebar", "LibraryEntryRow", "RecordingNameField", "NavigationSplitView-layout"]

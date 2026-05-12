@@ -8,6 +8,7 @@ tags:
   - library
   - naming
   - obsidian
+requirements-completed: []
 dependency_graph:
   requires:
     - "03-01 (LibraryStore + LibraryEntry models)"

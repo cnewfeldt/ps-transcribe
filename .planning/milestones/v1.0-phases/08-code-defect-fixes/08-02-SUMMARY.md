@@ -3,6 +3,7 @@ phase: 08-code-defect-fixes
 plan: 02
 subsystem: UI/Audio/Storage
 tags: [badge, crash-recovery, logging, os-logger, rebrand, state-cleanup]
+requirements-completed: []
 dependency_graph:
   requires: []
   provides: [incomplete-badge, file-exists-caching, source-pstranscribe-tag, uniform-os-logger, transcript-store-clear-on-stop]
