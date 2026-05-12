@@ -56,7 +56,6 @@ enum SnapshotFixtures {
             "notionDatabaseID",
             "notionAutoSendEnabled",
             "dictationHotkeyMode",
-            "clipboardRestoreDelay",
             "hideFromScreenShare",
             "modelAutoUpdateEnabled",
             "installedModelVersion",

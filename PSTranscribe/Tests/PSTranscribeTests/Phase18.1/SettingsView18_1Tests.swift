@@ -76,11 +76,6 @@ struct SettingsView18_1Tests {
         #expect(no.lowerBound < dc.lowerBound)
     }
 
-    @Test("Dictation section retains clipboardRestoreDelay Stepper (regression)")
-    func dictationKeepsRestoreDelay() {
-        #expect(settingsViewSource.contains("$settings.clipboardRestoreDelay"))
-    }
-
     @Test("Dictation section retains KeyboardShortcuts.Recorder for .dictateGlobal (regression)")
     func dictationKeepsRecorder() {
         #expect(settingsViewSource.contains("KeyboardShortcuts.Recorder"))

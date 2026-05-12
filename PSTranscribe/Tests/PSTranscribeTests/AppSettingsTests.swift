@@ -11,7 +11,6 @@ struct AppSettingsTests {
     // for the new shared destination keys (localFileEnabled / localFileRoot / etc.).
     private static let v12Keys = [
         "dictationHotkeyMode",
-        "clipboardRestoreDelay",
         "installedModelVersion",
         "modelLastCheckedDate",
         "modelAutoUpdateEnabled",
@@ -31,13 +30,6 @@ struct AppSettingsTests {
             defer { AppSettingsTests.clearV12Keys() }
             let s = AppSettings()
             #expect(s.dictationHotkeyMode == .toggle)
-        }
-
-        @Test @MainActor func clipboardRestoreDelay() {
-            AppSettingsTests.clearV12Keys()
-            defer { AppSettingsTests.clearV12Keys() }
-            let s = AppSettings()
-            #expect(s.clipboardRestoreDelay == 3.0)
         }
 
         @Test @MainActor func installedModelVersion() {
@@ -78,15 +70,6 @@ struct AppSettingsTests {
         s1.dictationHotkeyMode = .pressAndHold
         let s2 = AppSettings()
         #expect(s2.dictationHotkeyMode == .pressAndHold)
-    }
-
-    @Test @MainActor func roundTrip_clipboardRestoreDelay() {
-        Self.clearV12Keys()
-        defer { Self.clearV12Keys() }
-        let s1 = AppSettings()
-        s1.clipboardRestoreDelay = 5.5
-        let s2 = AppSettings()
-        #expect(s2.clipboardRestoreDelay == 5.5)
     }
 
     @Test @MainActor func roundTrip_installedModelVersion() {
