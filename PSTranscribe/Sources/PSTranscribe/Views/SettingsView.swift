@@ -631,21 +631,7 @@ struct SettingsView: View {
             }
             .font(.system(size: 12))
 
-            Divider().padding(.vertical, 2)
-
-            // Clipboard restore delay -- Stepper in 0.5s increments, 0..30s range.
-            HStack {
-                Text("Restore previous clipboard after")
-                    .font(.system(size: 12))
-                Spacer()
-                Stepper(value: $settings.clipboardRestoreDelay, in: 0...30, step: 0.5) {
-                    Text(String(format: "%.1fs", settings.clipboardRestoreDelay))
-                        .font(.system(.body, design: .monospaced))
-                }
-                .labelsHidden()
-            }
-
-            Text("Dictated text is always copied to the clipboard with privacy markers (excluded from Alfred, Maccy, Pasta history). Where the transcript is saved is configured under Local File / Obsidian / Notion above.")
+            Text("Dictated text is copied to the clipboard with privacy markers (excluded from Alfred, Maccy, Pasta history). Where the transcript is saved is configured under Local File / Obsidian / Notion above.")
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
         }
