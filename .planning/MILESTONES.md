@@ -4,6 +4,61 @@ Historical record of shipped versions. Newest first.
 
 ---
 
+## v1.3 — Polish & Validation
+
+**Shipped:** 2026-05-12
+**Tag:** `v1.3`
+**Phases:** 22 / 23 / 24 / 25 / 26 / 26.1 (6 executed; 26.1 inserted post-Phase 26 to close PROCESS-03 lint-gate regression)
+**Plans:** 21 across 6 phases (22 → 6 plans, 23 → 5, 24 → 5, 25 → 2, 26 → 2, 26.1 → 1)
+**Timeline:** 11 days (2026-05-01 → 2026-05-11)
+**Git range:** `b9753bf` → `75a5856` (125 commits)
+**Files changed:** 212 · **LOC delta:** +34,590 / −277 (Swift sources 10,097 · Tests 6,166 · website 2,629)
+
+### Delivered
+
+Close deferred v1.0–v1.2 backlog: complete the Phase 19 "Looks Done But Isn't" QA checklist + Phase 21 titlebar visual UAT, backfill Nyquist `*-VALIDATION.md` across v1.0 phases 1/2/3/8/10 and v1.2 phases 20/21, standardize SUMMARY.md `requirements-completed:` frontmatter with a CI lint gate, and stand up swift-snapshot-testing visual-regression infra for the appearance bridge.
+
+### Key Accomplishments
+
+1. **SUMMARY frontmatter standard + CI lint gate (Phase 22)** — Canonical `requirements-completed:` (hyphen, D-01) key added to all three SUMMARY templates (`summary.md`, `summary-standard.md`, `summary-minimal.md`) plus a 4-rule contract paragraph in `execute-plan.md`. `scripts/lint-summaries.sh` (Bash + yq) enforces presence/subset; `.github/workflows/lint-summaries.yml` wires it as a path-filtered macos-26 PR-merge gate. 18 archived SUMMARYs canonicalised via ephemeral migration script (committed and git-rm'd in the same migration commit per D-13). Phase 22 closed `38 files checked, 0 failures, 0 warnings`.
+2. **Visual regression infra (Phase 23)** — swift-snapshot-testing 1.19.2 wired into the test target, 15 baselines locked across 5 surfaces (ContentView, LibraryView, SettingsView, RecordingView, DictationHUD) × 3 appearances (Light/Dark/System), `SnapshotFixtures` helper, Nygard-style ADR rejecting custom XCTest+CGImage, snapshotpreviews, and XCUITest. `build-check.yml` extended with `swift test` step + record-mode env-var guard + failure-only diff-PNG artifact upload. `TESTING.md` refreshed, `CONTRIBUTING.md` created at repo root with the regen workflow and an AI-attribution-forbidden Commit Hygiene rule.
+3. **Nyquist sweep — v1.0 (Phase 24)** — 5 green `*-VALIDATION.md` files for v1.0 phases 1 (Rebrand), 2 (Security+Stability), 3 (Library+Naming), 8 (Defects), 10 (Obsidian+Cleanup). 10 new test files / 26 new @Test methods cover REBR-01/02/04/06/07, SECR-01..12 + STAB-01..04 + REBR-05, NAME-02/03 + SESS-06, STAB-03 + REBR-03, and the D-05 `recoveredSessionType()` helper lift. `build-check.yml:56` SHA-pin regression (Phase 23 ddcec6a) fixed inline — sole Phase 24 production-source change. Test suite grew 236 → 262 / 42 → 51 suites.
+4. **Nyquist sweep — v1.2 (Phase 25)** — 2 green `*-VALIDATION.md` files for v1.2 phases 20 (dark-mode parity) and 21 (AppearancePreference). `PreferredColorSchemeGrepGateTests` (shared, 7 @Test methods), `DesignTokensAdaptivePaletteTests` (NSColor-bridged variance test for 17 Chronicle tokens), `AppSettingsTests` extension for AppearancePreference UD round-trip. 8 verification rows per VALIDATION file, both at `nyquist_compliant: true`. Suite grew 262 → 274 / 51 → 53 suites.
+5. **QA sweep + visual UAT (Phase 26)** — Full 9-scenario QA sweep authored in `26-UAT.md`, terminal status `approved-with-debt`. QA-03 PASS for full multi-monitor matrix (primary + secondary-left + secondary-right + vertical + mid-recording-disconnect attested by user). QA-06..09 pass-citation from `21-HUMAN-UAT.md` (2026-05-01 user attestation). QA-01/02/04 WITHDRAWN with codebase-verified reasoning (Maccy/Alfred positioning retired; non-sandboxed app has no security-scoped bookmark code path). QA-05 UNTESTABLE-this-cycle, routed to `model-manifest-url-404.md` deferred-todo. Phase 26-02 retired DICT-06 (post-dictation clipboard restore) after smoke-test showed the 3s restore broke the dictation→paste UX; 268/268 tests pass post-retirement.
+6. **PROCESS-03 lint-gate closure (Phase 26.1)** — Inserted `requirements-completed: []` (empty list, valid per D-04) into 8 v1.0-archive SUMMARY frontmatters, flipping `bash scripts/lint-summaries.sh` from exit 1 (8 failures) to exit 0 (55 files, 0 failures, 0 warnings). `Lint Summaries` CI gate restored to green on `main`. Frontmatter-only migration — zero code/test/schema surface touched.
+
+### Known Gaps / Deferred
+
+- **`ci-build-check-failing-on-main.md`** (high) — Swift 6 strict-concurrency errors at `TranscriptionEngine.swift:238,342` (pre-existing from 2026-04-02 commit `2a2e7af`) fail `build-check.yml` `swift build` on the macos-26 runner. Blocks Phase 24 CI green attestation (NYQUIST-01..05 marked `satisfied (CI attest pending)` in the milestone audit).
+- **`model-manifest-url-404.md`** (high) — `raw.githubusercontent.com/cnewfeldt/ps-transcribe-releases/main/model-manifest.json` returns HTTP 404. `ModelUpdateService.checkForUpdate()` always fails, making QA-05's disk-space preflight unreachable end-to-end. Release/deployment-process gap (manifest needs republishing), not a v1.3 milestone-deliverable failure.
+- **Phase 24 + Phase 26 verifications** at `human_needed` — CI green attestation (Phase 24) and REQUIREMENTS.md traceability + QA-03b sub-scenario absorption decisions (Phase 26) carried forward to v1.4 as accepted tech debt. UAT artifacts ship at `approved-with-debt` with 0 pending scenarios.
+- **Phase 23 SettingsView snapshot Dictation crop** — 520×400 frame crops out the Dictation section; coverage gap, not a failure.
+- **Phase 25 WR-02 advisory** — Wave-2 adaptive tokens (warningTint et al.) not in REQ-20.2 roster; advisory hardening, not a current break.
+- **Phase 22 lint scope** — `lint-summaries.sh DEFAULT_ROOT=".planning/milestones"` does not cover `.planning/phases/`; active-phase SUMMARYs are an unscanned blind spot. Architectural debt, no current violation.
+
+### Decisions
+
+- v1.3 phases continue v1.2's numbering (first v1.3 phase = 22).
+- Canonical SUMMARY frontmatter key is `requirements-completed` (hyphen, D-01). Underscore is forbidden and lint-flagged.
+- Lint script tolerates legacy v1.2 YAML quirks via a grep-based fallback (yq parse failures don't abort `set -euo pipefail`).
+- Ephemeral migration scripts ship as a 2-commit pair (script-add → migration+script-rm) to preserve D-13 reproducibility-via-history.
+- D-03 lenient Nyquist policy: WITHDRAWN-with-cited-source rows are valid VALIDATION.md outcomes when codebase reality has moved past the original requirement.
+- D-04 `requirements-completed: []` (empty list) is valid frontmatter — used for closure phases that touch zero requirement surface.
+- QA-03 multi-monitor matrix collapses sub-scenarios into a single PASS row when primary attestation covers the architectural concern (Phase 26 human-decision #2).
+- DICT-06 (post-dictation clipboard restore) retired mid-Phase-26 after smoke-test surfaced UX regression; backward removal preferred over forward toggle.
+- `gogglebox.com` custom domain (`DOMAIN-FUT-01` / proposed Phase 27) removed from scope 2026-05-05; marketing site stays on `ps-transcribe-web.vercel.app`.
+
+### Archives
+
+- Roadmap: [`milestones/v1.3-ROADMAP.md`](milestones/v1.3-ROADMAP.md)
+- Requirements: [`milestones/v1.3-REQUIREMENTS.md`](milestones/v1.3-REQUIREMENTS.md)
+- Audit: [`milestones/v1.3-MILESTONE-AUDIT.md`](milestones/v1.3-MILESTONE-AUDIT.md)
+- Phases: `milestones/v1.3-phases/` (Phase 22 archived inline; 23/24/25/26/26.1 moved at milestone close)
+
+Known deferred items at close: 6 (2 high-priority todos + 4 tech-debt items; see STATE.md Deferred Items section).
+
+---
+
 ## v1.2 — Standalone Dictation + Model Auto-Update + Dark Mode Parity
 
 **Shipped:** 2026-05-01 (macOS app released as v2.2.0)

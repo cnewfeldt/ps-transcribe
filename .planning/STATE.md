@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Polish & Validation
-status: milestone_complete
+status: completed
 stopped_at: Phase 26 context gathered
-last_updated: "2026-05-12T06:35:41.191Z"
-last_activity: 2026-05-12 -- Phase 26.1 execution started
+last_updated: "2026-05-12T06:58:46.954Z"
+last_activity: 2026-05-12
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 15
-  completed_plans: 14
-  percent: 83
+  completed_plans: 15
+  percent: 100
 ---
 
 # Project State
@@ -157,6 +157,19 @@ Deferred beyond v1.3 (see PROJECT.md "Future Candidate Goals" + `.planning/seeds
 ### Blockers/Concerns
 
 None — v1.2 shipped clean.
+
+## Deferred Items
+
+Items acknowledged and deferred at milestone close on 2026-05-12:
+
+| Category | Item | Status |
+|----------|------|--------|
+| todo | ci-build-check-failing-on-main | pending (high) — Swift 6 strict-concurrency errors at TranscriptionEngine.swift:238,342 fail build-check.yml on macos-26 runner; blocks Phase 24 CI green attestation |
+| todo | model-manifest-url-404 | pending (high) — raw.githubusercontent.com/cnewfeldt/ps-transcribe-releases/main/model-manifest.json returns HTTP 404; blocks QA-05 disk-space-preflight reachability |
+| uat | Phase 24 (24-HUMAN-UAT.md) | approved-with-debt — 0 pending scenarios; CI green attestation deferred behind ci-build-check-failing-on-main |
+| uat | Phase 26 (26-UAT.md) | approved-with-debt — 0 pending scenarios; REQUIREMENTS.md traceability lag + QA-03b sub-scenario absorption flagged as human-decisions, carried forward |
+| verification | Phase 24 (24-VERIFICATION.md) | human_needed — CI green attestation pending |
+| verification | Phase 26 (26-VERIFICATION.md) | human_needed — traceability + QA-03b dispositions pending |
 
 ## Session Continuity
 
