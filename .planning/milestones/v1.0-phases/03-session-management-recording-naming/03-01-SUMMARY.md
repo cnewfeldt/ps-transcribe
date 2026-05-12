@@ -3,6 +3,7 @@ phase: 03-session-management-recording-naming
 plan: "01"
 subsystem: storage-models
 tags: [library, models, persistence, testing, obsidian]
+requirements-completed: []
 dependency_graph:
   requires: []
   provides:
