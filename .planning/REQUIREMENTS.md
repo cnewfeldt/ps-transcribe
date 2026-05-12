@@ -16,11 +16,11 @@
 - [~] **QA-02**: ~~Verify clipboard history exclusion under Alfred clipboard history — live test with Alfred clipboard active~~ — RETIRED 2026-05-11 in Phase 26 (D-01 evolved mid-sweep: PS Transcribe no longer positions itself as a Maccy/Alfred-friendly tool; privacy markers DICT-09 retained as defensive standards compliance only).
 - [x] **QA-03**: Verify HUD positioning is correct on multi-monitor setup — primary, secondary-left, secondary-right, vertical orientation, mid-recording monitor disconnect — VERIFIED 2026-05-11 in Phase 26 (single-display row 03a + multi-monitor row 03b both PASS in `26-UAT.md`; full sub-scenario matrix attested by user).
 - [~] **QA-04**: ~~Verify security-scoped bookmark for SaveDestinations folder URL survives app relaunch and macOS reboot~~ — RETIRED 2026-05-11 in Phase 26 (codebase-verified non-applicability: app is non-sandboxed per `PSTranscribe.entitlements` — no `app-sandbox` key; `localFileRoot`/`obsidianFolderPath` persist as plain `String` in UserDefaults at `AppSettings.swift:81,96` not `bookmarkData(options:.withSecurityScope)`; zero hits for `withSecurityScope|startAccessing|stopAccessing` across `PSTranscribe/Sources`. The premise of the test does not exist in shipped code).
-- [ ] **QA-05**: Verify disk-space preflight warning triggers and is dismissible when free disk space is below the model-update threshold
-- [ ] **QA-06**: Phase 21 titlebar visual UAT — Light preference flips titlebar to cream `#FAFAF7` (Chronicle bridge active)
-- [ ] **QA-07**: Phase 21 titlebar visual UAT — Dark preference flips titlebar to system-dark material (Chronicle bridge inactive)
-- [ ] **QA-08**: Phase 21 titlebar visual UAT — System preference follows OS appearance change live (no app restart required)
-- [ ] **QA-09**: Phase 21 titlebar visual UAT — Preference toggle while window is unfocused still updates titlebar correctly
+- [x] **QA-05**: Verify disk-space preflight warning triggers and is dismissible when free disk space is below the model-update threshold
+- [x] **QA-06**: Phase 21 titlebar visual UAT — Light preference flips titlebar to cream `#FAFAF7` (Chronicle bridge active)
+- [x] **QA-07**: Phase 21 titlebar visual UAT — Dark preference flips titlebar to system-dark material (Chronicle bridge inactive)
+- [x] **QA-08**: Phase 21 titlebar visual UAT — System preference follows OS appearance change live (no app restart required)
+- [x] **QA-09**: Phase 21 titlebar visual UAT — Preference toggle while window is unfocused still updates titlebar correctly
 
 ### Nyquist Validation Sweep (`NYQUIST-FUT-01`)
 
