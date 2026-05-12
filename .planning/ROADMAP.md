@@ -166,3 +166,13 @@ Future feature directions captured as seeds in `.planning/seeds/` (surfaced by `
 - **SEED-003** Transcript editing surface — inline correction, speaker rename + bulk, redact w/ audio mute, merge/split, undo
 - **SEED-004** Format reach — DOCX / PDF / SRT / VTT / JSON / TXT, per-destination presets, Notion property mapping refresh
 - **SEED-005** Recording preflight guardrails — block silent recordings, missing-mic alert, live input level meter, permission preflight
+
+### Phase 26.1: Close gap: PROCESS-03 lint-summaries failure on v1.0 archive (INSERTED)
+
+**Goal:** Restore `scripts/lint-summaries.sh` to exit 0 against the full SUMMARY corpus (currently fails C1 on 8 v1.0-archive files), unblocking the `Lint Summaries` CI gate so any PR touching SUMMARY/PLAN files can pass. Closes the only v1.3-milestone-audit blocker (PROCESS-03 `passed-then-regressed`).
+**Requirements**: PROCESS-03
+**Depends on:** Phase 26
+**Plans:** 1 plan
+
+Plans:
+- [ ] 26.1-01-PLAN.md — Add `requirements-completed: []` to 8 v1.0-archive SUMMARYs; verify lint exits 0; commit atomically
